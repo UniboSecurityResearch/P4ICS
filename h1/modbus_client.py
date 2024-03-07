@@ -1,6 +1,22 @@
 from pymodbus.client import AsyncModbusTcpClient
 import asyncio
 import time
+import argparse
+
+parser = argparse.ArgumentParser(description='ModBus sample client')
+parser.add_argument('--write', help='If set writes to a register',
+                    action="store_true", required=False)
+parser.add_argument('--read', help='If set reads from a register',
+                    action="store_true", required=False)
+parser.add_argument('--rw', help='If set writes to a register and then reads from a register',
+                    action="store_true", required=False)
+parser.add_argument('--connect', help='If set connect only to the server',
+                    action="store_true", required=False)
+parser.add_argument('--connect-times', help='Thrift server port for table updates',
+                    type=int, action="store", default=1)
+
+args = parser.parse_args()
+
 
 ###### TEST PPT E DEQ in Switch ######
 # async def main():
@@ -41,29 +57,44 @@ import time
 
 
 ###### TEST OPEN CONNECTION ######
-async def main():
+async def connect():
     client = AsyncModbusTcpClient("200.1.1.7", 502)
     with open("/shared/results_conn.txt", "w") as results_file:
-        for i in range(10000):
+        for i in range(args.connect_times):
             time_start = time.time()
             await client.connect()
             time_end = time.time()
             results_file.write("%s\n" % (time_end - time_start))
             client.close()
             print(f"Test connection number {i}")
-asyncio.run(main())
 
 
-# async def main():
-#     client = AsyncModbusTcpClient("200.1.1.7", 502)
-#     await client.connect()
-#     register_id = 0
-#     new_value = 45
-#     await client.write_register(register_id, new_value, unit=0x01)
-#     print(f"Valore scritto nel registro {register_id}: {new_value}")
-#     await client.read_holding_registers(register_id, 1, unit=0x01) #response = await client.read_holding_registers(register_id, 1, unit=0x01)
-#     print(f"Valore letto dal registro")
-#     client.close()
+async def write_register():
+    client = AsyncModbusTcpClient("200.1.1.7", 502, retries=0)
+    await client.connect()
+    register_id = 0
+    new_value = 45
+    await client.write_register(register_id, new_value, unit=0x01)
+    print(f"Valore scritto nel registro {register_id}: {new_value}")
+    client.close()
 
-# asyncio.run(main())
 
+async def read_register():
+    client = AsyncModbusTcpClient("200.1.1.7", 502, retries=0)
+    await client.connect()
+    register_id = 0
+    response = await client.read_holding_registers(register_id, 1, unit=0x01)
+    print(f"Valore letto dal registro {register_id}: {response.registers[0]}")
+    client.close()
+
+
+if args.write:
+    asyncio.run(write_register())
+elif args.read:
+    asyncio.run(read_register())
+elif args.rw:
+    asyncio.run(read_register())
+    asyncio.run(write_register())
+    asyncio.run(read_register())
+elif args.connect:
+    asyncio.run(connect())

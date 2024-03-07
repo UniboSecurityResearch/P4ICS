@@ -78,7 +78,7 @@ header payload_encrypt_t {
 }
 
 header payload_decrypt_t {
-   bit<40> content;
+   bit<256> content;
 }
 
 struct tcp_metadata_t
@@ -115,7 +115,7 @@ parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata) {
-        
+
     state start {
        transition parse_ethernet;
     }
@@ -174,10 +174,11 @@ parser MyParser(packet_in packet,
            1: accept;
            _: parse_payload;
         }
-    } 
+    }
 
     state parse_payload {
-        packet.extract(hdr.payload, (bit<32>)((hdr.modbus_tcp.length - 1) * 8));
+        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 7) * 8);
+        packet.extract(hdr.payload, (bit<32>)(calculated_length));
         transition accept;
     }
 
@@ -199,7 +200,7 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-   action drop() {
+    action drop() {
         mark_to_drop(standard_metadata);
     }
 
@@ -208,7 +209,6 @@ control MyIngress(inout headers hdr,
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-       
     }
 
     table ipv4_lpm {
@@ -227,15 +227,29 @@ control MyIngress(inout headers hdr,
     action cipher(){
         hdr.payload_encrypt.setValid();
         Encrypt(hdr.payload.content, hdr.payload_encrypt.content);//check metadata and add metadata
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - (hdr.modbus_tcp.length - 1) + 16;
-        hdr.modbus_tcp.length = 17;
+        hdr.payload.setInvalid();
+        bit<16> crypt_payload_length;
+        if(hdr.modbus_tcp.length < 16) {
+            crypt_payload_length = 16;
+        } else {
+            crypt_payload_length = 32;
+        }
+        hdr.ipv4.totalLen = hdr.ipv4.totalLen - (hdr.modbus_tcp.length - 1) + crypt_payload_length;
     }
 
     action decipher(){
         hdr.payload_decrypt.setValid();
         Decrypt(hdr.payload.content, hdr.payload_decrypt.content);//check metadata
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - (hdr.modbus_tcp.length - 1) + 5;
-        hdr.modbus_tcp.length = 6;
+        hdr.payload.setInvalid();
+        bit<16> crypt_payload_length = 0;
+        bit<16> decrypt_bit_length = 32; //must be equal to size of field payload_decrypt_t
+        if(hdr.modbus_tcp.length < 16) {
+            crypt_payload_length = 16;
+        } else {
+            crypt_payload_length = 32;
+        }
+        hdr.payload_decrypt.content = hdr.payload_decrypt.content << (bit<8>)((decrypt_bit_length - (hdr.modbus_tcp.length - 1)) * 8);
+        hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + (hdr.modbus_tcp.length - 1);
     }
 
     table modbus_sec {

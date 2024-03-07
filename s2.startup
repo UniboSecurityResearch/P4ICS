@@ -1,7 +1,7 @@
 ip link set eth0 address 00:00:00:00:00:03
 ip link set eth1 address 00:00:00:00:00:04
 chmod u+x ./retrieve_info.sh
-p4c-bm2-ss --emit-externs -o modbus_extraction.json modbus_extraction_r.p4
+p4c-bm2-ss --emit-externs -o modbus_extraction.json modbus_extraction.p4
 cd extern_lib && make
 cd ..
 simple_switch -i 1@eth0 -i 2@eth1 modbus_extraction.json -- --load-modules=extern_lib/definition.so &
