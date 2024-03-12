@@ -14,5 +14,5 @@
  */
 
 // Example custom extern function.
-extern void Encrypt<T, B>(in T a, inout B b);
-extern void Decrypt<T, B>(in T a, inout B b);
+extern void Encrypt<T, B, K, L, N, M>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4);
+extern void Decrypt<T, B, K, L, N, M>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4);

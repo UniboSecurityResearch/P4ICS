@@ -443,18 +443,33 @@ void InvCipher() {
 }
 
 
-void Decrypt(bm::Data & a, bm::Data & b) {
+void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4) {
 	int i;
 	Nk = 4;
 
 	// Calculate Nr from Nk and, implicitly, from Nb
 	Nr = Nk + 6;
 
-	// The key values are placed here
-	Key[0]  = 0x2b;  Key[1]  = 0x7e;  Key[2]  = 0x15;  Key[3]  = 0x16;
-	Key[4]  = 0x28;  Key[5]  = 0xae;  Key[6]  = 0xd2;  Key[7]  = 0xa6;
-	Key[8]  = 0xab;  Key[9]  = 0xf7;  Key[10] = 0x15;  Key[11] = 0x88;
-	Key[12] = 0x09;  Key[13] = 0xcf;  Key[14] = 0x4f;  Key[15] = 0x3c;
+	// The key values are read here
+    Key[0] = (k1.get_uint64() & 0xff000000UL) >> 24;
+    Key[1] = (k1.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[2] = (k1.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[3] = (k1.get_uint64() & 0x000000ffUL)      ;
+
+    Key[4] = (k2.get_uint64() & 0xff000000UL) >> 24;
+    Key[5] = (k2.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[6] = (k2.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[7] = (k2.get_uint64() & 0x000000ffUL)      ;
+
+    Key[8] = (k3.get_uint64() & 0xff000000UL) >> 24;
+    Key[9] = (k3.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[10] = (k3.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[11] = (k3.get_uint64() & 0x000000ffUL)      ;
+
+    Key[12] = (k4.get_uint64() & 0xff000000UL) >> 24;
+    Key[13] = (k4.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
 
 	// The KeyExpansion routine is called before encryption.
 	KeyExpansion();
@@ -482,18 +497,34 @@ void Decrypt(bm::Data & a, bm::Data & b) {
 	b.set(result);
 }
 
-void Encrypt(bm::Data & a, bm::Data & b) {
+void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4) {
 	int i;
 	Nk = 4;
 
 	// Calculate Nr from Nk and, implicitly, from Nb
 	Nr = Nk + 6;
 
-	// The key values are placed here
-	Key[0]  = 0x2b;  Key[1]  = 0x7e;  Key[2]  = 0x15;  Key[3]  = 0x16;
-	Key[4]  = 0x28;  Key[5]  = 0xae;  Key[6]  = 0xd2;  Key[7]  = 0xa6;
-	Key[8]  = 0xab;  Key[9]  = 0xf7;  Key[10] = 0x15;  Key[11] = 0x88;
-	Key[12] = 0x09;  Key[13] = 0xcf;  Key[14] = 0x4f;  Key[15] = 0x3c;
+	// The key values are read here
+    Key[0] = (k1.get_uint64() & 0xff000000UL) >> 24;
+    Key[1] = (k1.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[2] = (k1.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[3] = (k1.get_uint64() & 0x000000ffUL)      ;
+
+    Key[4] = (k2.get_uint64() & 0xff000000UL) >> 24;
+    Key[5] = (k2.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[6] = (k2.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[7] = (k2.get_uint64() & 0x000000ffUL)      ;
+
+    Key[8] = (k3.get_uint64() & 0xff000000UL) >> 24;
+    Key[9] = (k3.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[10] = (k3.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[11] = (k3.get_uint64() & 0x000000ffUL)      ;
+
+    Key[12] = (k4.get_uint64() & 0xff000000UL) >> 24;
+    Key[13] = (k4.get_uint64() & 0x00ff0000UL) >> 16;
+    Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
+    Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
+
 
 	// Get the input string
 	std::stringstream ss;
@@ -529,5 +560,5 @@ void Encrypt(bm::Data & a, bm::Data & b) {
 	b.set(result);
 }
 
-BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &);
-BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);

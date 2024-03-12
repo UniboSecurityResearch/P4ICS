@@ -200,6 +200,8 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
+   register<bit<32>>(4) keys;
+
     action drop() {
         mark_to_drop(standard_metadata);
     }
@@ -226,7 +228,12 @@ control MyIngress(inout headers hdr,
 
     action cipher(){
         hdr.payload_encrypt.setValid();
-        Encrypt(hdr.payload.content, hdr.payload_encrypt.content);//check metadata and add metadata
+        bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
+        keys.read(k1, 0);
+        keys.read(k2, 1);
+        keys.read(k3, 2);
+        keys.read(k4, 3);
+        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4);//check metadata and add metadata
         hdr.payload.setInvalid();
         bit<16> crypt_payload_length;
         if(hdr.modbus_tcp.length < 16) {
@@ -239,7 +246,12 @@ control MyIngress(inout headers hdr,
 
     action decipher(){
         hdr.payload_decrypt.setValid();
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content);//check metadata
+        bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
+        keys.read(k1, 0);
+        keys.read(k2, 1);
+        keys.read(k3, 2);
+        keys.read(k4, 3);
+        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4);//check metadata
         hdr.payload.setInvalid();
         bit<16> crypt_payload_length = 0;
         bit<16> decrypt_bit_length = 32; //must be equal to size of field payload_decrypt_t
