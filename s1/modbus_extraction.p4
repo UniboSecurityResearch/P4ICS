@@ -257,17 +257,14 @@ control MyIngress(inout headers hdr,
         keys.read(k2, 1);
         keys.read(k3, 2);
         keys.read(k4, 3);
-        bit<16> useful_length = 0;
         bit<16> useful_length_fixed = 0;
         if(hdr.modbus_tcp.isValid()) {
-            useful_length = hdr.modbus_tcp.length;
             useful_length_fixed = hdr.modbus_tcp.length - 1;
         } else if(hdr.mqtt_tcp.isValid()) {
-            useful_length = (bit<16>)hdr.mqtt_tcp.length;
             useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         }
-        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, useful_length);
-        bit<16> crypt_payload_length = ((useful_length / 16) + 1) * 16;
+        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, useful_length_fixed);
+        bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
         hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length;
         hdr.payload.setInvalid();
     }
@@ -279,17 +276,14 @@ control MyIngress(inout headers hdr,
         keys.read(k2, 1);
         keys.read(k3, 2);
         keys.read(k4, 3);
-        bit<16> useful_length = 0;
         bit<16> useful_length_fixed = 0;
         if (hdr.modbus_tcp.isValid()) {
-            useful_length = hdr.modbus_tcp.length;
             useful_length_fixed = hdr.modbus_tcp.length - 1;
         } else if (hdr.mqtt_tcp.isValid()) {
-            useful_length = (bit<16>)hdr.mqtt_tcp.length;
             useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         }
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length);//check metadata
-        bit<16> crypt_payload_length = ((useful_length / 16) + 1) * 16;
+        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length_fixed);//check metadata
+        bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
         hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed;
         hdr.payload.setInvalid();
     }
