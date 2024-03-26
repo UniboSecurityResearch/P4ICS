@@ -69,17 +69,24 @@ header modbus_tcp_t {
     bit<8> unitId;
 }
 
+header mqtt_tcp_t {
+    bit<4> packetType;
+    bit<4> flags;
+    bit<8> length;//if 0, there are no data in the tcp packet after this value
+}
+
 header payload_t {
    varbit<2024> content;
 }
 
 header payload_encrypt_t {
-   bit<128> content;
+   bit<512> content;
 }
 
 header payload_decrypt_t {
-   bit<256> content;
+   bit<512> content;
 }
+const bit<16> decrypt_byte_length = 64; //must be equal to size of fields payload_decrypt_t and payload_encrypt_t and set in definition.cpp
 
 struct tcp_metadata_t
 {
@@ -101,6 +108,7 @@ struct headers {
     tcp_t tcp;
     tcp_options_t tcp_options;
     modbus_tcp_t modbus_tcp;
+    mqtt_tcp_t mqtt_tcp;
     payload_t payload;
     payload_encrypt_t payload_encrypt;
     payload_decrypt_t payload_decrypt;
@@ -156,6 +164,7 @@ parser MyParser(packet_in packet,
     state maybe_extract_modbus_tcp {
         transition select(hdr.tcp.dstPort) {
             502 : extract_modbus_tcp;
+            1883 : extract_mqtt_tcp;
             default : check_src_port;
         }
     }
@@ -163,6 +172,7 @@ parser MyParser(packet_in packet,
     state check_src_port {
         transition select(hdr.tcp.srcPort) {
             502 : extract_modbus_tcp;
+            1883 : extract_mqtt_tcp;
             default : accept;
         }
     }
@@ -172,16 +182,30 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.modbus_tcp);
         transition select(hdr.modbus_tcp.length) {
            1: accept;
-           _: parse_payload;
+           _: parse_payload_modbus;
         }
     }
 
-    state parse_payload {
+    state extract_mqtt_tcp {
+        packet.extract(hdr.tcp_options);
+        packet.extract(hdr.mqtt_tcp);
+        transition select(hdr.mqtt_tcp.length) {
+           0: accept;
+           _: parse_payload_mqtt;
+        }
+    }
+
+    state parse_payload_modbus {
         bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 7) * 8);
         packet.extract(hdr.payload, (bit<32>)(calculated_length));
         transition accept;
     }
 
+    state parse_payload_mqtt {
+        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2) * 8);
+        packet.extract(hdr.payload, (bit<32>)(calculated_length));
+        transition accept;
+    }
 }
 
 /*************************************************************************
@@ -226,42 +250,48 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
-    action cipher(){
+    action cipher() {
         hdr.payload_encrypt.setValid();
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
         keys.read(k1, 0);
         keys.read(k2, 1);
         keys.read(k3, 2);
         keys.read(k4, 3);
-        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4);//check metadata and add metadata
-        hdr.payload.setInvalid();
-        bit<16> crypt_payload_length;
-        if(hdr.modbus_tcp.length < 16) {
-            crypt_payload_length = 16;
-        } else {
-            crypt_payload_length = 32;
+        bit<16> useful_length = 0;
+        bit<16> useful_length_fixed = 0;
+        if(hdr.modbus_tcp.isValid()) {
+            useful_length = hdr.modbus_tcp.length;
+            useful_length_fixed = hdr.modbus_tcp.length - 1;
+        } else if(hdr.mqtt_tcp.isValid()) {
+            useful_length = (bit<16>)hdr.mqtt_tcp.length;
+            useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         }
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - (hdr.modbus_tcp.length - 1) + crypt_payload_length;
+        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, useful_length);
+        bit<16> crypt_payload_length = ((useful_length / 16) + 1) * 16;
+        hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length;
+        hdr.payload.setInvalid();
     }
 
-    action decipher(){
+    action decipher() {
         hdr.payload_decrypt.setValid();
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
         keys.read(k1, 0);
         keys.read(k2, 1);
         keys.read(k3, 2);
         keys.read(k4, 3);
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4);//check metadata
-        hdr.payload.setInvalid();
-        bit<16> crypt_payload_length = 0;
-        bit<16> decrypt_bit_length = 32; //must be equal to size of field payload_decrypt_t
-        if(hdr.modbus_tcp.length < 16) {
-            crypt_payload_length = 16;
-        } else {
-            crypt_payload_length = 32;
+        bit<16> useful_length = 0;
+        bit<16> useful_length_fixed = 0;
+        if (hdr.modbus_tcp.isValid()) {
+            useful_length = hdr.modbus_tcp.length;
+            useful_length_fixed = hdr.modbus_tcp.length - 1;
+        } else if (hdr.mqtt_tcp.isValid()) {
+            useful_length = (bit<16>)hdr.mqtt_tcp.length;
+            useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         }
-        hdr.payload_decrypt.content = hdr.payload_decrypt.content << (bit<8>)((decrypt_bit_length - (hdr.modbus_tcp.length - 1)) * 8);
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + (hdr.modbus_tcp.length - 1);
+        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length);//check metadata
+        bit<16> crypt_payload_length = ((useful_length / 16) + 1) * 16;
+        hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed;
+        hdr.payload.setInvalid();
     }
 
     table modbus_sec {
@@ -277,14 +307,14 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
-        if(hdr.ipv4.isValid()){
+        if (hdr.ipv4.isValid()){
             ipv4_lpm.apply();
             if (hdr.tcp.isValid()){
-                if(hdr.modbus_tcp.isValid()){
+                if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid()){
                     modbus_sec.apply();
                 }
-            }    
-        }   
+            }
+        }
     }
 }
 
@@ -365,6 +395,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.tcp);
         packet.emit(hdr.tcp_options);
         packet.emit(hdr.modbus_tcp);
+        packet.emit(hdr.mqtt_tcp);
         packet.emit(hdr.payload_encrypt);
         packet.emit(hdr.payload_decrypt);
         packet.emit(hdr.payload);

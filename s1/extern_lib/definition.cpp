@@ -7,6 +7,8 @@
 #include <sstream>
 using namespace std;
 
+const long max_size_content = 64; //in byte
+
 // The number of columns comprising a state in AES. This is a parameter
 // that could be 4, 6, or 8.  For this example we set it to 4.
 #define Nb 4
@@ -319,15 +321,15 @@ void Cipher() {
    }
 }
 
-int fillBlock (int sz, char *str, unsigned char *in) {
+int fillBlock (int sz, char *str, unsigned char *in, long inputLength) {
    int j=0;
-   while (sz < strlen(str)) {
+   while (sz < inputLength) {
       if (j >= Nb*4) break;
       in[j++] = (unsigned char)str[sz];
       sz++;
    }
    // Pad the block with 0s, if necessary
-   if (sz >= strlen(str)) for ( ; j < Nb*4 ; j++) in[j] = 0;
+   if (sz >= inputLength) for ( ; j < Nb*4 ; j++) in[j] = 0;
    return sz;   
 }
 
@@ -443,7 +445,15 @@ void InvCipher() {
 }
 
 
-void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4) {
+long get_crypt_payload_length(long content_length) {
+    return ((content_length / 16) + 1) * 16;
+}
+long get_shift_size(long crypt_payload_length) {
+    return max_size_content - crypt_payload_length; //in byte
+}
+
+
+void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & len) {
 	int i;
 	Nk = 4;
 
@@ -474,30 +484,56 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
 	// The KeyExpansion routine is called before encryption.
 	KeyExpansion();
 
+    long totalLength = len.get_uint64();
+    long crypt_payload_length = get_crypt_payload_length(totalLength);
+    long shift_size = get_shift_size(crypt_payload_length);
 	string input = a.get_string();
 	char str[input.length()+1];
 
 	// Copy the input string to str
-	strcpy(str, input.c_str());
-	
-	int number;
-	for (i=0 ; i < Nb*4 ; i++){
-		if((int)str[i] < 0)
-			number = (int)str[i] + 256;
-		else
-			number = (int)str[i];
-		in[i] = (unsigned char)number;
+    long initialPadding = crypt_payload_length - input.length();
+
+    for (i=0; i < initialPadding; i++) {
+        str[i] = 0x00;
+    }
+    for (i=initialPadding; i < crypt_payload_length; i++) {
+        str[i] = input[i-initialPadding];
+    }
+    str[crypt_payload_length] = '\0';
+
+    string result;
+
+	for(int block = 0; block < ((totalLength / 16) + 1); block++) {
+        int number;
+        for (int j=0 ; j < Nb*4 ; j++){
+            i = j + block * 16;
+            if((int)str[i] < 0)
+                number = (int)str[i] + 256;
+            else
+                number = (int)str[i];
+            in[j] = (unsigned char)number;
+        }
+
+        // The block is decrypted here - the result is in the array 'out'
+        InvCipher();
+
+        for (i=0; i < Nb*4; i++) {
+            char s[3];
+            sprintf(s, "%02x", out[i]);
+            result += s;
+        }
 	}
 
-	// The block is decrypted here - the result is in the array 'out'
-	InvCipher();
+    for(int i = 0; i < shift_size; i++) {
+        char s[9];
+        sprintf(s, "%02x", '\0');
+        result += s;
+    }
 
-	// Convert out to string
-	string result(reinterpret_cast<char*>(out));
-	b.set(result);
+    b.set(result);
 }
 
-void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4) {
+void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & len) {
 	int i;
 	Nk = 4;
 
@@ -526,16 +562,24 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
 
 
-	// Get the input string
-	std::stringstream ss;
-	ss<< std::hex << a.get_uint64(); // int decimal_value
-	std::string input(ss.str());
+    // Get the input string
+	string input = a.get_string();
+	long totalLength = len.get_uint64();
+	char str[totalLength+1];
 
-	char str[input.length()+1];
+	long inputLength = totalLength;
 
 	// Copy the input string to str
-	strcpy(str, input.c_str());
-	
+	long initialPadding = totalLength - input.length();
+
+	for (i=0; i < initialPadding; i++) {
+        str[i] = 0x00;
+    }
+	for (i=initialPadding; i < totalLength; i++) {
+	    str[i] = input[i-initialPadding];
+	}
+	str[totalLength] = '\0';
+
 	// The KeyExpansion routine is called before encryption.
 	KeyExpansion();
 
@@ -543,22 +587,28 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
 	// sz is the cursor into the input string
 	int sz=0;
 	// Each iteration encrypts one block = Nb*4 bytes = 128 bits in this case
-	while (sz < strlen(str)) {
+	while (sz < inputLength) {
 		// Fill the array 'in' with the next plaintext block
-		sz = fillBlock (sz, str, in);
+		sz = fillBlock (sz, str, in, inputLength);
 
 		// The block is encrypted here - the result is in the array 'out'
 		Cipher();
-
 		// Output the encrypted block.
 		for (int i = 0; i < Nb*4; i++) {
 			char s[9];
-			sprintf(s, "%02x", out[i]); //try (int)
+			sprintf(s, "%02x", out[i]);
 			result += s;
 		}
 	}
+	long crypt_payload_length = get_crypt_payload_length(totalLength);
+    long shift_size = get_shift_size(crypt_payload_length);
+
+    for(int i = 0; i < shift_size; i++) {
+        char s[9];
+        sprintf(s, "%02x", '\0');
+        result += s;
+    }
 	b.set(result);
 }
-
-BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
-BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
