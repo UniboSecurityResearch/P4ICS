@@ -80,13 +80,13 @@ header payload_t {
 }
 
 header payload_encrypt_t {
-   bit<512> content;
+   bit<1024> content;
 }
 
 header payload_decrypt_t {
-   bit<512> content;
+   bit<1024> content;
 }
-const bit<16> decrypt_byte_length = 64; //must be equal to size of fields payload_decrypt_t and payload_encrypt_t and set in definition.cpp
+//the size of fields payload_decrypt_t and payload_encrypt_t must be set in definition.cpp (max_size_content) divided by 8
 
 struct tcp_metadata_t
 {

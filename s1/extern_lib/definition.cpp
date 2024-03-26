@@ -7,7 +7,7 @@
 #include <sstream>
 using namespace std;
 
-const long max_size_content = 64; //in byte
+const long max_size_content = 128; //in byte
 
 // The number of columns comprising a state in AES. This is a parameter
 // that could be 4, 6, or 8.  For this example we set it to 4.
