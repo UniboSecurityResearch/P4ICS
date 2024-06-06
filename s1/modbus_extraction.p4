@@ -62,6 +62,14 @@ header tcp_options_t {
     bit<80> timestamps;
 } //Due to pymodbus implementation
 
+header tcp_options2_t {
+    bit<32> maxSegmentSize;
+    bit<16> sackPermitted;
+    bit<80> timestamps;
+    bit<8> nop;
+    bit<24> windowScale;
+}//Due to java dnp3 implementation
+
 header modbus_tcp_t {
     bit<16> transactionId;
     bit<16> protocolId;
@@ -84,16 +92,25 @@ header cip_tcp_t {
     bit<32> options;
 }
 
+header dnp3_tcp_t {
+    bit<16> sync;
+    bit<8> length;
+    bit<8> linkControl;
+    bit<16> destination;
+    bit<16> source;
+    bit<16> checksum;
+}
+
 header payload_t {
-   varbit<2024> content;
+   varbit<2048> content;
 }
 
 header payload_encrypt_t {
-   bit<1024> content;
+   bit<2048> content;
 }
 
 header payload_decrypt_t {
-   bit<1024> content;
+   bit<2048> content;
 }
 //the size of fields payload_decrypt_t and payload_encrypt_t must be set in definition.cpp (max_size_content) divided by 8
 
@@ -116,9 +133,11 @@ struct headers {
     ipv4_t ipv4;
     tcp_t tcp;
     tcp_options_t tcp_options;
+    tcp_options2_t tcp_options2;
     modbus_tcp_t modbus_tcp;
     mqtt_tcp_t mqtt_tcp;
     cip_tcp_t cip_tcp;
+    dnp3_tcp_t dnp3_tcp;
     payload_t payload;
     payload_encrypt_t payload_encrypt;
     payload_decrypt_t payload_decrypt;
@@ -176,6 +195,7 @@ parser MyParser(packet_in packet,
             502 : extract_modbus_tcp;
             1883 : extract_mqtt_tcp;
             44818 : extract_cip_tcp;
+            20000 : extract_dnp3_tcp;
             default : check_src_port_tcp;
         }
     }
@@ -185,6 +205,7 @@ parser MyParser(packet_in packet,
             502 : extract_modbus_tcp;
             1883 : extract_mqtt_tcp;
             44818 : extract_cip_tcp;
+            20000 : extract_dnp3_tcp;
             default : accept;
         }
     }
@@ -216,6 +237,31 @@ parser MyParser(packet_in packet,
         }
     }
 
+    state extract_dnp3_tcp {
+        transition select(hdr.tcp.syn) {
+           0: extract_dnp3_tcp_opt1;
+           1: extract_dnp3_tcp_opt2;
+        }
+    }
+
+    state extract_dnp3_tcp_opt1 {
+        packet.extract(hdr.tcp_options);
+        transition extract_dnp3_tcp_opt;
+    }
+
+    state extract_dnp3_tcp_opt2 {
+        packet.extract(hdr.tcp_options2);
+        transition extract_dnp3_tcp_opt;
+    }
+
+    state extract_dnp3_tcp_opt {
+        packet.extract(hdr.dnp3_tcp);
+        transition select(hdr.dnp3_tcp.length) {
+           0: accept;
+           _: parse_payload_dnp3_tcp;
+        }
+    }
+
     state parse_payload_modbus {
         bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 7) * 8);
         packet.extract(hdr.payload, (bit<32>)(calculated_length));
@@ -230,6 +276,12 @@ parser MyParser(packet_in packet,
 
     state parse_payload_cip_tcp {
         bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 24) * 8);
+        packet.extract(hdr.payload, (bit<32>)(calculated_length));
+        transition accept;
+    }
+
+    state parse_payload_dnp3_tcp {
+        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 10) * 8);
         packet.extract(hdr.payload, (bit<32>)(calculated_length));
         transition accept;
     }
@@ -291,6 +343,8 @@ control MyIngress(inout headers hdr,
             useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         } else if(hdr.cip_tcp.isValid()) {
              useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
+        } else if(hdr.dnp3_tcp.isValid()) {
+            useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
         }
         Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, useful_length_fixed);
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
@@ -312,6 +366,8 @@ control MyIngress(inout headers hdr,
             useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         } else if (hdr.cip_tcp.isValid()) {
              useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
+        } else if (hdr.dnp3_tcp.isValid()) {
+             useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
         }
         Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length_fixed);//check metadata
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
@@ -335,7 +391,7 @@ control MyIngress(inout headers hdr,
         if (hdr.ipv4.isValid()){
             ipv4_lpm.apply();
             if (hdr.tcp.isValid()){
-                if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid()){
+                if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
                     modbus_sec.apply();
                 }
             }
@@ -353,7 +409,7 @@ control MyEgress(inout headers hdr,
                     //apply{}
     register<bit<48>>(100000) packet_processing_time_array; //egress timestamp - ingress timestamp
     register<bit<32>>(100000) packet_dequeuing_timedelta_array; //deq_timedelta
-    
+
     register<bit<48>>(1) timestamp_last_seen_packet;
     register<bit<32>>(1) last_saved_index;
     bit<48> diff_time;
@@ -361,27 +417,27 @@ control MyEgress(inout headers hdr,
     bit<32> current_index;
 
 
-    apply {  
+    apply {
         timestamp_last_seen_packet.read(last_time,     0);
 
         diff_time = standard_metadata.ingress_global_timestamp - last_time;
 
         //retrieve index
         last_saved_index.read(current_index,     0);
-        
+
         //retrieve packet processing time
-        packet_processing_time_array.write(current_index,     
+        packet_processing_time_array.write(current_index,
             standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp);
 
-        //retrieve dequeue timedelta 
-        packet_dequeuing_timedelta_array.write(current_index,     
+        //retrieve dequeue timedelta
+        packet_dequeuing_timedelta_array.write(current_index,
             standard_metadata.deq_timedelta);
 
         //update index
         last_saved_index.write(0,     current_index + 1);
-        
+
         //reset time window
-        timestamp_last_seen_packet.write(0,     standard_metadata.ingress_global_timestamp);  
+        timestamp_last_seen_packet.write(0,     standard_metadata.ingress_global_timestamp);
     }
 }
 
@@ -419,9 +475,11 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ipv4);
         packet.emit(hdr.tcp);
         packet.emit(hdr.tcp_options);
+        packet.emit(hdr.tcp_options2);
         packet.emit(hdr.modbus_tcp);
         packet.emit(hdr.mqtt_tcp);
         packet.emit(hdr.cip_tcp);
+        packet.emit(hdr.dnp3_tcp);
         packet.emit(hdr.payload_encrypt);
         packet.emit(hdr.payload_decrypt);
         packet.emit(hdr.payload);
