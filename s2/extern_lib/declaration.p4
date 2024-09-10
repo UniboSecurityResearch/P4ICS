@@ -14,5 +14,11 @@
  */
 
 // Example custom extern function.
+extern void sha256_hash_256<T, B>(inout T a, in B b);
+extern void sha256_hash_512<T, B, C>(inout T a, in B b, in C c);
+extern void sha256_hash_1024<T, B, C, D, E, F>(inout T a, in B b, in C c, in D d, in E e, in F f);
+extern void verify_hash_equals<A, B, C>(inout A a, in B b, in C c);
+
+
 extern void Encrypt<T, B, K, L, N, M, O>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O len);
-extern void Decrypt<T, B, K, L, N, M, O>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O len);
+extern void Decrypt<T, B, K, L, N, M, O, P, Q, R>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O len, in P sha, in Q seqNo, inout R shaCalculated);

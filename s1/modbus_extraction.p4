@@ -36,6 +36,16 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
+header ipv4_options_t {
+    bit<32> savedLen;
+    bit<256> sha;
+}
+
+header sha_temp_store_t {
+    bit<32> equals;
+    bit<256> shaCalculated;
+}
+
 header tcp_t {
     bit<16> srcPort;
     bit<16> dstPort;
@@ -131,6 +141,7 @@ struct metadata {
 struct headers {
     ethernet_t ethernet;
     ipv4_t ipv4;
+    ipv4_options_t ipv4_options;
     tcp_t tcp;
     tcp_options_t tcp_options;
     tcp_options2_t tcp_options2;
@@ -141,6 +152,7 @@ struct headers {
     payload_t payload;
     payload_encrypt_t payload_encrypt;
     payload_decrypt_t payload_decrypt;
+    sha_temp_store_t temp;
 } //modify payload for modbus
 
 
@@ -167,6 +179,22 @@ parser MyParser(packet_in packet,
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
+        transition select(hdr.ipv4.ihl) {
+            5: no_parse_ipv4_options;
+            14: parse_ipv4_options;
+            _ : accept;    // For other protocols, skip to accept
+        }
+    }
+
+    state parse_ipv4_options {
+        packet.extract(hdr.ipv4_options);
+        transition select(hdr.ipv4.protocol) {
+            6: parse_tcp;  // Protocol 6 corresponds to TCP
+            _ : accept;    // For other protocols, skip to accept
+        }
+    }
+
+    state no_parse_ipv4_options {
         transition select(hdr.ipv4.protocol) {
             6: parse_tcp;  // Protocol 6 corresponds to TCP
             _ : accept;    // For other protocols, skip to accept
@@ -331,6 +359,7 @@ control MyIngress(inout headers hdr,
 
     action cipher() {
         hdr.payload_encrypt.setValid();
+        hdr.ipv4_options.setValid();
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
         keys.read(k1, 0);
         keys.read(k2, 1);
@@ -342,13 +371,16 @@ control MyIngress(inout headers hdr,
         } else if(hdr.mqtt_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         } else if(hdr.cip_tcp.isValid()) {
-             useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
+            useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
         } else if(hdr.dnp3_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
         }
+        hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed;
+        sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed);
+        hdr.ipv4.ihl = 14;
         Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, useful_length_fixed);
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length;
+        hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36; //36 is the ipv4 options size in bytes
         hdr.payload.setInvalid();
     }
 
@@ -365,14 +397,19 @@ control MyIngress(inout headers hdr,
         } else if (hdr.mqtt_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
         } else if (hdr.cip_tcp.isValid()) {
-             useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
+            useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
         } else if (hdr.dnp3_tcp.isValid()) {
-             useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
+            useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
         }
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length_fixed);//check metadata
+        hdr.temp.setValid();
+        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length_fixed, hdr.ipv4_options.sha, hdr.tcp.seqNo, hdr.temp.shaCalculated);//check metadata
+        hdr.ipv4.ihl = 5;
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed;
+        hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed - 36;
+        verify_hash_equals(hdr.temp.equals, hdr.ipv4_options.sha, hdr.temp.shaCalculated);
+        hdr.temp.setInvalid();
         hdr.payload.setInvalid();
+        hdr.ipv4_options.setInvalid();
     }
 
     table modbus_sec {
@@ -473,6 +510,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.ipv4_options);
         packet.emit(hdr.tcp);
         packet.emit(hdr.tcp_options);
         packet.emit(hdr.tcp_options2);
