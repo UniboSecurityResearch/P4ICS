@@ -369,7 +369,7 @@ control MyIngress(inout headers hdr,
         if(hdr.modbus_tcp.isValid()) {
             useful_length_fixed = hdr.modbus_tcp.length - 1;
         } else if(hdr.mqtt_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
+            useful_length_fixed = (bit<16>)(hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2);
         } else if(hdr.cip_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
         } else if(hdr.dnp3_tcp.isValid()) {
@@ -395,7 +395,7 @@ control MyIngress(inout headers hdr,
         if (hdr.modbus_tcp.isValid()) {
             useful_length_fixed = hdr.modbus_tcp.length - 1;
         } else if (hdr.mqtt_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.mqtt_tcp.length;
+            useful_length_fixed = (bit<16>)hdr.ipv4_options.savedLen;
         } else if (hdr.cip_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
         } else if (hdr.dnp3_tcp.isValid()) {
