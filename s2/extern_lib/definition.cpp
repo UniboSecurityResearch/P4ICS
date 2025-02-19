@@ -475,9 +475,14 @@ long get_shift_size(long crypt_payload_length) {
 }
 
 
-void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & len, bm::Data & sha, bm::Data & seqNo, bm::Data & shaCalculated) {
+void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len, bm::Data & sha, bm::Data & seqNo, bm::Data & shaCalculated) {
 	int i;
-	Nk = 4;
+    if(k4.get_string() == "0") //128 bit encryption key
+        Nk = 4;
+    else if(k6.get_string() == "0") //192 bit encryption key
+        Nk = 6;
+    else Nk = 8; //256 bit encryption key
+
 
 	// Calculate Nr from Nk and, implicitly, from Nb
 	Nr = Nk + 6;
@@ -503,6 +508,30 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
     Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
 
+    if(Nk == 6 || Nk == 8){
+        Key[16] = (k5.get_uint64() & 0xff000000UL) >> 24;
+        Key[17] = (k5.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[18] = (k5.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[19] = (k5.get_uint64() & 0x000000ffUL);
+
+        Key[20] = (k6.get_uint64() & 0xff000000UL) >> 24;
+        Key[21] = (k6.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[22] = (k6.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[23] = (k6.get_uint64() & 0x000000ffUL);
+    }
+    
+    if(Nk == 8){
+        Key[24] = (k7.get_uint64() & 0xff000000UL) >> 24;
+        Key[25] = (k7.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[26] = (k7.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[27] = (k7.get_uint64() & 0x000000ffUL);
+
+        Key[28] = (k8.get_uint64() & 0xff000000UL) >> 24;
+        Key[29] = (k8.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[31] = (k8.get_uint64() & 0x000000ffUL);
+    }
+  
 	// The KeyExpansion routine is called before encryption.
 	KeyExpansion();
 
@@ -587,16 +616,21 @@ void verify_hash_equals(bm::Data & equals, bm::Data & hash1, bm::Data & hash2) {
         areEquals &= shaSavedChar1[i] == shaSavedChar2[i];
     }
     if(areEquals) {
-        printf("\n\nEQUALSSS\n\n");
+        printf("\n\nEQUALS\n\n");
     } else {
         printf("\n\nNOT EQUALS\n\n");
     }
     equals.set(areEquals);
 }
 
-void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & len) {
+void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len) {
 	int i;
-	Nk = 4;
+    if(k4.get_string() == "0") //128 bit encryption key
+        Nk = 4;
+    else if(k6.get_string() == "0") //192 bit encryption key
+        Nk = 6;
+    else Nk = 8; //256 bit encryption key
+
 
 	// Calculate Nr from Nk and, implicitly, from Nb
 	Nr = Nk + 6;
@@ -622,9 +656,35 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
     Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
 
+    if(Nk == 6 || Nk == 8){
+        Key[16] = (k5.get_uint64() & 0xff000000UL) >> 24;
+        Key[17] = (k5.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[18] = (k5.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[19] = (k5.get_uint64() & 0x000000ffUL);
 
+        Key[20] = (k6.get_uint64() & 0xff000000UL) >> 24;
+        Key[21] = (k6.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[22] = (k6.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[23] = (k6.get_uint64() & 0x000000ffUL);
+    }
+    
+    if(Nk == 8){
+        Key[24] = (k7.get_uint64() & 0xff000000UL) >> 24;
+        Key[25] = (k7.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[26] = (k7.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[27] = (k7.get_uint64() & 0x000000ffUL);
+
+        Key[28] = (k8.get_uint64() & 0xff000000UL) >> 24;
+        Key[29] = (k8.get_uint64() & 0x00ff0000UL) >> 16;
+        Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
+        Key[31] = (k8.get_uint64() & 0x000000ffUL);
+    }
+
+
+    // Get the input string
 	string input = a.get_string();
 	long totalLength = len.get_uint64();
+
 	char str[totalLength+1];
 
 	long inputLength = totalLength;
@@ -635,14 +695,14 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
 	long crypt_payload_length = get_crypt_payload_length(totalLength);
     long shift_size = get_shift_size(crypt_payload_length);
 
-    for (i=0; i < initialPadding; i++) {
+	for (i=0; i < initialPadding; i++) {
         str[i] = 0x00;
     }
 
-    for (i=initialPadding; i < totalLength; i++) {
-        str[i] = input[i-initialPadding];
-    }
-    str[totalLength] = '\0';
+	for (i=initialPadding; i < totalLength; i++) {
+	    str[i] = input[i-initialPadding];
+	}
+	str[totalLength] = '\0';
 
 	// The KeyExpansion routine is called before encryption.
 	KeyExpansion();
@@ -657,7 +717,6 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
 
 		// The block is encrypted here - the result is in the array 'out'
 		Cipher();
-
 		// Output the encrypted block.
 		for (int i = 0; i < Nb*4; i++) {
 			char s[9];
@@ -665,6 +724,7 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
 			result += s;
 		}
 	}
+
     for(int i = 0; i < shift_size; i++) {
         char s[9];
         sprintf(s, "%02x", '\0');
@@ -990,7 +1050,7 @@ void sha256_hash_1024(bm::Data & a, bm::Data & b, bm::Data & c, bm::Data & d, bm
 //	str = str + payload;
 
 
-    for (int i = 0; i < totalLength; i++) {
+	for (int i = 0; i < totalLength; i++) {
         char s[9];
         sprintf(s, "%02x", payload[i]);
         str += s;
@@ -1023,5 +1083,12 @@ BM_REGISTER_EXTERN_FUNCTION(verify_hash_equals, bm::Data &, bm::Data &, bm::Data
 
 
 
-BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
-BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &,
+    bm::Data &, bm::Data &, bm::Data &, bm::Data &,
+    bm::Data &, bm::Data &, bm::Data &, bm::Data &,
+    bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &,
+    bm::Data &, bm::Data &, bm::Data &, bm::Data &,
+    bm::Data &, bm::Data &, bm::Data &, bm::Data &,
+    bm::Data &,
+    bm::Data &, bm::Data &, bm::Data &);

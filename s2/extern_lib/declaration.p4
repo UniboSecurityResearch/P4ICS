@@ -20,5 +20,5 @@ extern void sha256_hash_1024<T, B, C, D, E, F>(inout T a, in B b, in C c, in D d
 extern void verify_hash_equals<A, B, C>(inout A a, in B b, in C c);
 
 
-extern void Encrypt<T, B, K, L, N, M, O>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O len);
-extern void Decrypt<T, B, K, L, N, M, O, P, Q, R>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O len, in P sha, in Q seqNo, inout R shaCalculated);
+extern void Encrypt<T, B, K, L, N, M, O, P, Q, R, S>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O k5, in P k6, in Q k7, in R k8, in S len);
+extern void Decrypt<T, B, K, L, N, M, O, P, Q, R, S, W, Z, Y>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O k5, in P k6, in Q k7, in R k8, in S len, in W sha, in Z seqNo, inout Y shaCalculated);

@@ -1,0 +1,1323 @@
+Calling target program-options parser
+[11:33:11.422] [bmv2] [D] [thread 131] Set default default entry for table 'MyIngress.ipv4_lpm': MyIngress.drop - 
+[11:33:11.422] [bmv2] [D] [thread 131] Set default default entry for table 'MyIngress.modbus_sec': MyIngress.decipher - 
+[11:33:11.423] [bmv2] [D] [thread 131] Set default default entry for table 'tbl_modbus_extraction473': modbus_extraction473 - 
+Adding interface eth0 as port 1
+[11:33:11.424] [bmv2] [D] [thread 131] Adding interface eth0 as port 1
+Adding interface eth1 as port 2
+[11:33:11.436] [bmv2] [D] [thread 131] Adding interface eth1 as port 2
+[11:33:11.446] [bmv2] [I] [thread 131] Starting Thrift server on port 9090
+[11:33:11.446] [bmv2] [I] [thread 131] Thrift server was started
+[11:33:21.546] [bmv2] [T] [thread 146] bm_get_config
+[11:33:21.551] [bmv2] [T] [thread 146] bm_set_default_action
+[11:33:21.551] [bmv2] [D] [thread 146] Set default entry for table 'MyIngress.ipv4_lpm': MyIngress.drop - 
+[11:33:21.552] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.552] [bmv2] [D] [thread 146] Entry 0 added to table 'MyIngress.ipv4_lpm'
+[11:33:21.552] [bmv2] [D] [thread 146] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:21.552] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.552] [bmv2] [D] [thread 146] Entry 1 added to table 'MyIngress.ipv4_lpm'
+[11:33:21.552] [bmv2] [D] [thread 146] Dumping entry 1
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010108/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:21.552] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.552] [bmv2] [D] [thread 146] Entry 2 added to table 'MyIngress.ipv4_lpm'
+[11:33:21.552] [bmv2] [D] [thread 146] Dumping entry 2
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010109/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:21.552] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.552] [bmv2] [D] [thread 146] Entry 3 added to table 'MyIngress.ipv4_lpm'
+[11:33:21.552] [bmv2] [D] [thread 146] Dumping entry 3
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c30b0e05/32
+Action entry: MyIngress.ipv4_forward - a000101,1,
+
+[11:33:21.553] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.553] [bmv2] [D] [thread 146] Entry 4 added to table 'MyIngress.ipv4_lpm'
+[11:33:21.553] [bmv2] [D] [thread 146] Dumping entry 4
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c30b0e06/32
+Action entry: MyIngress.ipv4_forward - a000201,1,
+
+[11:33:21.553] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.553] [bmv2] [D] [thread 146] Entry 5 added to table 'MyIngress.ipv4_lpm'
+[11:33:21.553] [bmv2] [D] [thread 146] Dumping entry 5
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c30b0e07/32
+Action entry: MyIngress.ipv4_forward - a000201,1,
+
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.553] [bmv2] [T] [thread 146] bm_register_write
+[11:33:21.554] [bmv2] [T] [thread 146] bm_table_add_entry
+[11:33:21.554] [bmv2] [D] [thread 146] Entry 0 added to table 'MyIngress.modbus_sec'
+[11:33:21.554] [bmv2] [D] [thread 146] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Processing packet received on port 1
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser 'parser': start
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Extracting header 'ethernet'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] Bytes parsed: 14
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Extracting header 'ipv4'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] Bytes parsed: 34
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] Bytes parsed: 34
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Extracting header 'tcp'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 320
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 320
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 0
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 0
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser state 'parse_tcp': key is 0000
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] Bytes parsed: 54
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Parser 'parser': end
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Pipeline 'ingress': start
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:44.492] [bmv2] [T] [thread 137] [0.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is false
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Pipeline 'ingress': end
+[11:33:44.492] [bmv2] [D] [thread 137] [0.0] [cxt 0] Egress port is 2
+[11:33:44.492] [bmv2] [D] [thread 140] [0.0] [cxt 0] Pipeline 'egress': start
+[11:33:44.492] [bmv2] [T] [thread 140] [0.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:44.492] [bmv2] [D] [thread 140] [0.0] [cxt 0] Looking up key:
+
+[11:33:44.492] [bmv2] [D] [thread 140] [0.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:44.492] [bmv2] [D] [thread 140] [0.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:44.492] [bmv2] [T] [thread 140] [0.0] [cxt 0] Action modbus_extraction473
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 0
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 0 with value 604
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 0 with value 54
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 1
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:44.493] [bmv2] [T] [thread 140] [0.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33100435
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Pipeline 'egress': end
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Deparser 'deparser': start
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Updating checksum 'cksum'
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Deparsing header 'tcp'
+[11:33:44.493] [bmv2] [D] [thread 140] [0.0] [cxt 0] Deparser 'deparser': end
+[11:33:44.493] [bmv2] [D] [thread 142] [0.0] [cxt 0] Transmitting packet of size 74 out of port 2
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Processing packet received on port 2
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser 'parser': start
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Extracting header 'ethernet'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] Bytes parsed: 14
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Extracting header 'ipv4'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] Bytes parsed: 34
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] Bytes parsed: 34
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Extracting header 'tcp'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 320
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 320
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 0
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 0
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser state 'parse_tcp': key is 0000
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] Bytes parsed: 54
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Parser 'parser': end
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Pipeline 'ingress': start
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c30b0e05
+
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 3
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Dumping entry 3
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c30b0e05/32
+Action entry: MyIngress.ipv4_forward - a000101,1,
+
+[11:33:44.495] [bmv2] [D] [thread 137] [1.0] [cxt 0] Action entry is MyIngress.ipv4_forward - a000101,1,
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:44.495] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:44.496] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:44.496] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:44.496] [bmv2] [T] [thread 137] [1.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is false
+[11:33:44.496] [bmv2] [D] [thread 137] [1.0] [cxt 0] Pipeline 'ingress': end
+[11:33:44.496] [bmv2] [D] [thread 137] [1.0] [cxt 0] Egress port is 1
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Pipeline 'egress': start
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Looking up key:
+
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Action modbus_extraction473
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 1
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 1 with value 499
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 1 with value 33
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 2
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:44.496] [bmv2] [T] [thread 139] [1.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33103731
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Pipeline 'egress': end
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Deparser 'deparser': start
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Updating checksum 'cksum'
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Deparsing header 'tcp'
+[11:33:44.496] [bmv2] [D] [thread 139] [1.0] [cxt 0] Deparser 'deparser': end
+[11:33:44.496] [bmv2] [D] [thread 142] [1.0] [cxt 0] Transmitting packet of size 74 out of port 1
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Processing packet received on port 1
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser 'parser': start
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Extracting header 'ethernet'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] Bytes parsed: 14
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Extracting header 'ipv4'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] Bytes parsed: 34
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] Bytes parsed: 34
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Extracting header 'tcp'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 256
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 0
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 0
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser state 'parse_tcp': key is 0000
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] Bytes parsed: 54
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Parser 'parser': end
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Pipeline 'ingress': start
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:44.496] [bmv2] [D] [thread 137] [2.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:44.496] [bmv2] [T] [thread 137] [2.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is false
+[11:33:44.497] [bmv2] [D] [thread 137] [2.0] [cxt 0] Pipeline 'ingress': end
+[11:33:44.497] [bmv2] [D] [thread 137] [2.0] [cxt 0] Egress port is 2
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Processing packet received on port 1
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser': start
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Extracting header 'ethernet'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Pipeline 'egress': start
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 14
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Extracting header 'ipv4'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Looking up key:
+
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 34
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Action modbus_extraction473
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 34
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Extracting header 'tcp'
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 2
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 2 with value 462
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 2 with value 14
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 3
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:44.497] [bmv2] [T] [thread 140] [2.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33104721
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Pipeline 'egress': end
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Deparser 'deparser': start
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Updating checksum 'cksum'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 54
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Deparsing header 'tcp'
+[11:33:44.497] [bmv2] [D] [thread 140] [2.0] [cxt 0] Deparser 'deparser': end
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:44.497] [bmv2] [D] [thread 142] [2.0] [cxt 0] Transmitting packet of size 66 out of port 2
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 54
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 73
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Bytes parsed: 78
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Parser 'parser': end
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Pipeline 'ingress': start
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:44.497] [bmv2] [D] [thread 137] [3.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:44.497] [bmv2] [T] [thread 137] [3.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:44.498] [bmv2] [D] [thread 137] [3.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:44.498] [bmv2] [D] [thread 137] [3.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:44.498] [bmv2] [D] [thread 137] [3.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:44.498] [bmv2] [D] [thread 137] [3.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Action MyIngress.cipher
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Primitive (no source info)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Primitive (no source info)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Primitive (no source info)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] Primitive (no source info)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:44.498] [bmv2] [T] [thread 137] [3.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:44.498] [bmv2] [D] [thread 137] [3.0] [cxt 0] Pipeline 'ingress': end
+[11:33:44.498] [bmv2] [D] [thread 137] [3.0] [cxt 0] Egress port is 2
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Pipeline 'egress': start
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Looking up key:
+
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Action modbus_extraction473
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 3
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 3 with value 1729
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 3 with value 13
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 4
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:44.498] [bmv2] [T] [thread 140] [3.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33105038
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Pipeline 'egress': end
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparser 'deparser': start
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Updating checksum 'cksum'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'tcp'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:44.498] [bmv2] [D] [thread 140] [3.0] [cxt 0] Deparser 'deparser': end
+[11:33:44.498] [bmv2] [D] [thread 142] [3.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Processing packet received on port 1
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser': start
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Extracting header 'ethernet'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 14
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Extracting header 'ipv4'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 34
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 34
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Extracting header 'tcp'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 54
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 54
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 73
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Bytes parsed: 78
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Parser 'parser': end
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Pipeline 'ingress': start
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:44.707] [bmv2] [D] [thread 137] [4.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Action MyIngress.cipher
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:44.707] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Primitive (no source info)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Primitive (no source info)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Primitive (no source info)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] Primitive (no source info)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:44.708] [bmv2] [T] [thread 137] [4.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:44.708] [bmv2] [D] [thread 137] [4.0] [cxt 0] Pipeline 'ingress': end
+[11:33:44.708] [bmv2] [D] [thread 137] [4.0] [cxt 0] Egress port is 2
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Pipeline 'egress': start
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Looking up key:
+
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Action modbus_extraction473
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 4
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 4 with value 1327
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 4 with value 39
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 5
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:44.708] [bmv2] [T] [thread 140] [4.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33315196
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Pipeline 'egress': end
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparser 'deparser': start
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Updating checksum 'cksum'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'tcp'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:44.708] [bmv2] [D] [thread 140] [4.0] [cxt 0] Deparser 'deparser': end
+[11:33:44.708] [bmv2] [D] [thread 142] [4.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Processing packet received on port 1
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser': start
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Extracting header 'ethernet'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 14
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Extracting header 'ipv4'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 34
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 34
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Extracting header 'tcp'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 54
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 54
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 73
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Bytes parsed: 78
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Parser 'parser': end
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Pipeline 'ingress': start
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:44.915] [bmv2] [D] [thread 137] [5.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Action MyIngress.cipher
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Primitive (no source info)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Primitive (no source info)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Primitive (no source info)
+[11:33:44.915] [bmv2] [T] [thread 137] [5.0] [cxt 0] Primitive (no source info)
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:44.916] [bmv2] [T] [thread 137] [5.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:44.916] [bmv2] [D] [thread 137] [5.0] [cxt 0] Pipeline 'ingress': end
+[11:33:44.916] [bmv2] [D] [thread 137] [5.0] [cxt 0] Egress port is 2
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Pipeline 'egress': start
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Looking up key:
+
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Action modbus_extraction473
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 5
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 5 with value 1172
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 5 with value 21
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 6
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:44.916] [bmv2] [T] [thread 140] [5.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33523199
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Pipeline 'egress': end
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparser 'deparser': start
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Updating checksum 'cksum'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'tcp'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:44.916] [bmv2] [D] [thread 140] [5.0] [cxt 0] Deparser 'deparser': end
+[11:33:44.916] [bmv2] [D] [thread 142] [5.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Processing packet received on port 1
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser': start
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Extracting header 'ethernet'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 14
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Extracting header 'ipv4'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 34
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 34
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Extracting header 'tcp'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 54
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 54
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 73
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Bytes parsed: 78
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Parser 'parser': end
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Pipeline 'ingress': start
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:45.331] [bmv2] [D] [thread 137] [6.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Action MyIngress.cipher
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:45.331] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] Primitive (no source info)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] Primitive (no source info)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] Primitive (no source info)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] Primitive (no source info)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:45.332] [bmv2] [T] [thread 137] [6.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:45.332] [bmv2] [D] [thread 137] [6.0] [cxt 0] Pipeline 'ingress': end
+[11:33:45.332] [bmv2] [D] [thread 137] [6.0] [cxt 0] Egress port is 2
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Pipeline 'egress': start
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Looking up key:
+
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Action modbus_extraction473
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 6
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 6 with value 1226
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 6 with value 40
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 7
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:45.332] [bmv2] [T] [thread 140] [6.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 33939231
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Pipeline 'egress': end
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparser 'deparser': start
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Updating checksum 'cksum'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'tcp'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:45.332] [bmv2] [D] [thread 140] [6.0] [cxt 0] Deparser 'deparser': end
+[11:33:45.332] [bmv2] [D] [thread 142] [6.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Processing packet received on port 1
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser': start
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Extracting header 'ethernet'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 14
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Extracting header 'ipv4'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 34
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 34
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Extracting header 'tcp'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 54
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 54
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 73
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Bytes parsed: 78
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Parser 'parser': end
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Pipeline 'ingress': start
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:46.155] [bmv2] [D] [thread 137] [7.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Action MyIngress.cipher
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:46.155] [bmv2] [T] [thread 137] [7.0] [cxt 0] Primitive (no source info)
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] Primitive (no source info)
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] Primitive (no source info)
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] Primitive (no source info)
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:46.156] [bmv2] [T] [thread 137] [7.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:46.156] [bmv2] [D] [thread 137] [7.0] [cxt 0] Pipeline 'ingress': end
+[11:33:46.156] [bmv2] [D] [thread 137] [7.0] [cxt 0] Egress port is 2
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Pipeline 'egress': start
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Looking up key:
+
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Action modbus_extraction473
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 7
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 7 with value 1224
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 7 with value 40
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 8
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:46.156] [bmv2] [T] [thread 140] [7.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 34763196
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Pipeline 'egress': end
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparser 'deparser': start
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Updating checksum 'cksum'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'tcp'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:46.156] [bmv2] [D] [thread 140] [7.0] [cxt 0] Deparser 'deparser': end
+[11:33:46.156] [bmv2] [D] [thread 142] [7.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Processing packet received on port 1
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser': start
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Extracting header 'ethernet'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 14
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Extracting header 'ipv4'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 34
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 34
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Extracting header 'tcp'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 54
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 54
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 73
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Bytes parsed: 78
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Parser 'parser': end
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Pipeline 'ingress': start
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:47.819] [bmv2] [D] [thread 137] [8.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Action MyIngress.cipher
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:47.819] [bmv2] [T] [thread 137] [8.0] [cxt 0] Primitive (no source info)
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] Primitive (no source info)
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] Primitive (no source info)
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] Primitive (no source info)
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:47.820] [bmv2] [T] [thread 137] [8.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:47.820] [bmv2] [D] [thread 137] [8.0] [cxt 0] Pipeline 'ingress': end
+[11:33:47.820] [bmv2] [D] [thread 137] [8.0] [cxt 0] Egress port is 2
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Pipeline 'egress': start
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Looking up key:
+
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Action modbus_extraction473
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 8
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 8 with value 1218
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 8 with value 25
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 9
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:47.820] [bmv2] [T] [thread 140] [8.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 36427214
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Pipeline 'egress': end
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparser 'deparser': start
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Updating checksum 'cksum'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'tcp'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:47.820] [bmv2] [D] [thread 140] [8.0] [cxt 0] Deparser 'deparser': end
+[11:33:47.820] [bmv2] [D] [thread 142] [8.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Processing packet received on port 1
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser': start
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Extracting header 'ethernet'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 14
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Extracting header 'ipv4'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 34
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 34
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Extracting header 'tcp'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 54
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 54
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 73
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Bytes parsed: 78
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Parser 'parser': end
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Pipeline 'ingress': start
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:51.147] [bmv2] [D] [thread 137] [9.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Action MyIngress.cipher
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:51.147] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] Primitive (no source info)
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] Primitive (no source info)
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] Primitive (no source info)
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] Primitive (no source info)
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:51.148] [bmv2] [T] [thread 137] [9.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:51.148] [bmv2] [D] [thread 137] [9.0] [cxt 0] Pipeline 'ingress': end
+[11:33:51.148] [bmv2] [D] [thread 137] [9.0] [cxt 0] Egress port is 2
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Pipeline 'egress': start
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Looking up key:
+
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Action modbus_extraction473
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 9
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 9 with value 1234
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 9 with value 21
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 10
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:51.148] [bmv2] [T] [thread 140] [9.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 39755193
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Pipeline 'egress': end
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparser 'deparser': start
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Updating checksum 'cksum'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'tcp'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:51.148] [bmv2] [D] [thread 140] [9.0] [cxt 0] Deparser 'deparser': end
+[11:33:51.148] [bmv2] [D] [thread 142] [9.0] [cxt 0] Transmitting packet of size 365 out of port 2
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Processing packet received on port 1
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser': start
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'start'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Extracting header 'ethernet'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'start': key is 0800
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 14
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'parse_ipv4'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Extracting header 'ipv4'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'parse_ipv4': key is 05
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 34
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'no_parse_ipv4_options'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'no_parse_ipv4_options': key is 06
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 34
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'parse_tcp'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Extracting header 'tcp'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_full_length0' from expression, new value is 352
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_header_length2' from expression, new value is 256
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser set: setting field 'scalars.metadata._tcp_metadata_payload_length4' from expression, new value is 96
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser set: setting field 'scalars.tmp' from expression, new value is 96
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'parse_tcp': key is 0060
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 54
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'check_dst_port_tcp'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'check_dst_port_tcp': key is 01f6
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 54
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'extract_modbus_tcp'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Extracting header 'tcp_options'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Extracting header 'modbus_tcp'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'extract_modbus_tcp': key is 0006
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 73
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser' entering state 'parse_payload_modbus'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser set: setting field 'scalars.tmp_0' from expression, new value is 40
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Extracting variable-sized header 'payload'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser state 'parse_payload_modbus' has no switch, going to default next state
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Bytes parsed: 78
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Parser 'parser': end
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Pipeline 'ingress': start
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(438) Condition "hdr.ipv4.isValid()" (node_2) is true
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Applying table 'MyIngress.ipv4_lpm'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Looking up key:
+* hdr.ipv4.dstAddr    : c8010107
+
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Table 'MyIngress.ipv4_lpm': hit with handle 0
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Dumping entry 0
+Match key:
+* hdr.ipv4.dstAddr    : LPM       c8010107/32
+Action entry: MyIngress.ipv4_forward - 3,2,
+
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Action entry is MyIngress.ipv4_forward - 3,2,
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Action MyIngress.ipv4_forward
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(341) Primitive standard_metadata.egress_spec = port
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(342) Primitive hdr.ethernet.srcAddr = hdr.ethernet.dstAddr
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(343) Primitive hdr.ethernet.dstAddr = dstAddr
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(344) Primitive hdr.ipv4.ttl = hdr.ipv4.ttl - 1
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(440) Condition "hdr.tcp.isValid()" (node_4) is true
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(441) Condition "hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()" (node_5) is true
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Applying table 'MyIngress.modbus_sec'
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Looking up key:
+* standard_metadata.egress_spec: 0002
+
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Table 'MyIngress.modbus_sec': hit with handle 0
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Dumping entry 0
+Match key:
+* standard_metadata.egress_spec: EXACT     0002
+Action entry: MyIngress.cipher - 
+
+[11:33:58.123] [bmv2] [D] [thread 137] [10.0] [cxt 0] Action entry is MyIngress.cipher - 
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Action MyIngress.cipher
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(361) Primitive hdr.payload_encrypt.setValid()
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(362) Primitive hdr.ipv4_options.setValid()
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(365) Primitive keys.read(k1, 0)
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 0 read value 729683222
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(366) Primitive keys.read(k2, 1)
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 1 read value 682545830
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(367) Primitive keys.read(k3, 2)
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 2 read value 2885096840
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(368) Primitive keys.read(k4, 3)
+[11:33:58.123] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 3 read value 164581180
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(369) Primitive keys.read(k5, 4)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 4 read value 102358694
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(370) Primitive keys.read(k6, 5)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 5 read value 259174683
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(371) Primitive keys.read(k7, 6)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 6 read value 0
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(372) Primitive keys.read(k8, 7)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Read register 'MyIngress.keys' at index 7 read value 0
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(373) Primitive bit<16> useful_length_fixed = 0;
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Primitive (no source info)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Primitive (no source info)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Primitive (no source info)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] Primitive (no source info)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(383) Primitive hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(384) Primitive useful_length_fixed
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(384) Primitive sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(385) Primitive hdr.ipv4.ihl = 14
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(386) Primitive Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed)
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(388) Primitive hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36
+[11:33:58.124] [bmv2] [T] [thread 137] [10.0] [cxt 0] modbus_extraction.p4(389) Primitive hdr.payload.setInvalid()
+[11:33:58.124] [bmv2] [D] [thread 137] [10.0] [cxt 0] Pipeline 'ingress': end
+[11:33:58.124] [bmv2] [D] [thread 137] [10.0] [cxt 0] Egress port is 2
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Pipeline 'egress': start
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Applying table 'tbl_modbus_extraction473'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Looking up key:
+
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Table 'tbl_modbus_extraction473': miss
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Action entry is modbus_extraction473 - 
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Action modbus_extraction473
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(473) Primitive last_saved_index.read(current_index, 0)
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Read register 'MyEgress.last_saved_index' at index 0 read value 10
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(477) Primitive standard_metadata.egress_global_timestamp-standard_metadata.ingress_global_timestamp
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(476) Primitive packet_processing_time_array.write(current_index, ...
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Wrote register 'MyEgress.packet_processing_time_array' at index 10 with value 1365
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(480) Primitive packet_dequeuing_timedelta_array.write(current_index, ...
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Wrote register 'MyEgress.packet_dequeuing_timedelta_array' at index 10 with value 44
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(484) Primitive current_index + 1
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(484) Primitive last_saved_index.write(0, current_index + 1)
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Wrote register 'MyEgress.last_saved_index' at index 0 with value 11
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] modbus_extraction.p4(487) Primitive timestamp_last_seen_packet.write(0, standard_metadata.ingress_global_timestamp)
+[11:33:58.124] [bmv2] [T] [thread 140] [10.0] [cxt 0] Wrote register 'MyEgress.timestamp_last_seen_packet' at index 0 with value 46731212
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Pipeline 'egress': end
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparser 'deparser': start
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Updating checksum 'cksum'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'ethernet'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'ipv4'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'ipv4_options'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'tcp'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'tcp_options'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'modbus_tcp'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparsing header 'payload_encrypt'
+[11:33:58.124] [bmv2] [D] [thread 140] [10.0] [cxt 0] Deparser 'deparser': end
+[11:33:58.124] [bmv2] [D] [thread 142] [10.0] [cxt 0] Transmitting packet of size 365 out of port 2

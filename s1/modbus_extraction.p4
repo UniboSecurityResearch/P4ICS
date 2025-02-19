@@ -331,7 +331,7 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-   register<bit<32>>(4) keys;
+   register<bit<32>>(8) keys;
 
     action drop() {
         mark_to_drop(standard_metadata);
@@ -361,10 +361,15 @@ control MyIngress(inout headers hdr,
         hdr.payload_encrypt.setValid();
         hdr.ipv4_options.setValid();
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
+        bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
         keys.read(k1, 0);
         keys.read(k2, 1);
         keys.read(k3, 2);
         keys.read(k4, 3);
+        keys.read(k5, 4);
+        keys.read(k6, 5);
+        keys.read(k7, 6);
+        keys.read(k8, 7);
         bit<16> useful_length_fixed = 0;
         if(hdr.modbus_tcp.isValid()) {
             useful_length_fixed = hdr.modbus_tcp.length - 1;
@@ -378,7 +383,7 @@ control MyIngress(inout headers hdr,
         hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed;
         sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed);
         hdr.ipv4.ihl = 14;
-        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, useful_length_fixed);
+        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed);
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
         hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36; //36 is the ipv4 options size in bytes
         hdr.payload.setInvalid();
@@ -387,10 +392,15 @@ control MyIngress(inout headers hdr,
     action decipher() {
         hdr.payload_decrypt.setValid();
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
+        bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
         keys.read(k1, 0);
         keys.read(k2, 1);
         keys.read(k3, 2);
         keys.read(k4, 3);
+        keys.read(k5, 4);
+        keys.read(k6, 5);
+        keys.read(k7, 6);
+        keys.read(k8, 7);
         bit<16> useful_length_fixed = 0;
         if (hdr.modbus_tcp.isValid()) {
             useful_length_fixed = hdr.modbus_tcp.length - 1;
@@ -402,7 +412,7 @@ control MyIngress(inout headers hdr,
             useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
         }
         hdr.temp.setValid();
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, useful_length_fixed, hdr.ipv4_options.sha, hdr.tcp.seqNo, hdr.temp.shaCalculated);//check metadata
+        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed, hdr.ipv4_options.sha, hdr.tcp.seqNo, hdr.temp.shaCalculated);//check metadata
         hdr.ipv4.ihl = 5;
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
         hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed - 36;
