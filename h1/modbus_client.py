@@ -1,4 +1,4 @@
-  from pymodbus.client import AsyncModbusTcpClient
+from pymodbus.client import AsyncModbusTcpClient
 import asyncio
 import time
 import argparse
