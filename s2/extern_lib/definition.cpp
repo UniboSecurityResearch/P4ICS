@@ -477,12 +477,24 @@ long get_shift_size(long crypt_payload_length) {
 
 void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len, bm::Data & sha, bm::Data & seqNo, bm::Data & shaCalculated) {
 	int i;
-    if(k4.get_string() == "0") //128 bit encryption key
-        Nk = 4;
-    else if(k6.get_string() == "0") //192 bit encryption key
-        Nk = 6;
-    else Nk = 8; //256 bit encryption key
 
+    // Create an array of pointers to the references.
+    bm::Data keys[] = { k1, k2, k3, k4, k5, k6, k7, k8 };
+
+    //if there is no register equal to 0, the value of Nk will be 8
+    Nk = 8;
+
+    // Iterate starting from k0 (index 0) up to k8 (index 7)
+    for (int i = 0; i <= 7; i++) {
+        printf("%lu\n", keys[i].get_uint64());
+        if (keys[i].get_uint64() == 0) {
+            Nk = i;
+            break;
+        }
+    }
+
+
+    printf("Nk=%ld\n",Nk);
 
 	// Calculate Nr from Nk and, implicitly, from Nb
 	Nr = Nk + 6;
@@ -508,24 +520,26 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
     Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
 
-    if(Nk == 6 || Nk == 8){
+    if(Nk > 4){
         Key[16] = (k5.get_uint64() & 0xff000000UL) >> 24;
         Key[17] = (k5.get_uint64() & 0x00ff0000UL) >> 16;
         Key[18] = (k5.get_uint64() & 0x0000ff00UL) >> 8;
         Key[19] = (k5.get_uint64() & 0x000000ffUL);
-
+    }
+    if(Nk > 5){
         Key[20] = (k6.get_uint64() & 0xff000000UL) >> 24;
         Key[21] = (k6.get_uint64() & 0x00ff0000UL) >> 16;
         Key[22] = (k6.get_uint64() & 0x0000ff00UL) >> 8;
         Key[23] = (k6.get_uint64() & 0x000000ffUL);
     }
-    
-    if(Nk == 8){
+    if(Nk > 6){
         Key[24] = (k7.get_uint64() & 0xff000000UL) >> 24;
         Key[25] = (k7.get_uint64() & 0x00ff0000UL) >> 16;
         Key[26] = (k7.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[27] = (k7.get_uint64() & 0x000000ffUL);
-
+        Key[27] = (k7.get_uint64() & 0x000000ffUL);   
+    }
+    
+    if(Nk > 7){
         Key[28] = (k8.get_uint64() & 0xff000000UL) >> 24;
         Key[29] = (k8.get_uint64() & 0x00ff0000UL) >> 16;
         Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
@@ -586,12 +600,11 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
         }
     }
 
-    string shaSaved = sha.get_string();
     string shaCalculatedString = sha256_hash_1024_internal(k1, k2, seqNo, result);
 
     for(int i = 0; i < shift_size + bytesNotInserted; i++) {
         char s[9];
-        sprintf(s, "%02x", '\0'); //try (int)
+        sprintf(s, "%02x", '\0');
         result += s;
     }
 
@@ -625,12 +638,23 @@ void verify_hash_equals(bm::Data & equals, bm::Data & hash1, bm::Data & hash2) {
 
 void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len) {
 	int i;
-    if(k4.get_string() == "0") //128 bit encryption key
-        Nk = 4;
-    else if(k6.get_string() == "0") //192 bit encryption key
-        Nk = 6;
-    else Nk = 8; //256 bit encryption key
 
+    // Create an array of pointers to the references.
+    bm::Data keys[] = { k1, k2, k3, k4, k5, k6, k7, k8 };
+
+    //if there is no register equal to 0, the value of Nk will be 8
+    Nk = 8;
+
+    // Iterate starting from k0 (index 0) up to k8 (index 7)
+    for (int i = 0; i <= 7; i++) {
+        printf("%lu\n", keys[i].get_uint64());
+        if (keys[i].get_uint64() == 0) {
+            Nk = i;
+            break;
+        }
+    }
+
+    printf("Nk=%ld\n",Nk);
 
 	// Calculate Nr from Nk and, implicitly, from Nb
 	Nr = Nk + 6;
@@ -656,24 +680,26 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
     Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
 
-    if(Nk == 6 || Nk == 8){
+    if(Nk > 4){
         Key[16] = (k5.get_uint64() & 0xff000000UL) >> 24;
         Key[17] = (k5.get_uint64() & 0x00ff0000UL) >> 16;
         Key[18] = (k5.get_uint64() & 0x0000ff00UL) >> 8;
         Key[19] = (k5.get_uint64() & 0x000000ffUL);
-
+    }
+    if(Nk > 5){
         Key[20] = (k6.get_uint64() & 0xff000000UL) >> 24;
         Key[21] = (k6.get_uint64() & 0x00ff0000UL) >> 16;
         Key[22] = (k6.get_uint64() & 0x0000ff00UL) >> 8;
         Key[23] = (k6.get_uint64() & 0x000000ffUL);
     }
-    
-    if(Nk == 8){
+    if(Nk > 6){
         Key[24] = (k7.get_uint64() & 0xff000000UL) >> 24;
         Key[25] = (k7.get_uint64() & 0x00ff0000UL) >> 16;
         Key[26] = (k7.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[27] = (k7.get_uint64() & 0x000000ffUL);
-
+        Key[27] = (k7.get_uint64() & 0x000000ffUL);   
+    }
+    
+    if(Nk > 7){
         Key[28] = (k8.get_uint64() & 0xff000000UL) >> 24;
         Key[29] = (k8.get_uint64() & 0x00ff0000UL) >> 16;
         Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
