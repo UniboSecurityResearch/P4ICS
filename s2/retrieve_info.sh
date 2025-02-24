@@ -66,17 +66,26 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+MODE=""
+
+if [ "$READ_FLAG" = true ]; then
+    MODE="read"
+fi
+
+if [ "$WRITE_FLAG" = true ]; then
+    MODE="write"
+fi
 
 if [ "$PPT_FLAG" = true ]; then
     echo "PPT option was selected"
-    echo "packet_processing_time_array: " > /shared/ppt_"${KEY}"-bit_s1.txt 
-    echo "register_read packet_processing_time_array" | simple_switch_CLI >> /shared/ppt_"${KEY}"-bit_s2.txt
+    echo "" > /shared/results_s2_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
+    echo "register_read packet_processing_time_array" | simple_switch_CLI >> /shared/results_s2_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
 fi
 
 if [ "$DEQ_FLAG" = true ]; then
     echo "DEQ option was selected"
-    echo "packet_dequeuing_timedelta_array: " >> /shared/deq_"${KEY}"-bit_s1.txt 
-    echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI >> /shared/deq_"${KEY}"-bit_s2.txt 
+    echo "" > /shared/results_s2_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
+    echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI >> /shared/results_s2_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
 fi
 
 # If no options were provided, show usage

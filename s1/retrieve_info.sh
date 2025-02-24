@@ -2,15 +2,17 @@
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [--ppt BIT_LENGTH] [--deq BIT_LENGTH]"
+    echo "Usage: $0 [--ppt KEY_LENGTH] [--deq KEY_LENGTH] [-r|--read] [-w|--write]"
     echo "Options:"
-    echo "  --ppt BIT_LENGTH    PPT option with key length (128/160/192/224/256)"
-    echo "  --deq BIT_LENGTH    DEQ option with key length (128/160/192/224/256)"
+    echo "  --ppt KEY_LENGTH    PPT option with key length (128/160/192/224/256)"
+    echo "  --deq KEY_LENGTH    DEQ option with key length (128/160/192/224/256)"
+    echo "  -r, --read          Read option"
+    echo "  -w, --write         Write option"
     exit 1
 }
 
-# Function to validate bit length
-validate_bit_length() {
+# Function to validate key length
+validate_key_length() {
     local length=$1
     case "$length" in
         128|160|192|224|256) return 0 ;;
@@ -21,6 +23,8 @@ validate_bit_length() {
 # Initialize variables
 PPT_FLAG=false
 DEQ_FLAG=false
+READ_FLAG=false
+WRITE_FLAG=false
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -28,24 +32,32 @@ while [[ $# -gt 0 ]]; do
         --ppt)
             PPT_FLAG=true
             shift
-            if [[ $# -gt 0 ]] && validate_bit_length "$1"; then
+            if [[ $# -gt 0 ]] && validate_key_length "$1"; then
                 KEY="$1"
                 shift
             else
-                echo "Error: --ppt requires a valid bit length (128/160/192/224/256)"
+                echo "Error: --ppt requires a valid key length (128/160/192/224/256)"
                 usage
             fi
             ;;
         --deq)
             DEQ_FLAG=true
             shift
-            if [[ $# -gt 0 ]] && validate_bit_length "$1"; then
+            if [[ $# -gt 0 ]] && validate_key_length "$1"; then
                 KEY="$1"
                 shift
             else
-                echo "Error: --deq requires a valid bit length (128/160/192/224/256)"
+                echo "Error: --deq requires a valid key length (128/160/192/224/256)"
                 usage
             fi
+            ;;
+        -r|--read)
+            READ_FLAG=true
+            shift
+            ;;
+        -w|--write)
+            WRITE_FLAG=true
+            shift
             ;;
         *)
             echo "Error: Unknown option $1"
@@ -54,17 +66,24 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+MODE=""
+
+if [ "$READ_FLAG" = true ]; then
+    MODE="read"
+fi
+
+if [ "$WRITE_FLAG" = true ]; then
+    MODE="write"
+fi
 
 if [ "$PPT_FLAG" = true ]; then
     echo "PPT option was selected"
-    echo "packet_processing_time_array: " > /shared/ppt_"${KEY}"-bit_s1.txt 
-    echo "register_read packet_processing_time_array" | simple_switch_CLI >> /shared/ppt_"${KEY}"-bit_s1.txt 
+    echo "register_read packet_processing_time_array" | simple_switch_CLI >> /shared/results_s1_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
 fi
 
 if [ "$DEQ_FLAG" = true ]; then
     echo "DEQ option was selected"
-    echo "packet_dequeuing_timedelta_array: " >> /shared/deq_"${KEY}"-bit_s1.txt 
-    echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI >> /shared/deq_"${KEY}"-bit_s1.txt 
+    echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI >> /shared/results_s1_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
 fi
 
 # If no options were provided, show usage
