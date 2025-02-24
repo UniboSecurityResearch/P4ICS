@@ -13,7 +13,7 @@ usage() {
     echo "Measurement options:"
     echo "  --rtt    Measure Round Trip Time"
     echo "  --ppt    Measure Packet Processing Time"
-    echo "  --deq    Measure Dequeuing Time"
+    echo "  --deq    Measure Dequeuing Timedelta"
     echo "Note: If no measurement options are selected, all measurements will be performed"
     exit 1
 }
@@ -275,6 +275,7 @@ register_write keys 7 096548217' ./s2/commands.txt
 
     echo "Processing ${bits}-bit configuration..."
 
+    # RTT - Round Trip Time
     if [ $MEASURE_RTT -eq 1 ]; then
         echo "Measuring Round Trip Time..."
         echo "Starting server in h2..."
@@ -291,78 +292,128 @@ register_write keys 7 096548217' ./s2/commands.txt
         fi
     fi
 
+    # PPT - Packet Prcessing Time
     if [ $MEASURE_PPT -eq 1 ]; then
         echo "Measuring Packet Processing Time..."
-        # If the rtt tests were not executed there are no data on ppt on the switches
-        # so we need to start the modbus client on h1
-        if [ $MEASURE_RTT -ne 1 ]; then
-            #h2
-            echo "Starting server in h2..."
-            kathara exec h2 "python server.py" &
-            # give server the time to start
-            sleep 2
 
-            #h1
-            echo "Starting client in h1..."
-            if ! kathara exec h1 "python modbus_client.py --test-ppt" >/dev/tty 2>&1; then
-                echo "Error: PPT measurement failed | error in modbud clinet on h1"
-                kathara lclean
-                rm -f shared/startup.temp
-                exit
-            fi
-        fi
+        # WRITE
+        #h2
+        echo "Starting server in h2..."
+        kathara exec h2 "python server.py" &
+        # give server the time to start
+        sleep 2
 
-        # retrieve info from the switches
-        #s1
-        echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits}" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s1"
-            kathara lclean
-            rm -f shared/startup.temp
-            exit
-        fi
-
-        #s2
-        echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits}" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s2"
+        #h1
+        echo "Starting client in h1..."
+        if ! kathara exec h1 "python modbus_client.py --test-write" >/dev/tty 2>&1; then
+            echo "Error: PPT measurement failed | error in modbus client on h1"
             kathara lclean
             rm -f shared/startup.temp
             exit
         fi
         
+
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            kathara lclean
+            rm -f shared/startup.temp
+            exit
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            kathara lclean
+            rm -f shared/startup.temp
+            exit
+        fi
+
+        # READ
+        #h1
+        echo "Starting client in h1..."
+        if ! kathara exec h1 "python modbus_client.py --test-read" >/dev/tty 2>&1; then
+            echo "Error: PPT measurement failed | error in modbus client on h1"
+            kathara lclean
+            rm -f shared/startup.temp
+            exit
+        fi      
+
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            kathara lclean
+            rm -f shared/startup.temp
+            exit
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            kathara lclean
+            rm -f shared/startup.temp
+            exit
+        fi  
     fi
 
+    # DEQ - Packet Dequeuing Timedelta
     if [ $MEASURE_DEQ -eq 1 ]; then
-        echo "Measuring Dequeuing Time..."
-        # If the rtt tests were not executed there are no data on deq on the switches
-        # so we need to start the modbus client on h1
-        if [ $MEASURE_RTT -ne 1 ]; then
-            #h2
-            echo "Starting server in h2..."
-            kathara exec h2 "python server.py" &
-            # give server the time to start
-            sleep 3
+        echo "Measuring Dequeuing Timedelta..."
 
-            #h1
-            echo "Starting client in h1..."
-            if ! kathara exec h1 "python modbus_client.py --test-ppt" >/dev/tty 2>&1; then
-                echo "Error: PPT measurement failed | error in modbud clinet on h1"
-                kathara lclean
-            fi
+        # WRITE
+        #h2
+        echo "Starting server in h2..."
+        kathara exec h2 "python server.py" &
+        # give server the time to start
+        sleep 3
+
+        #h1
+        echo "Starting client in h1..."
+        if ! kathara exec h1 "python modbus_client.py --test-write" >/dev/tty 2>&1; then
+            echo "Error: PPT measurement failed | error in modbus client on h1"
+            kathara lclean
         fi
 
         # retrieve info from the switches
         #s1
         echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --deq $bits" >/dev/tty 2>&1; then
+        if ! kathara exec s1 "./retrieve_info.sh --deq $bits -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
             kathara lclean
         fi
 
         #s2
         echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --deq $bits" >/dev/tty 2>&1; then
+        if ! kathara exec s2 "./retrieve_info.sh --deq $bits -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            kathara lclean
+        fi
+
+        # READ
+        #h1
+        echo "Starting client in h1..."
+        if ! kathara exec h1 "python modbus_client.py --test-read" >/dev/tty 2>&1; then
+            echo "Error: PPT measurement failed | error in modbus client on h1"
+            kathara lclean
+        fi
+
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --deq $bits -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            kathara lclean
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --deq $bits -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
             kathara lclean
         fi
@@ -376,7 +427,7 @@ register_write keys 7 096548217' ./s2/commands.txt
 
 }
 
-
+rm -f shared/startup.temp
 # Process each selected configuration
 if [ $BIT_128 -eq 1 ]; then
     run_configuration "128"
