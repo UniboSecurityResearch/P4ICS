@@ -18,6 +18,15 @@ usage() {
     exit 1
 }
 
+# Function to be executed on cleanup
+cleanup() {
+    echo "Performing cleanup..."
+    # Add your cleanup tasks here
+    kathara lclean
+    rm -f shared/startup.temp
+    exit
+}
+
 # Function to check if a container is ready
 wait_for_container() {
     local container=$1
@@ -286,8 +295,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Starting client in h1..."
         if ! kathara exec h1 "python modbus_client.py --test-rtt ${bits}" >/dev/tty 2>&1; then
             echo "Error: RTT measurement failed"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi
     fi
@@ -307,8 +314,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Starting client in h1..."
         if ! kathara exec h1 "python modbus_client.py --test-write" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi
         
@@ -318,8 +323,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Retreiving info from s1"
         if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi
 
@@ -327,8 +330,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Retreiving info from s2"
         if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi
 
@@ -337,8 +338,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Starting client in h1..."
         if ! kathara exec h1 "python modbus_client.py --test-read" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi      
 
@@ -347,8 +346,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Retreiving info from s1"
         if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi
 
@@ -356,8 +353,6 @@ register_write keys 7 096548217' ./s2/commands.txt
         echo "Retreiving info from s2"
         if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
-            kathara lclean
-            rm -f shared/startup.temp
             exit
         fi  
     fi
@@ -424,8 +419,10 @@ register_write keys 7 096548217' ./s2/commands.txt
     echo "Cleaning up ${bits}-bit configuration..."
     rm -f shared/startup.temp
     kathara lclean
+} ## run_configuration()
 
-}
+# Set up trap for both SIGINT and EXIT
+trap cleanup SIGINT EXIT
 
 rm -f shared/startup.temp
 # Process each selected configuration
@@ -449,3 +446,4 @@ if [ $BIT_256 -eq 1 ]; then
     run_configuration "256"
 fi
 
+cp shared/results* results/mul_key
