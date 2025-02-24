@@ -45,14 +45,14 @@ parser.add_argument(
     metavar="KEY_SIZE",
 )
 parser.add_argument(
-    "--test-ppt",
-    help="Test the Packet Processing Time for 100000 times",
+    "--test-read",
+    help="Test read from a register for 100000 times",
     action="store_true",
     required=False,
 )
 parser.add_argument(
-    "--test-deq",
-    help="Test the Packet Dequeuing Time for 100000 times",
+    "--test-write",
+    help="Test write from a register for 100000 times",
     action="store_true",
     required=False,
 )
@@ -137,16 +137,6 @@ async def test_rtt():
     new_value = 45
     key = sys.argv[2]
 
-    ## READ
-    with open(f"/shared/results_10*10000_no_chiper_read_{key}_bit_key.txt", "w") as results_file:
-        for j in range(10):
-            for i in range(10000):
-                time_start = time.time()
-                response = await client.read_holding_registers(register_id, 1, unit=0x01)
-                time_end = time.time()
-                results_file.write("%s\n" % (time_end - time_start))
-                print(f"RTT - Value read from the register {register_id}: {response.registers[0]} - {i} - Test for {key}-bit key")
-
     ## WRITE
     with open(f"/shared/results_10*10000_no_chiper_write_{key}_bit_key.txt", "w") as results_file:
         for j in range(10):
@@ -159,7 +149,17 @@ async def test_rtt():
                 print(f"RTT - Value written into the register {register_id}: {new_value} - {i} - Test for {key}-bit key")
     client.close()
 
-async def test_ppt_deq():
+    ## READ
+    with open(f"/shared/results_10*10000_no_chiper_read_{key}_bit_key.txt", "w") as results_file:
+        for j in range(10):
+            for i in range(10000):
+                time_start = time.time()
+                response = await client.read_holding_registers(register_id, 1, unit=0x01)
+                time_end = time.time()
+                results_file.write("%s\n" % (time_end - time_start))
+                print(f"RTT - Value read from the register {register_id}: {response.registers[0]} - {i} - Test for {key}-bit key")
+
+async def test_read():
     client = AsyncModbusTcpClient("200.1.1.7", 502)
     await client.connect()
     register_id = 0
@@ -167,7 +167,19 @@ async def test_ppt_deq():
     for j in range(10):
         for i in range(10000):
             response = await client.read_holding_registers(register_id, 1, unit=0x01)
-            print(f"PPT-DEQ - Value read from the register {register_id}: {response.registers[0]} - {i} - Test for {key}-bit key")
+            print(f"PPT-DEQ - Value read from the register {register_id}: {response.registers[0]} - {i}")
+    client.close()
+
+async def test_write():
+    client = AsyncModbusTcpClient("200.1.1.7", 502)
+    await client.connect()
+    register_id = 0
+    new_value = 45
+    for j in range(10):
+        for i in range(10000):
+            new_value = random.randint(0, 100)
+            await client.write_register(register_id, new_value, unit=0x01)
+            print(f"PPT-DEQ - Value written into the register {register_id}: {new_value} - {i}")
     client.close()
 
 
@@ -183,7 +195,7 @@ elif args.connect:
     asyncio.run(connect())
 elif args.test_rtt:
     asyncio.run(test_rtt())
-elif args.test_ppt:
-    asyncio.run(test_ppt_deq())
-elif args.test_deq:
-    asyncio.run(test_ppt_deq())
+elif args.test_read:
+    asyncio.run(test_read())
+elif args.test_write:
+    asyncio.run(test_write())
