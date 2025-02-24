@@ -78,12 +78,16 @@ fi
 
 if [ "$PPT_FLAG" = true ]; then
     echo "PPT option was selected"
-    echo "register_read packet_processing_time_array" | simple_switch_CLI >> /shared/results_s1_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
+    FILE=/shared/results_s1_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
+    echo "register_read packet_processing_time_array" | simple_switch_CLI >> "$FILE"
+    sed -i -n '4{s/.*= //; s/, /\n/g; p}' "$FILE"
 fi
 
 if [ "$DEQ_FLAG" = true ]; then
     echo "DEQ option was selected"
-    echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI >> /shared/results_s1_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
+    FILE=/shared/results_s1_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
+    echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI  >> "$FILE"
+    sed -i -n '4{s/.*= //; s/, /\n/g; p}' "$FILE"
 fi
 
 # If no options were provided, show usage
