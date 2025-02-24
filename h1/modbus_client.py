@@ -138,7 +138,7 @@ async def test_rtt():
     key = sys.argv[2]
 
     ## WRITE
-    with open(f"/shared/results_10*10000_no_chiper_write_{key}_bit_key.txt", "w") as results_file:
+    with open(f"/shared/results_10*10000_chiper_write_{key}_bit_key.txt", "w") as results_file:
         for j in range(10):
             for i in range(10000):
                 new_value = random.randint(0, 100)
@@ -147,10 +147,10 @@ async def test_rtt():
                 time_end = time.time()
                 results_file.write("%s\n" % (time_end - time_start))
                 print(f"RTT - Value written into the register {register_id}: {new_value} - {i} - Test for {key}-bit key")
-    client.close()
+
 
     ## READ
-    with open(f"/shared/results_10*10000_no_chiper_read_{key}_bit_key.txt", "w") as results_file:
+    with open(f"/shared/results_10*10000_chiper_read_{key}_bit_key.txt", "w") as results_file:
         for j in range(10):
             for i in range(10000):
                 time_start = time.time()
@@ -158,6 +158,7 @@ async def test_rtt():
                 time_end = time.time()
                 results_file.write("%s\n" % (time_end - time_start))
                 print(f"RTT - Value read from the register {register_id}: {response.registers[0]} - {i} - Test for {key}-bit key")
+    client.close()
 
 async def test_read():
     client = AsyncModbusTcpClient("200.1.1.7", 502)
