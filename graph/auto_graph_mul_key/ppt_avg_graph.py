@@ -1,275 +1,173 @@
 #!/usr/bin/python3
+import os
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 
-# Inizializza le liste per i dati
-r_s1 = []
-r_s2 = []
-r_encrypt_s1 = []
-r_encrypt_s2 = []
-# r_tls_s1 = []
-# r_tls_s2 = []
+def read_and_filter(file_path):
+    """
+    Read the data from a file and filter out outliers using the IQR method.
+    """
+    data = []
+    with open(file_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    data.append(float(line))
+                except ValueError:
+                    continue
+    if not data:
+        return data
+    Q1, Q3 = np.percentile(data, [25, 75])
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
+    return filtered_data
 
-# Specifica il percorso del file di testo
-file_path = "./results/switch/results_s1_read_packet_processing_time.txt"
-# Leggi i dati dal file, prendendo solo una riga ogni 4
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
-        if line:
-            r_s1.append(float(line))
-# Rimuovi i valori anomali
-Q3, Q1 = np.percentile(r_s1, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in r_s1:
-    if el < upper_bound and el > lower_bound:
-        r_s1.remove(el)
+# List of encryption key lengths for the cipher tests
+key_lengths = ['128-bit', '160-bit', '192-bit', '224-bit', '256-bit']
 
-file_path = "./results/switch/results_s2_read_packet_processing_time.txt"
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        if line:
-            r_s2.append(float(line))
-Q3, Q1 = np.percentile(r_s2, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in r_s2:
-    if el < upper_bound and el > lower_bound:
-        r_s2.remove(el)
+# Base directory where your files are located.
+base_dir = "./results/mul_key/"
 
+# ---------------------------
+# Plain (no cipher) files for read and write tests (S1 and S2)
+# ---------------------------
+plain_read_file_s1 = os.path.join(
+    base_dir, "results_s1_no_chiper_read_packet_processing_time.txt"
+)
+plain_read_file_s2 = os.path.join(
+    base_dir, "results_s2_no_chiper_read_packet_processing_time.txt"
+)
+plain_write_file_s1 = os.path.join(
+    base_dir, "results_s1_no_chiper_write_packet_processing_time.txt"
+)
+plain_write_file_s2 = os.path.join(
+    base_dir, "results_s2_no_chiper_write_packet_processing_time.txt"
+)
 
+# Read and filter the plain data.
+plain_read_s1 = read_and_filter(plain_read_file_s1)
+plain_read_s2 = read_and_filter(plain_read_file_s2)
+plain_write_s1 = read_and_filter(plain_write_file_s1)
+plain_write_s2 = read_and_filter(plain_write_file_s2)
 
-file_path = "./results/switch/results_s1_cipher_read_packet_processing_time.txt"
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        if line:
-            r_encrypt_s1.append(float(line))
-Q3, Q1 = np.percentile(r_encrypt_s1, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in r_encrypt_s1:
-    if el < upper_bound and el > lower_bound:
-        r_encrypt_s1.remove(el)
+mean_plain_read_s1 = np.mean(plain_read_s1) if plain_read_s1 else 0
+mean_plain_read_s2 = np.mean(plain_read_s2) if plain_read_s2 else 0
+mean_plain_write_s1 = np.mean(plain_write_s1) if plain_write_s1 else 0
+mean_plain_write_s2 = np.mean(plain_write_s2) if plain_write_s2 else 0
 
-file_path = "./results/switch/results_s2_cipher_read_packet_processing_time.txt"
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        if line:
-            r_encrypt_s2.append(float(line))
-Q3, Q1 = np.percentile(r_encrypt_s2, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in r_encrypt_s2:
-    if el < upper_bound and el > lower_bound:
-        r_encrypt_s2.remove(el)
+# ---------------------------
+# Cipher files for each key length (for both read and write tests)
+# ---------------------------
+cipher_read_s1 = {}
+cipher_read_s2 = {}
+cipher_write_s1 = {}
+cipher_write_s2 = {}
 
-# file_path = "./results/switch/results_s1_tls_read_packet_processing_time.txt"
-# with open(file_path, 'r') as file:
-#     for line in file:
-#         line = line.strip()
-#         if line:
-#             r_tls_s1.append(float(line))
-# Q3, Q1 = np.percentile(r_tls_s1, [75, 25])
-# IQR = Q3 - Q1
-# upper_bound = Q3 + 1.5 * IQR
-# lower_bound = Q1 - 1.5 * IQR
-# for el in r_tls_s1:
-#     if el < upper_bound and el > lower_bound:
-#         r_tls_s1.remove(el)
+for kl in key_lengths:
+    read_s1_file = os.path.join(
+        base_dir, f"results_s1_cipher_read_packet_processing_time_{kl}.txt"
+    )
+    read_s2_file = os.path.join(
+        base_dir, f"results_s2_cipher_read_packet_processing_time_{kl}.txt"
+    )
+    write_s1_file = os.path.join(
+        base_dir, f"results_s1_cipher_write_packet_processing_time_{kl}.txt"
+    )
+    write_s2_file = os.path.join(
+        base_dir, f"results_s2_cipher_write_packet_processing_time_{kl}.txt"
+    )
+    
+    cipher_read_s1[kl] = read_and_filter(read_s1_file)
+    cipher_read_s2[kl] = read_and_filter(read_s2_file)
+    cipher_write_s1[kl] = read_and_filter(write_s1_file)
+    cipher_write_s2[kl] = read_and_filter(write_s2_file)
 
-# file_path = "./results/switch/results_s2_tls_read_packet_processing_time.txt"
-# with open(file_path, 'r') as file:
-#     for line in file:
-#         line = line.strip()
-#         if line:
-#             r_tls_s2.append(float(line))
-# Q3, Q1 = np.percentile(r_tls_s2, [75, 25])
-# IQR = Q3 - Q1
-# upper_bound = Q3 + 1.5 * IQR
-# lower_bound = Q1 - 1.5 * IQR
-# for el in r_tls_s2:
-#     if el < upper_bound and el > lower_bound:
-#         r_tls_s2.remove(el)
+# TEST NO AUTO
+cipher_write_s1['128-bit'] = read_and_filter("./results/mul_key/results_s1_chiper_no_auto_write_packet_processing_time_128-bit.txt")
+cipher_write_s2['128-bit'] = read_and_filter("./results/mul_key/results_s2_chiper_no_auto_write_packet_processing_time_128-bit.txt")
 
-# Calcola la media
-mean_r_s1 = np.mean(r_s1)
-mean_r_s2 = np.mean(r_s2)
-mean_r_encrypt_s1 = np.mean(r_encrypt_s1)
-mean_r_encrypt_s2 = np.mean(r_encrypt_s2)
-# mean_r_tls_s1 = np.mean(r_tls_s1)
-# mean_r_tls_s2 = np.mean(r_tls_s2)
+mean_cipher_read_s1 = {}
+mean_cipher_read_s2 = {}
+mean_cipher_write_s1 = {}
+mean_cipher_write_s2 = {}
 
-# stampa le medie
-print("mean_r_s1: ", mean_r_s1)
-print("mean_r_s2: ", mean_r_s2)
-print("mean_r_encrypt_s1: ", mean_r_encrypt_s1)
-print("mean_r_encrypt_s2: ", mean_r_encrypt_s2)
-# print("mean_r_tls_s1: ", mean_r_tls_s1)
-# print("mean_r_tls_s2: ", mean_r_tls_s2)
+for kl in key_lengths:
+    mean_cipher_read_s1[kl] = (np.mean(cipher_read_s1[kl])
+                                 if cipher_read_s1[kl] else 0)
+    mean_cipher_read_s2[kl] = (np.mean(cipher_read_s2[kl])
+                                 if cipher_read_s2[kl] else 0)
+    mean_cipher_write_s1[kl] = (np.mean(cipher_write_s1[kl])
+                                  if cipher_write_s1[kl] else 0)
+    mean_cipher_write_s2[kl] = (np.mean(cipher_write_s2[kl])
+                                  if cipher_write_s2[kl] else 0)
 
-# Calcola la deviazione standard
-std_dev_r_s1 = np.std(r_s1)
-std_dev_r_s2 = np.std(r_s2)
-std_dev_r_encrypt_s1 = np.std(r_encrypt_s1)
-std_dev_r_encrypt_s2 = np.std(r_encrypt_s2)
-# std_dev_r_tls_s1 = np.std(r_tls_s1)
-# std_dev_r_tls_s2 = np.std(r_tls_s2)
+# Print out the computed means for verification.
+print("===== READ TIMES =====")
+print("Plain S1: Mean =", mean_plain_read_s1)
+print("Plain S2: Mean =", mean_plain_read_s2)
+for kl in key_lengths:
+    print(f"Cipher {kl} S1: Mean = {mean_cipher_read_s1[kl]}")
+    print(f"Cipher {kl} S2: Mean = {mean_cipher_read_s2[kl]}")
 
-# Inizializza le liste per i dati
-w_s1 = []
-w_s2 = []
-w_encrypt_s1 = []
-w_encrypt_s2 = []
-# w_tls_s1 = []
-# w_tls_s2 = []
+print("\n===== WRITE TIMES =====")
+print("Plain S1: Mean =", mean_plain_write_s1)
+print("Plain S2: Mean =", mean_plain_write_s2)
+for kl in key_lengths:
+    print(f"Cipher {kl} S1: Mean = {mean_cipher_write_s1[kl]}")
+    print(f"Cipher {kl} S2: Mean = {mean_cipher_write_s2[kl]}")
 
-# Specifica il percorso del file di testo
-file_path = "./results/switch/results_s1_write_packet_processing_time.txt"
-# Leggi i dati dal file, prendendo solo una riga ogni 4
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
-        if line:
-            w_s1.append(float(line))
-# Rimuovi i valori anomali
-Q3, Q1 = np.percentile(w_s1, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in w_s1:
-    if el < upper_bound and el > lower_bound:
-        w_s1.remove(el)
+# ---------------------------
+# Plotting Stacked Bar Charts
+# ---------------------------
 
-file_path = "./results/switch/results_s2_write_packet_processing_time.txt"
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        if line:
-            w_s2.append(float(line))
-Q3, Q1 = np.percentile(w_s2, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in w_s2:
-    if el < upper_bound and el > lower_bound:
-        w_s2.remove(el)
+# Categories for the x-axis: "Plain" followed by each key length.
+categories = ['Plain'] + key_lengths
+x = np.arange(len(categories))
+width = 0.5
 
+# ----- Read Times Stacked Bar Chart -----
+# Prepare the means such that S1 is the bottom stack (orange)
+# and S2 is stacked on top (blue)
+read_s1_means = [mean_plain_read_s1] + [
+    mean_cipher_read_s1[kl] for kl in key_lengths
+]
+read_s2_means = [mean_plain_read_s2] + [
+    mean_cipher_read_s2[kl] for kl in key_lengths
+]
 
+fig, ax = plt.subplots(figsize=(10, 6))
+bar_s1 = ax.bar(x, read_s1_means, width, label='Switch 1',
+                color='tab:blue')
+bar_s2 = ax.bar(x, read_s2_means, width, bottom=read_s1_means,
+                label='Switch 2', color='tab:orange')
 
-file_path = "./results/switch/results_s1_cipher_write_packet_processing_time.txt"
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        if line:
-            w_encrypt_s1.append(float(line))
-Q3, Q1 = np.percentile(w_encrypt_s1, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in w_encrypt_s1:
-    if el < upper_bound and el > lower_bound:
-        w_encrypt_s1.remove(el)
+ax.set_ylabel('Avg Packet Dequeuing Time (ms)', fontsize=14)
+ax.set_xticks(x)
+ax.set_xticklabels(categories, fontsize=12)
+ax.legend(fontsize=12)
+plt.tight_layout()
+plt.show()
 
-file_path = "./results/switch/results_s2_cipher_write_packet_processing_time.txt"
-with open(file_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        if line:
-            w_encrypt_s2.append(float(line))
-Q3, Q1 = np.percentile(w_encrypt_s2, [75, 25])
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-lower_bound = Q1 - 1.5 * IQR
-for el in w_encrypt_s2:
-    if el < upper_bound and el > lower_bound:
-        w_encrypt_s2.remove(el)
+# ----- Write Times Stacked Bar Chart -----
+write_s1_means = [mean_plain_write_s1] + [
+    mean_cipher_write_s1[kl] for kl in key_lengths
+]
+write_s2_means = [mean_plain_write_s2] + [
+    mean_cipher_write_s2[kl] for kl in key_lengths
+]
 
-# file_path = "./results/switch/results_s1_tls_write_packet_processing_time.txt"
-# with open(file_path, 'r') as file:
-#     for line in file:
-#         line = line.strip()
-#         if line:
-#             w_tls_s1.append(float(line))
-# Q3, Q1 = np.percentile(w_tls_s1, [75, 25])
-# IQR = Q3 - Q1
-# upper_bound = Q3 + 1.5 * IQR
-# lower_bound = Q1 - 1.5 * IQR
-# for el in w_tls_s1:
-#     if el < upper_bound and el > lower_bound:
-#         w_tls_s1.remove(el)
+fig, ax = plt.subplots(figsize=(10, 6))
+bar_s1 = ax.bar(x, write_s1_means, width, label='Switch 1',
+                color='tab:blue')
+bar_s2 = ax.bar(x, write_s2_means, width, bottom=write_s1_means,
+                label='Switch 2', color='tab:orange')
 
-# file_path = "./results/switch/results_s2_tls_write_packet_processing_time.txt"
-# with open(file_path, 'r') as file:
-#     for line in file:
-#         line = line.strip()
-#         if line:
-#             w_tls_s2.append(float(line))
-# Q3, Q1 = np.percentile(w_tls_s2, [75, 25])
-# IQR = Q3 - Q1
-# upper_bound = Q3 + 1.5 * IQR
-# lower_bound = Q1 - 1.5 * IQR
-# for el in w_tls_s2:
-#     if el < upper_bound and el > lower_bound:
-#         w_tls_s2.remove(el)
-
-# Calcola la media
-mean_w_s1 = np.mean(w_s1)
-mean_w_s2 = np.mean(w_s2)
-mean_w_encrypt_s1 = np.mean(w_encrypt_s1)
-mean_w_encrypt_s2 = np.mean(w_encrypt_s2)
-# mean_w_tls_s1 = np.mean(w_tls_s1)
-# mean_w_tls_s2 = np.mean(w_tls_s2)
-
-# stampa le medie
-print("mean_w_s1: ", mean_w_s1)
-print("mean_w_s2: ", mean_w_s2)
-print("mean_w_encrypt_s1: ", mean_w_encrypt_s1)
-print("mean_w_encrypt_s2: ", mean_w_encrypt_s2)
-# print("mean_w_tls_s1: ", mean_w_tls_s1)
-# print("mean_w_tls_s2: ", mean_w_tls_s2)
-
-# Calcola la deviazione standard
-std_dev_w_s1 = np.std(w_s1)
-std_dev_w_s2 = np.std(w_s2)
-std_dev_w_encrypt_s1 = np.std(w_encrypt_s1)
-std_dev_w_encrypt_s2 = np.std(w_encrypt_s2)
-# std_dev_w_tls_s1 = np.std(w_tls_s1)
-# std_dev_w_tls_s2 = np.std(w_tls_s2)
-
-# Crea una lista con le medie
-y_val_s1 = [mean_r_s1, mean_r_encrypt_s1, mean_w_s1, mean_w_encrypt_s1]#, mean_r_tls_s1]
-y_val_s2 = [mean_r_s2, mean_r_encrypt_s2, mean_w_s2, mean_w_encrypt_s2]#, mean_r_tls_s2]
-
-# Crea una lista di stringhe per i valori sull'asse delle x
-x_val = ['Modbus\nRead', 'Modbus Read\nin-switch\nencryption', 'Modbus\nWrite', 'Modbus Write\nin-switch\nencryption']#, 'Modbus Read TLS']
-
-# Crea un grafico a barre
-plt.bar(x_val, y_val_s1, color='tab:blue', label='Switch 1', width=0.5)#, yerr=[std_dev_r_s1, std_dev_r_encrypt_s1], ecolor='red', capsize=5)
-#plt.bar(x_val, y_val_s1, color='tab:blue', label='Switch 1', yerr=[std_dev_r_s1, std_dev_r_encrypt_s1, std_dev_r_tls_s1], ecolor='red', capsize=5)
-
-plt.bar(x_val, y_val_s2, color='tab:orange', label='Switch 2', bottom=y_val_s1, width=0.5)#, yerr=[std_dev_r_s2, std_dev_r_encrypt_s2], ecolor='black', capsize=5)
-#plt.bar(x_val, y_val_s2, color='tab:orange', label='Switch 2', bottom=y_val_s1, yerr=[std_dev_r_s2, std_dev_r_encrypt_s2, std_dev_r_tls_s2], ecolor='black', capsize=5)
-
-#Aggiungi label sull'asse y
-plt.ylabel('Avg Packet Processing Time (ms)', fontsize=13)
-
-# Modifica la dimensione dei numeri sull'asse delle x e delle y
-plt.xticks(fontsize=13)  # Imposta la dimensione dei numeri sull'asse delle x a 13
-plt.yticks(fontsize=13)  # Imposta la dimensione dei numeri sull'asse delle y a 13
-
-# Aggiungi una legenda
-plt.legend(fontsize=12, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, fancybox=True, shadow=True)
-
-plt.subplots_adjust(left=0.12, bottom=0.15, right=0.996, top=0.9)
-
-# Mostra il grafico
+ax.set_ylabel('Avg Packet Processing Time (ms)', fontsize=14)
+ax.set_xticks(x)
+ax.set_xticklabels(categories, fontsize=12)
+ax.legend(fontsize=12)
+plt.tight_layout()
 plt.show()
