@@ -13,7 +13,7 @@ usage() {
     echo "Measurement options:"
     echo "  --rtt    Measure Round Trip Time"
     echo "  --ppt    Measure Packet Processing Time"
-    echo "  --deq    Measure Dequeuing Timedelta"
+    echo "  --deq    Measure Packet Dequeuing Timedelta"
     echo "Note: If no measurement options are selected, all measurements will be performed"
     exit 1
 }
@@ -143,6 +143,79 @@ if [ $MEASURE_RTT -eq 0 ] && [ $MEASURE_PPT -eq 0 ] && [ $MEASURE_DEQ -eq 0 ]; t
     MEASURE_DEQ=1
 fi
 
+measure_ppt(){
+    echo "Measuring Packet Processing Time for ${bits}-bit configuration"
+    if [ "$1" = "write" ]; then
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            exit
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            exit
+        fi
+    fi
+
+    if [ "$1" = "read" ]; then
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            exit
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            exit
+        fi  
+    fi
+}
+
+measure_deq(){
+    echo "Measuring Packet Dequeuing Timedelta for ${bits}-bit configuration"
+    if [ "$1" = "write" ]; then
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --deq ${bits} -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            exit
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --deq ${bits} -w" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            exit
+        fi
+    fi
+
+    if [ "$1" = "read" ]; then
+        # retrieve info from the switches
+        #s1
+        echo "Retreiving info from s1"
+        if ! kathara exec s1 "./retrieve_info.sh --deq ${bits} -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s1"
+            exit
+        fi
+
+        #s2
+        echo "Retreiving info from s2"
+        if ! kathara exec s2 "./retrieve_info.sh --deq ${bits} -r" >/dev/tty 2>&1; then
+            echo "Error: PPT info retrieve failed in s2"
+            exit
+        fi  
+    fi
+}
 
 # Function to run a specific configuration
 run_configuration() {
@@ -293,14 +366,37 @@ register_write keys 7 096548217' ./s2/commands.txt
         sleep 2
 
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-rtt ${bits}" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "python modbus_client.py --test-rtt-write ${bits}" >/dev/tty 2>&1; then
             echo "Error: RTT measurement failed"
             exit
         fi
+
+        if [ $MEASURE_PPT -eq 1 ]; then
+            measure_ppt "write"
+        fi
+
+        if [ $MEASURE_DEQ -eq 1 ]; then
+            measure_deq "write"
+        fi
+
+        echo "Starting client in h1..."
+        if ! kathara exec h1 "python modbus_client.py --test-rtt-read ${bits}" >/dev/tty 2>&1; then
+            echo "Error: RTT measurement failed"
+            exit
+        fi
+
+        if [ $MEASURE_PPT -eq 1 ]; then
+            measure_ppt "read"
+        fi
+
+        if [ $MEASURE_DEQ -eq 1 ]; then
+            measure_deq "read"
+        fi
+
     fi
 
     # PPT - Packet Prcessing Time
-    if [ $MEASURE_PPT -eq 1 ]; then
+    if [ $MEASURE_PPT -eq 1 ] && [ $MEASURE_RTT -ne 1 ]; then
         echo "Measuring Packet Processing Time..."
 
         # WRITE
@@ -312,53 +408,35 @@ register_write keys 7 096548217' ./s2/commands.txt
 
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-write" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "python modbus_client.py --test-write ${bits}" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             exit
         fi
         
 
-        # retrieve info from the switches
-        #s1
-        echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s1"
-            exit
-        fi
+        measure_ppt "write"
 
-        #s2
-        echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s2"
-            exit
+        if [ $MEASURE_DEQ -eq 1 ]; then
+            measure_deq "write"
         fi
 
         # READ
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-read" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "python modbus_client.py --test-read ${bits}" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             exit
         fi      
 
-        # retrieve info from the switches
-        #s1
-        echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s1"
-            exit
-        fi
+        measure_ppt "read"
 
-        #s2
-        echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s2"
-            exit
-        fi  
+        if [ $MEASURE_DEQ -eq 1 ]; then
+            measure_deq "read"
+        fi
     fi
 
     # DEQ - Packet Dequeuing Timedelta
-    if [ $MEASURE_DEQ -eq 1 ]; then
+    if [ $MEASURE_DEQ -eq 1 ] && [ $MEASURE_RTT -ne 1 ] && [ $MEASURE_PPT -ne 1 ]; then
         echo "Measuring Dequeuing Timedelta..."
 
         # WRITE
@@ -370,49 +448,22 @@ register_write keys 7 096548217' ./s2/commands.txt
 
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-write" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "python modbus_client.py --test-write ${bits}" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             kathara lclean
         fi
 
-        # retrieve info from the switches
-        #s1
-        echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --deq $bits -w" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s1"
-            kathara lclean
-        fi
-
-        #s2
-        echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --deq $bits -w" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s2"
-            kathara lclean
-        fi
+        measure_deq "write"
 
         # READ
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-read" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "python modbus_client.py --test-read ${bits}" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             kathara lclean
         fi
 
-        # retrieve info from the switches
-        #s1
-        echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --deq $bits -r" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s1"
-            kathara lclean
-        fi
-
-        #s2
-        echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --deq $bits -r" >/dev/tty 2>&1; then
-            echo "Error: PPT info retrieve failed in s2"
-            kathara lclean
-        fi
-        
+        measure_deq "read"    
     fi
     
     # After processing, clean up
