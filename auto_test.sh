@@ -473,7 +473,8 @@ register_write keys 7 096548217' ./s2/commands.txt
 } ## run_configuration()
 
 # Set up trap for both SIGINT and EXIT
-trap cleanup SIGINT EXIT
+#trap cleanup SIGINT EXIT
+rm -f shared/startup.temp
 
 rm -f shared/startup.temp
 # Process each selected configuration
