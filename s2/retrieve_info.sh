@@ -66,7 +66,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-MODE=""
 
 if [ "$READ_FLAG" = true ]; then
     MODE="read"
@@ -78,7 +77,8 @@ fi
 
 if [ "$PPT_FLAG" = true ]; then
     echo "s2: PPT option selected"
-    FILE=/shared/results_s2_chiper_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
+    if [ "$KEY" -ne "" ]; then FILE=/shared/results_s2_chiper_"$MODE"_packet_processing_time_"${KEY}"-bit.txt;
+    else FILE=/shared/results_s2_"$MODE"_packet_processing_time.txt; fi
     echo "register_read packet_processing_time_array" | simple_switch_CLI >> "$FILE"
     sed -i -n '4{s/.*= //; s/, /\n/g; p}' "$FILE"
     sed -i 's/$/.0/' "$FILE"
@@ -86,7 +86,8 @@ fi
 
 if [ "$DEQ_FLAG" = true ]; then
     echo "s2: DEQ option selected"
-    FILE=/shared/results_s2_chiper_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
+    if [ "$KEY" -ne "" ]; then FILE=/shared/results_s2_chiper_"$MODE"_packet_processing_time_"${KEY}"-bit.txt;
+    else FILE=/shared/results_s2_"$MODE"_packet_processing_time.txt; fi
     echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI  >> "$FILE"
     sed -i -n '4{s/.*= //; s/, /\n/g; p}' "$FILE"
     sed -i 's/$/.0/' "$FILE"
