@@ -46,12 +46,14 @@ while [[ $# -gt 0 ]]; do
     --deq)
         DEQ_FLAG=true
         shift
-        if [[ $# -gt 0 ]] && validate_key_length "$1"; then
-            KEY="$1"
-            shift
-        else
-            echo "Error: --deq requires a valid key length (128/160/192/224/256)"
-            usage
+        if [[ $# -gt 0 && $1 != -* ]]; then
+            if validate_key_length "$1"; then
+                KEY="$1"
+                shift
+            else
+                echo "Error: --deq option requires a valid key length (128/160/192/224/256) if provided."
+                usage
+            fi
         fi
         ;;
     -r | --read)
