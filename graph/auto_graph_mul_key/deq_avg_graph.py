@@ -140,7 +140,7 @@ bar_s1 = ax.bar(x, read_s1_means, width, label='Switch 1',
 bar_s2 = ax.bar(x, read_s2_means, width, bottom=read_s1_means,
                 label='Switch 2', color='tab:blue')
 
-ax.set_ylabel('Avg Packet Dequeuing Time (ms)', fontsize=14)
+ax.set_ylabel('Avg Packet Dequeuing Time (μs)', fontsize=14)
 ax.set_title('Stacked Read Times', fontsize=16)
 ax.set_xticks(x)
 ax.set_xticklabels(categories, fontsize=12)
@@ -162,7 +162,7 @@ bar_s1 = ax.bar(x, write_s1_means, width, label='Switch 1',
 bar_s2 = ax.bar(x, write_s2_means, width, bottom=write_s1_means,
                 label='Switch 2', color='tab:blue')
 
-ax.set_ylabel('Avg Packet Dequeuing Time (ms)', fontsize=14)
+ax.set_ylabel('Avg Packet Dequeuing Time (μs)', fontsize=14)
 ax.set_title('Stacked Write Times', fontsize=16)
 ax.set_xticks(x)
 ax.set_xticklabels(categories, fontsize=12)
