@@ -2,20 +2,20 @@
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [--ppt KEY_LENGTH] [--deq KEY_LENGTH] [-r|--read] [-w|--write]"
+    echo "Usage: $0 [--ppt MODE] [--deq MODE] [-r|--read] [-w|--write]"
     echo "Options:"
-    echo "  --ppt KEY_LENGTH    PPT option with key length (128/160/192/224/256)"
-    echo "  --deq KEY_LENGTH    DEQ option with key length (128/160/192/224/256)"
+    echo "  --ppt MODE    PPT option with mode (no-encryption/tls/128/160/192/224/256)"
+    echo "  --deq MODE    DEQ option with mode (no-encryption/tls/128/160/192/224/256)"
     echo "  -r, --read          Read option"
     echo "  -w, --write         Write option"
     exit 1
 }
 
-# Function to validate key length
-validate_key_length() {
-    local length=$1
-    case "$length" in
-    128 | 160 | 192 | 224 | 256) return 0 ;;
+# Function to validate mode
+validate_mode() {
+    local mode=$1
+    case "$mode" in
+    no-encryption | tls | 128 | 160 | 192 | 224 | 256) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -34,11 +34,11 @@ while [[ $# -gt 0 ]]; do
         shift
         # If next argument exists and does not look like an option, validate it.
         if [[ $# -gt 0 && $1 != -* ]]; then
-            if validate_key_length "$1"; then
-                KEY="$1"
+            if validate_mode "$1"; then
+                MODE="$1"
                 shift
             else
-                echo "Error: --ppt option requires a valid key length (128/160/192/224/256) if provided."
+                echo "Error: --ppt option requires a valid mode (no-encryption/tls/128/160/192/224/256) if provided."
                 usage
             fi
         fi
@@ -47,11 +47,11 @@ while [[ $# -gt 0 ]]; do
         DEQ_FLAG=true
         shift
         if [[ $# -gt 0 && $1 != -* ]]; then
-            if validate_key_length "$1"; then
-                KEY="$1"
+            if validate_mode "$1"; then
+                MODE="$1"
                 shift
             else
-                echo "Error: --deq option requires a valid key length (128/160/192/224/256) if provided."
+                echo "Error: --deq option requires a valid mode (no-encryption/tls/128/160/192/224/256) if provided."
                 usage
             fi
         fi
@@ -72,18 +72,21 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ "$READ_FLAG" = true ]; then
-    MODE="read"
+    OPTION="read"
 fi
 
 if [ "$WRITE_FLAG" = true ]; then
-    MODE="write"
+    OPTION="write"
 fi
 
 if [ "$PPT_FLAG" = true ]; then
     echo "s1: PPT option selected"
-    if [  -n "$KEY"  ]; then
-        FILE=/shared/results_s1_chiper_"$MODE"_packet_processing_time_"${KEY}"-bit.txt
-    else FILE=/shared/results_s1_"$MODE"_packet_processing_time.txt; fi
+    if [  -n "$MODE"  ]; then
+        if [ "$MODE" = "no-encryption" ]; then FILE=/shared/results_s1_no_cipher_"$OPTION"_packet_processing_time.txt
+        elif [ "$MODE" = "tls" ]; then FILE=/shared/results_s1_tls_"$OPTION"_packet_processing_time.txt
+        else FILE=/shared/results_s1_cipher_"$OPTION"_packet_processing_time_"${MODE}"-bit.txt
+        fi
+    else FILE=/shared/results_s1_"$OPTION"_packet_processing_time.txt; fi
     echo "register_read packet_processing_time_array" | simple_switch_CLI >>"$FILE"
     sed -i -n '4{s/.*= //; s/, /\n/g; p}' "$FILE"
     sed -i 's/$/.0/' "$FILE"
@@ -91,9 +94,12 @@ fi
 
 if [ "$DEQ_FLAG" = true ]; then
     echo "s1: DEQ option selected"
-    if [  -n "$KEY"  ]; then
-        FILE=/shared/results_s1_chiper_"$MODE"_packet_dequeuing_timedelta_array_"${KEY}"-bit.txt
-    else FILE=/shared/results_s1_"$MODE"_packet_dequeuing_timedelta_array.txt; fi
+    if [  -n "$MODE"  ]; then
+        if [ "$MODE" = "no-encryption" ]; then FILE=/shared/results_s1_no_cipher_"$OPTION"_packet_dequeuing_timedelta.txt
+        elif [ "$MODE" = "tls" ]; then FILE=/shared/results_s1_tls_"$OPTION"_packet_dequeuing_timedelta.txt
+        else FILE=/shared/results_s1_cipher_"$OPTION"_packet_dequeuing_timedelta_"${MODE}"-bit.txt
+        fi
+    else FILE=/shared/results_s1_"$OPTION"_packet_dequeuing_timedelta.txt; fi
     echo "register_read packet_dequeuing_timedelta_array" | simple_switch_CLI >>"$FILE"
     sed -i -n '4{s/.*= //; s/, /\n/g; p}' "$FILE"
     sed -i 's/$/.0/' "$FILE"
