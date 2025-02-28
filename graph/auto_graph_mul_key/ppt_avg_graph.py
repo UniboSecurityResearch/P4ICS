@@ -25,26 +25,26 @@ def read_and_filter(file_path):
     filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
     return filtered_data
 
-# List of encryption key lengths for the cipher tests
+# List of encryption key lengths for the in-switch encryption tests.
 key_lengths = ['128-bit', '160-bit', '192-bit', '224-bit', '256-bit']
 
 # Base directory where your files are located.
 base_dir = "./results/mul_key/"
 
 # ---------------------------
-# Plain (no cipher) files for read and write tests (S1 and S2)
+# Plain (No_cipher) files for packet processing time tests (Switch 1 and Switch 2)
 # ---------------------------
 plain_read_file_s1 = os.path.join(
-    base_dir, "results_s1_no_chiper_read_packet_processing_time.txt"
+    base_dir, "No_cipher", "results_s1_no_cipher_read_packet_processing_time.txt"
 )
 plain_read_file_s2 = os.path.join(
-    base_dir, "results_s2_no_chiper_read_packet_processing_time.txt"
+    base_dir, "No_cipher", "results_s2_no_cipher_read_packet_processing_time.txt"
 )
 plain_write_file_s1 = os.path.join(
-    base_dir, "results_s1_no_chiper_write_packet_processing_time.txt"
+    base_dir, "No_cipher", "results_s1_no_cipher_write_packet_processing_time.txt"
 )
 plain_write_file_s2 = os.path.join(
-    base_dir, "results_s2_no_chiper_write_packet_processing_time.txt"
+    base_dir, "No_cipher", "results_s2_no_cipher_write_packet_processing_time.txt"
 )
 
 # Read and filter the plain data.
@@ -59,7 +59,8 @@ mean_plain_write_s1 = np.mean(plain_write_s1) if plain_write_s1 else 0
 mean_plain_write_s2 = np.mean(plain_write_s2) if plain_write_s2 else 0
 
 # ---------------------------
-# Cipher files for each key length (for both read and write tests)
+# Modbus in-switch encryption (Cipher) files for packet processing time tests
+# (Switch 1 and Switch 2 for each key length)
 # ---------------------------
 cipher_read_s1 = {}
 cipher_read_s2 = {}
@@ -68,26 +69,26 @@ cipher_write_s2 = {}
 
 for kl in key_lengths:
     read_s1_file = os.path.join(
-        base_dir, f"results_s1_cipher_read_packet_processing_time_{kl}.txt"
+        base_dir, "Cipher",
+        f"results_s1_cipher_read_packet_processing_time_{kl}.txt"
     )
     read_s2_file = os.path.join(
-        base_dir, f"results_s2_cipher_read_packet_processing_time_{kl}.txt"
+        base_dir, "Cipher",
+        f"results_s2_cipher_read_packet_processing_time_{kl}.txt"
     )
     write_s1_file = os.path.join(
-        base_dir, f"results_s1_cipher_write_packet_processing_time_{kl}.txt"
+        base_dir, "Cipher",
+        f"results_s1_cipher_write_packet_processing_time_{kl}.txt"
     )
     write_s2_file = os.path.join(
-        base_dir, f"results_s2_cipher_write_packet_processing_time_{kl}.txt"
+        base_dir, "Cipher",
+        f"results_s2_cipher_write_packet_processing_time_{kl}.txt"
     )
     
     cipher_read_s1[kl] = read_and_filter(read_s1_file)
     cipher_read_s2[kl] = read_and_filter(read_s2_file)
     cipher_write_s1[kl] = read_and_filter(write_s1_file)
     cipher_write_s2[kl] = read_and_filter(write_s2_file)
-
-# TEST NO AUTO
-cipher_write_s1['128-bit'] = read_and_filter("./results/mul_key/results_s1_chiper_no_auto_write_packet_processing_time_128-bit.txt")
-cipher_write_s2['128-bit'] = read_and_filter("./results/mul_key/results_s2_chiper_no_auto_write_packet_processing_time_128-bit.txt")
 
 mean_cipher_read_s1 = {}
 mean_cipher_read_s2 = {}
@@ -104,39 +105,77 @@ for kl in key_lengths:
     mean_cipher_write_s2[kl] = (np.mean(cipher_write_s2[kl])
                                   if cipher_write_s2[kl] else 0)
 
-# Print out the computed means for verification.
-print("===== READ TIMES =====")
-print("Plain S1: Mean =", mean_plain_read_s1)
-print("Plain S2: Mean =", mean_plain_read_s2)
-for kl in key_lengths:
-    print(f"Cipher {kl} S1: Mean = {mean_cipher_read_s1[kl]}")
-    print(f"Cipher {kl} S2: Mean = {mean_cipher_read_s2[kl]}")
+# ---------------------------
+# Modbus TLS files for packet processing time tests (Switch 1 and Switch 2)
+# ---------------------------
+tls_read_file_s1 = os.path.join(
+    base_dir, "Mobus_TLS", "results_s1_tls_read_packet_processing_time.txt"
+)
+tls_read_file_s2 = os.path.join(
+    base_dir, "Mobus_TLS", "results_s2_tls_read_packet_processing_time.txt"
+)
+tls_write_file_s1 = os.path.join(
+    base_dir, "Mobus_TLS", "results_s1_tls_write_packet_processing_time.txt"
+)
+tls_write_file_s2 = os.path.join(
+    base_dir, "Mobus_TLS", "results_s2_tls_write_packet_processing_time.txt"
+)
 
-print("\n===== WRITE TIMES =====")
-print("Plain S1: Mean =", mean_plain_write_s1)
-print("Plain S2: Mean =", mean_plain_write_s2)
-for kl in key_lengths:
-    print(f"Cipher {kl} S1: Mean = {mean_cipher_write_s1[kl]}")
-    print(f"Cipher {kl} S2: Mean = {mean_cipher_write_s2[kl]}")
+tls_read_s1 = read_and_filter(tls_read_file_s1)
+tls_read_s2 = read_and_filter(tls_read_file_s2)
+tls_write_s1 = read_and_filter(tls_write_file_s1)
+tls_write_s2 = read_and_filter(tls_write_file_s2)
+
+mean_tls_read_s1 = np.mean(tls_read_s1) if tls_read_s1 else 0
+mean_tls_read_s2 = np.mean(tls_read_s2) if tls_read_s2 else 0
+mean_tls_write_s1 = np.mean(tls_write_s1) if tls_write_s1 else 0
+mean_tls_write_s2 = np.mean(tls_write_s2) if tls_write_s2 else 0
 
 # ---------------------------
-# Plotting Stacked Bar Charts
+# Print computed means for verification.
 # ---------------------------
+print("===== READ PACKET PROCESSING TIMES =====")
+print("No encryption S1: Mean =", mean_plain_read_s1)
+print("No encryption S2: Mean =", mean_plain_read_s2)
+print("Modbus TLS S1: Mean =", mean_tls_read_s1)
+print("Modbus TLS S2: Mean =", mean_tls_read_s2)
+for kl in key_lengths:
+    print(f"Modbus in-switch encryption {kl} S1: Mean = {mean_cipher_read_s1[kl]}")
+    print(f"Modbus in-switch encryption {kl} S2: Mean = {mean_cipher_read_s2[kl]}")
 
-# Categories for the x-axis: "Plain" followed by each key length.
-categories = ['Plain'] + key_lengths
+print("\n===== WRITE PACKET PROCESSING TIMES =====")
+print("No encryption S1: Mean =", mean_plain_write_s1)
+print("No encryption S2: Mean =", mean_plain_write_s2)
+print("Modbus TLS S1: Mean =", mean_tls_write_s1)
+print("Modbus TLS S2: Mean =", mean_tls_write_s2)
+for kl in key_lengths:
+    print(f"Modbus in-switch encryption {kl} S1: Mean = {mean_cipher_write_s1[kl]}")
+    print(f"Modbus in-switch encryption {kl} S2: Mean = {mean_cipher_write_s2[kl]}")
+
+# ---------------------------
+# Prepare data arrays for the Stacked Bar Charts.
+#
+# The order is:
+#    1. No encryption
+#    2. Modbus TLS
+#    3. Modbus in-switch encryption <key-length> (for each key)
+# ---------------------------
+categories = (
+    ["No encryption", "Modbus TLS"] +
+    [f"Modbus\nin-switch\nencryption\n{kl}" for kl in key_lengths]
+)
 x = np.arange(len(categories))
 width = 0.5
 
-# ----- Read Times Stacked Bar Chart -----
-# Prepare the means such that S1 is the bottom stack (orange)
-# and S2 is stacked on top (blue)
-read_s1_means = [mean_plain_read_s1] + [
-    mean_cipher_read_s1[kl] for kl in key_lengths
-]
-read_s2_means = [mean_plain_read_s2] + [
-    mean_cipher_read_s2[kl] for kl in key_lengths
-]
+# ----- READ Packet Processing Time Stacked Bar Chart -----
+read_s1_means = (
+    [mean_plain_read_s1, mean_tls_read_s1] +
+    [mean_cipher_read_s1[kl] for kl in key_lengths]
+)
+read_s2_means = (
+    [mean_plain_read_s2, mean_tls_read_s2] +
+    [mean_cipher_read_s2[kl] for kl in key_lengths]
+)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 bar_s1 = ax.bar(x, read_s1_means, width, label='Switch 1',
@@ -144,20 +183,23 @@ bar_s1 = ax.bar(x, read_s1_means, width, label='Switch 1',
 bar_s2 = ax.bar(x, read_s2_means, width, bottom=read_s1_means,
                 label='Switch 2', color='tab:orange')
 
-ax.set_ylabel('Avg Packet Dequeuing Time (μs)', fontsize=14)
+ax.set_ylabel('Avg Packet Processing Time (μs)', fontsize=14)
+ax.set_title('Read', fontsize=16)
 ax.set_xticks(x)
 ax.set_xticklabels(categories, fontsize=12)
 ax.legend(fontsize=12)
 plt.tight_layout()
 plt.show()
 
-# ----- Write Times Stacked Bar Chart -----
-write_s1_means = [mean_plain_write_s1] + [
-    mean_cipher_write_s1[kl] for kl in key_lengths
-]
-write_s2_means = [mean_plain_write_s2] + [
-    mean_cipher_write_s2[kl] for kl in key_lengths
-]
+# ----- WRITE Packet Processing Time Stacked Bar Chart -----
+write_s1_means = (
+    [mean_plain_write_s1, mean_tls_write_s1] +
+    [mean_cipher_write_s1[kl] for kl in key_lengths]
+)
+write_s2_means = (
+    [mean_plain_write_s2, mean_tls_write_s2] +
+    [mean_cipher_write_s2[kl] for kl in key_lengths]
+)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 bar_s1 = ax.bar(x, write_s1_means, width, label='Switch 1',
@@ -166,6 +208,7 @@ bar_s2 = ax.bar(x, write_s2_means, width, bottom=write_s1_means,
                 label='Switch 2', color='tab:orange')
 
 ax.set_ylabel('Avg Packet Processing Time (μs)', fontsize=14)
+ax.set_title('Write', fontsize=16)
 ax.set_xticks(x)
 ax.set_xticklabels(categories, fontsize=12)
 ax.legend(fontsize=12)
