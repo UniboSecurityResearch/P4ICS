@@ -2,21 +2,35 @@
 
 # Function to print usage
 usage() {
-    echo "Usage: $0 [--all] [--128] [--160] [--192] [--224] [--256] [--rtt] [--ppt] [--deq]"
+    echo "Usage: $0 [--all] [--128] [--160] [--192] [--224] [--256] [--rtt] [--ppt] [--deq] [--no-encryption] [--tls]"
     echo "Options:"
-    echo "  --all    Run all configurations"
-    echo "  --128    Run 128-bit configuration"
-    echo "  --160    Run 160-bit configuration"
-    echo "  --192    Run 192-bit configuration"
-    echo "  --224    Run 224-bit configuration"
-    echo "  --256    Run 256-bit configuration"
+    echo "  --all               Run all configurations"
+    echo "  --no-encryption     Run test without encryption functionality"
+    echo "  --tls               Run test with Modbus using TLS encryption"
+    echo "  --128               Run 128-bit configuration"
+    echo "  --160               Run 160-bit configuration"
+    echo "  --192               Run 192-bit configuration"
+    echo "  --224               Run 224-bit configuration"
+    echo "  --256               Run 256-bit configuration"
     echo "Measurement options:"
-    echo "  --rtt    Measure Round Trip Time"
-    echo "  --ppt    Measure Packet Processing Time"
-    echo "  --deq    Measure Packet Dequeuing Timedelta"
+    echo "  --rtt               Measure Round Trip Time"
+    echo "  --ppt               Measure Packet Processing Time"
+    echo "  --deq               Measure Packet Dequeuing Timedelta"
+
     echo "Note: If no measurement options are selected, all measurements will be performed"
     exit 1
 }
+
+# EXTENSIBILITY 
+# Set the command to execute the client
+default_client="python modbus_client.py"
+# Set the command to execute the server
+default_server="python server.py"
+
+export client="$default_client"
+export server="$default_server"
+
+KEYS=( "128" "160" "192" "224" "256" )
 
 # Function to be executed on cleanup
 cleanup() {
@@ -38,7 +52,7 @@ wait_for_container() {
     
     while [ $attempt -le $max_attempts ]; do
         # Check if startup is complete by looking for a marker in shared/startup.temp
-        if grep -q "$container" shared/startup.temp; then
+        if grep -q "$container" shared/startup.temp 2&>/dev/null; then
             echo "$container is ready!"
             return 0
         fi
@@ -54,6 +68,8 @@ wait_for_container() {
 
 # Initialize all flags to 0
 ALL=0
+NO_ENCRYPTION=0
+TLS=0
 BIT_128=0
 BIT_160=0
 BIT_192=0
@@ -64,10 +80,11 @@ MEASURE_PPT=0
 MEASURE_DEQ=0
 
 # Parse command line arguments
-TEMP=$(getopt -o '' --long all,128,160,192,224,256,rtt,ppt,deq -n "$0" -- "$@")
+TEMP=$(getopt -o '' --long all,no-encryption,tls,128,160,192,224,256,rtt,ppt,deq -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     usage
 fi
+
 
 eval set -- "$TEMP"
 
@@ -76,6 +93,14 @@ while true; do
     case "$1" in
         --all)
             ALL=1
+            shift
+            ;;
+        --no-encryption)
+            NO_ENCRYPTION=1
+            shift
+            ;;
+        --tls)
+            TLS=1
             shift
             ;;
         --128)
@@ -122,6 +147,8 @@ done
 
 # If --all is specified, set all configuration flags to 1
 if [ $ALL -eq 1 ]; then
+    NO_ENCRYPTION=1
+    TLS=1
     BIT_128=1
     BIT_160=1
     BIT_192=1
@@ -130,7 +157,7 @@ if [ $ALL -eq 1 ]; then
 fi
 
 # Check if at least one configuration option was selected
-if [ $ALL -eq 0 ] && [ $BIT_128 -eq 0 ] && [ $BIT_160 -eq 0 ] && [ $BIT_192 -eq 0 ] && [ $BIT_224 -eq 0 ] && [ $BIT_256 -eq 0 ]; then
+if [ $ALL -eq 0 ] && [ $NO_ENCRYPTION -eq 0 ] && [ $TLS -eq 0 ] && [ $BIT_128 -eq 0 ] && [ $BIT_160 -eq 0 ] && [ $BIT_192 -eq 0 ] && [ $BIT_224 -eq 0 ] && [ $BIT_256 -eq 0 ]; then
     echo "Error: At least one configuration option must be selected"
     usage
 fi
@@ -143,20 +170,28 @@ if [ $MEASURE_RTT -eq 0 ] && [ $MEASURE_PPT -eq 0 ] && [ $MEASURE_DEQ -eq 0 ]; t
     MEASURE_DEQ=1
 fi
 
+# function to print the mode
+detect_mode(){
+    if [ "$MODE" = "no-encryption" ] || [ "$MODE" = "tls" ]; then
+        CUR_MODE="$MODE"
+    else CUR_MODE="$MODE"-bit
+    fi
+}
+
 measure_ppt(){
-    echo "Measuring Packet Processing Time for ${bits}-bit configuration"
+    echo "Measuring Packet Processing Time for $CUR_MODE configuration"
     if [ "$1" = "write" ]; then
         # retrieve info from the switches
         #s1
         echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
+        if ! kathara exec s1 "./retrieve_info.sh --ppt ${MODE} -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
             exit
         fi
 
         #s2
         echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -w" >/dev/tty 2>&1; then
+        if ! kathara exec s2 "./retrieve_info.sh --ppt ${MODE} -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
             exit
         fi
@@ -166,14 +201,14 @@ measure_ppt(){
         # retrieve info from the switches
         #s1
         echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
+        if ! kathara exec s1 "./retrieve_info.sh --ppt ${MODE} -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
             exit
         fi
 
         #s2
         echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --ppt ${bits} -r" >/dev/tty 2>&1; then
+        if ! kathara exec s2 "./retrieve_info.sh --ppt ${MODE} -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
             exit
         fi  
@@ -181,19 +216,19 @@ measure_ppt(){
 }
 
 measure_deq(){
-    echo "Measuring Packet Dequeuing Timedelta for ${bits}-bit configuration"
+    echo "Measuring Packet Dequeuing Timedelta for $CUR_MODE configuration"
     if [ "$1" = "write" ]; then
         # retrieve info from the switches
         #s1
         echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --deq ${bits} -w" >/dev/tty 2>&1; then
+        if ! kathara exec s1 "./retrieve_info.sh --deq ${MODE} -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
             exit
         fi
 
         #s2
         echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --deq ${bits} -w" >/dev/tty 2>&1; then
+        if ! kathara exec s2 "./retrieve_info.sh --deq ${MODE} -w" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
             exit
         fi
@@ -203,14 +238,14 @@ measure_deq(){
         # retrieve info from the switches
         #s1
         echo "Retreiving info from s1"
-        if ! kathara exec s1 "./retrieve_info.sh --deq ${bits} -r" >/dev/tty 2>&1; then
+        if ! kathara exec s1 "./retrieve_info.sh --deq ${MODE} -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s1"
             exit
         fi
 
         #s2
         echo "Retreiving info from s2"
-        if ! kathara exec s2 "./retrieve_info.sh --deq ${bits} -r" >/dev/tty 2>&1; then
+        if ! kathara exec s2 "./retrieve_info.sh --deq ${MODE} -r" >/dev/tty 2>&1; then
             echo "Error: PPT info retrieve failed in s2"
             exit
         fi  
@@ -219,14 +254,43 @@ measure_deq(){
 
 # Function to run a specific configuration
 run_configuration() {
-    local bits=$1
-    echo "Starting Kathara for ${bits}-bit configuration..."
+    local MODE=$1
+
+    if [ "$MODE" = "tls" ];then 
+        export client="python tls_client.py"
+        export server="python server_tls.py"
+    fi
+
+    detect_mode
+
+    echo "Starting Kathara for $CUR_MODE configuration..."
+
     # delete any line that starts with "register_write keys 4|5|6|7"
     sed -i -E '/^register_write keys (4|5|6|7)/d' s1/commands.txt
     sed -i -E '/^register_write keys (4|5|6|7)/d' s2/commands.txt
 
     # Change the commands.txt in s1 and s2 according to the current size of the key
-    case $bits in
+    case $MODE in
+        no-encryption | tls)
+            # set the register from 4 up to 7 to 0 in commands.txt in s1
+            sed -i '/^register_write keys 3/ a\
+register_write keys 4 0\
+register_write keys 5 0\
+register_write keys 6 0\
+register_write keys 7 0' ./s1/commands.txt
+
+            # set the register from 4 up to 7 to 0 in commands.txt in s2
+            sed -i '/^register_write keys 3/ a\
+register_write keys 4 0\
+register_write keys 5 0\
+register_write keys 6 0\
+register_write keys 7 0' ./s2/commands.txt
+            #delete the line that add the modbus_sec table to disable in-network encryption
+            sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
+            sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
+            
+        ;;
+
         128)
             # set the register from 4 up to 7 to 0 in commands.txt in s1
             sed -i '/^register_write keys 3/ a\
@@ -316,6 +380,27 @@ register_write keys 7 096548217' ./s2/commands.txt
             echo 'Expected "128", "160", "192", "224" or "256"' >&2
             exit 1
     esac
+
+    if [[ "${KEYS[*]}" =~ $MODE ]]; then
+        #restore encryption adding the rules to match the table modbus_sec
+#         if ! grep '^table_add modbus_sec' s1/commands.txt; then
+#             sed -i '/^register_write keys 7/ a\
+# table_add modbus_sec cipher 2 =>' ./s1/commands.txt
+#         fi
+#         if ! grep '^table_add modbus_sec' s2/commands.txt; then
+#             sed -i '/^register_write keys 7/ a\
+# table_add modbus_sec cipher 2 =>' ./s2/commands.txt
+#         fi
+        # delete any rule that add an entry to modbus_sec to be sure that only the rules added after are in commands.txt
+        sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
+        sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
+        sed -i '/^register_write keys 7/ a\
+table_add modbus_sec decipher 1 =>\
+table_add modbus_sec cipher 2 =>' ./s1/commands.txt
+        sed -i '/^register_write keys 7/ a\
+table_add modbus_sec decipher 1 =>\
+table_add modbus_sec cipher 2 =>' ./s2/commands.txt
+    fi
     
     # Clean any previous Kathara instance
     kathara lclean
@@ -323,12 +408,12 @@ register_write keys 7 096548217' ./s2/commands.txt
     # Start Kathara with specific configuration
     if ! kathara lstart --noterminals
     then
-        echo "Error: Failed to start Kathara for ${bits}-bit configuration"
+        echo "Error: Failed to start Kathara for $CUR_MODE configuration"
         kathara lclean
         return 1
     fi
 
-    echo "Kathara started successfully for ${bits}-bit configuration!"
+    echo "Kathara started successfully for $CUR_MODE configuration!"
     
     # Wait for containers to be ready
     if ! wait_for_container "h1"; then
@@ -355,18 +440,19 @@ register_write keys 7 096548217' ./s2/commands.txt
         return 1
     fi
 
-    echo "Processing ${bits}-bit configuration..."
+    echo "Processing $CUR_MODE configuration..."
 
     # RTT - Round Trip Time
     if [ $MEASURE_RTT -eq 1 ]; then
         echo "Measuring Round Trip Time..."
         echo "Starting server in h2..."
-        kathara exec h2 "python server.py" &
+        kathara exec h2 $server &
         # give server the time to start
         sleep 2
 
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-rtt-write ${bits}" >/dev/tty 2>&1; then
+        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
+        if ! kathara exec h1 "$client --test-rtt-write $client_mode" >/dev/tty 2>&1; then
             echo "Error: RTT measurement failed"
             exit
         fi
@@ -380,7 +466,7 @@ register_write keys 7 096548217' ./s2/commands.txt
         fi
 
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-rtt-read ${bits}" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "$client --test-rtt-read $client_mode" >/dev/tty 2>&1; then
             echo "Error: RTT measurement failed"
             exit
         fi
@@ -402,13 +488,14 @@ register_write keys 7 096548217' ./s2/commands.txt
         # WRITE
         #h2
         echo "Starting server in h2..."
-        kathara exec h2 "python server.py" &
+        kathara exec h2 $server &
         # give server the time to start
         sleep 2
 
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-write ${bits}" >/dev/tty 2>&1; then
+        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
+        if ! kathara exec h1 "$client --test-write $client_mode" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             exit
         fi
@@ -423,7 +510,7 @@ register_write keys 7 096548217' ./s2/commands.txt
         # READ
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-read ${bits}" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "$client --test-read $client_mode" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             exit
         fi      
@@ -442,13 +529,14 @@ register_write keys 7 096548217' ./s2/commands.txt
         # WRITE
         #h2
         echo "Starting server in h2..."
-        kathara exec h2 "python server.py" &
+        kathara exec h2 $server &
         # give server the time to start
-        sleep 3
+        sleep 2
 
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-write ${bits}" >/dev/tty 2>&1; then
+        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
+        if ! kathara exec h1 "$client --test-write $client_mode" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             kathara lclean
         fi
@@ -458,7 +546,7 @@ register_write keys 7 096548217' ./s2/commands.txt
         # READ
         #h1
         echo "Starting client in h1..."
-        if ! kathara exec h1 "python modbus_client.py --test-read ${bits}" >/dev/tty 2>&1; then
+        if ! kathara exec h1 "$client --test-read $client_mode" >/dev/tty 2>&1; then
             echo "Error: PPT measurement failed | error in modbus client on h1"
             kathara lclean
         fi
@@ -467,7 +555,13 @@ register_write keys 7 096548217' ./s2/commands.txt
     fi
     
     # After processing, clean up
-    echo "Cleaning up ${bits}-bit configuration..."
+    echo "Cleaning up $CUR_MODE configuration..."
+    # restore the default client and server
+    if [ "$MODE" = "tls" ];then 
+        export client="$default_client"
+        export server="$default_server"
+    fi
+
     rm -f shared/startup.temp
     kathara lclean
 } ## run_configuration()
@@ -478,6 +572,14 @@ rm -f shared/startup.temp
 
 rm -f shared/startup.temp
 # Process each selected configuration
+if [ $NO_ENCRYPTION -eq 1 ]; then
+    run_configuration "no-encryption"
+fi
+
+if [ $TLS -eq 1 ]; then
+    run_configuration "tls"
+fi
+
 if [ $BIT_128 -eq 1 ]; then
     run_configuration "128"
 fi
@@ -498,4 +600,4 @@ if [ $BIT_256 -eq 1 ]; then
     run_configuration "256"
 fi
 
-cp shared/results* results/mul_key
+# cp shared/results* results/mul_key
