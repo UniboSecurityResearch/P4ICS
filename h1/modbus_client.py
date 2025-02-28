@@ -161,7 +161,7 @@ async def test_rtt_write():
         cur_mode = mode
     else: 
         file = f"/shared/results_10*10000_cipher_write_{mode}_key.txt"
-        cur_mode = mode + " key"
+        cur_mode = mode + "-bit key"
 
     ## WRITE
     with open(file, "w") as results_file:
@@ -187,7 +187,7 @@ async def test_rtt_read():
         cur_mode = mode
     else: 
         file = f"/shared/results_10*10000_cipher_read_{mode}_key.txt"
-        cur_mode = mode + " key"
+        cur_mode = mode + "-bit key"
 
     ## READ
     with open(file, "w") as results_file:
@@ -210,7 +210,7 @@ async def test_read():
     if (mode=="no-encryption"):
         cur_mode = mode
     else:
-        cur_mode = mode + " key"
+        cur_mode = mode + "-bit key"
 
     for j in range(10):
         for i in range(10000):
@@ -228,7 +228,7 @@ async def test_write():
     if (mode=="no-encryption"):
         cur_mode = mode
     else:
-        cur_mode = mode + " key"
+        cur_mode = mode + "-bit key"
     
     for j in range(10):
         for i in range(10000):
