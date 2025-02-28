@@ -9,10 +9,10 @@ register_write keys 0 729683222
 register_write keys 1 682545830
 register_write keys 2 2885096840
 register_write keys 3 164581180
-register_write keys 4 0
-register_write keys 5 0
-register_write keys 6 0
-register_write keys 7 0
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 243695780
+register_write keys 7 096548217
 table_add modbus_sec decipher 1 =>
 table_add modbus_sec cipher 2 =>
 EOF
