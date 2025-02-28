@@ -357,6 +357,10 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
+    action no_cipher(){
+        bit<1> c;
+    }
+
     action cipher() {
         hdr.payload_encrypt.setValid();
         hdr.ipv4_options.setValid();
@@ -374,7 +378,7 @@ control MyIngress(inout headers hdr,
         if(hdr.modbus_tcp.isValid()) {
             useful_length_fixed = hdr.modbus_tcp.length - 1;
         } else if(hdr.mqtt_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)(hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2);;
+            useful_length_fixed = (bit<16>)(hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2);
         } else if(hdr.cip_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
         } else if(hdr.dnp3_tcp.isValid()) {
@@ -427,11 +431,12 @@ control MyIngress(inout headers hdr,
             standard_metadata.egress_spec: exact;
         }
         actions = {
+            no_cipher;
             cipher;
             decipher;
         }
         size = 2;
-        default_action = decipher();
+        default_action = no_cipher();
     }
 
     apply {

@@ -357,6 +357,10 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
+    action no_cipher(){
+        bit<1> c;
+    }
+
     action cipher() {
         hdr.payload_encrypt.setValid();
         hdr.ipv4_options.setValid();
@@ -427,11 +431,12 @@ control MyIngress(inout headers hdr,
             standard_metadata.egress_spec: exact;
         }
         actions = {
+            no_cipher;
             cipher;
             decipher;
         }
         size = 2;
-        default_action = decipher();
+        default_action = no_cipher();
     }
 
     apply {
