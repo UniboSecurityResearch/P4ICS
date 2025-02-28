@@ -178,8 +178,9 @@ detect_mode(){
     fi
 }
 
+
 measure_ppt(){
-    echo "Measuring Packet Processing Time for $CUR_MODE configuration"
+    echo "Measuring Packet Processing Time for $CUR_MODE ($1) configuration"
     if [ "$1" = "write" ]; then
         # retrieve info from the switches
         #s1
@@ -216,7 +217,7 @@ measure_ppt(){
 }
 
 measure_deq(){
-    echo "Measuring Packet Dequeuing Timedelta for $CUR_MODE configuration"
+    echo "Measuring Packet Dequeuing Timedelta for $CUR_MODE ($1) configuration"
     if [ "$1" = "write" ]; then
         # retrieve info from the switches
         #s1
@@ -252,8 +253,130 @@ measure_deq(){
     fi
 }
 
+run_configuration_mode(){ #@note run_configuration_mode
+    if [ ! "$1" = "write" ] && [ ! "$1" = "read" ]; then
+        exit 1
+    fi
+
+    # Clean any previous Kathara instance
+    kathara lclean
+    
+    # Start Kathara with specific configuration
+    if ! kathara lstart --noterminals
+    then
+        echo "Error: Failed to start Kathara for $CUR_MODE ($1) configuration"
+        kathara lclean
+        return 1
+    fi
+
+    echo "Kathara started successfully for $CUR_MODE ($1) configuration!"
+    
+    # Wait for containers to be ready
+    if ! wait_for_container "h1"; then
+        echo "Error: h1 failed to start properly"
+        kathara lclean
+        return 1
+    fi
+
+    if ! wait_for_container "h2"; then
+        echo "Error: h2 failed to start properly"
+        kathara lclean
+        return 1
+    fi
+
+    if ! wait_for_container "s1"; then
+        echo "Error: s1 failed to start properly"
+        kathara lclean
+        return 1
+    fi
+
+    if ! wait_for_container "s2"; then
+        echo "Error: s2 failed to start properly"
+        kathara lclean
+        return 1
+    fi
+
+    echo "Processing $CUR_MODE ($1) configuration..."
+
+    # RTT - Round Trip Time
+    if [ $MEASURE_RTT -eq 1 ]; then
+        echo "Measuring Round Trip Time..."
+        echo "Starting server in h2..."
+        kathara exec h2 $server &
+        # give server the time to start
+        sleep 2
+
+        echo "Starting client in h1..."
+        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
+        if ! kathara exec h1 "$client --test-rtt-$1 $client_mode" >/dev/tty 2>&1; then
+            echo "Error: RTT measurement failed"
+            exit
+        fi
+
+        if [ $MEASURE_PPT -eq 1 ]; then
+            measure_ppt "$1"
+        fi
+
+        if [ $MEASURE_DEQ -eq 1 ]; then
+            measure_deq "$1"
+        fi
+    fi
+
+    # PPT - Packet Prcessing Time
+    if [ $MEASURE_PPT -eq 1 ] && [ $MEASURE_RTT -ne 1 ]; then
+        echo "Measuring Packet Processing Time..."
+
+        #h2
+        echo "Starting server in h2..."
+        kathara exec h2 $server &
+        # give server the time to start
+        sleep 2
+
+        #h1
+        echo "Starting client in h1..."
+        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
+        if ! kathara exec h1 "$client --test-$1 $client_mode" >/dev/tty 2>&1; then
+            echo "Error: PPT measurement failed | error in modbus client on h1"
+            exit
+        fi
+        
+
+        measure_ppt "$1"
+
+        if [ $MEASURE_DEQ -eq 1 ]; then
+            measure_deq "$1"
+        fi
+    fi
+
+    # DEQ - Packet Dequeuing Timedelta
+    if [ $MEASURE_DEQ -eq 1 ] && [ $MEASURE_RTT -ne 1 ] && [ $MEASURE_PPT -ne 1 ]; then
+        echo "Measuring Dequeuing Timedelta..."
+
+        #h2
+        echo "Starting server in h2..."
+        kathara exec h2 $server &
+        # give server the time to start
+        sleep 2
+
+        #h1
+        echo "Starting client in h1..."
+        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
+        if ! kathara exec h1 "$client --test-$1 $client_mode" >/dev/tty 2>&1; then
+            echo "Error: PPT measurement failed | error in modbus client on h1"
+            kathara lclean
+        fi
+
+        measure_deq "$1" 
+    fi
+    
+    # After processing, clean up
+    echo "Cleaning up $CUR_MODE ($1) configuration..."
+    rm -f shared/startup.temp
+} ## run_configuration_mode
+
+
 # Function to run a specific configuration
-run_configuration() {
+run_configuration() { #@note run_configuration
     local MODE=$1
 
     if [ "$MODE" = "tls" ];then 
@@ -382,18 +505,10 @@ register_write keys 7 096548217' ./s2/commands.txt
     esac
 
     if [[ "${KEYS[*]}" =~ $MODE ]]; then
-        #restore encryption adding the rules to match the table modbus_sec
-#         if ! grep '^table_add modbus_sec' s1/commands.txt; then
-#             sed -i '/^register_write keys 7/ a\
-# table_add modbus_sec cipher 2 =>' ./s1/commands.txt
-#         fi
-#         if ! grep '^table_add modbus_sec' s2/commands.txt; then
-#             sed -i '/^register_write keys 7/ a\
-# table_add modbus_sec cipher 2 =>' ./s2/commands.txt
-#         fi
         # delete any rule that add an entry to modbus_sec to be sure that only the rules added after are in commands.txt
         sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
         sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
+        # add rules to enable in-network encryption
         sed -i '/^register_write keys 7/ a\
 table_add modbus_sec decipher 1 =>\
 table_add modbus_sec cipher 2 =>' ./s1/commands.txt
@@ -402,175 +517,20 @@ table_add modbus_sec decipher 1 =>\
 table_add modbus_sec cipher 2 =>' ./s2/commands.txt
     fi
     
-    # Clean any previous Kathara instance
-    kathara lclean
-    
-    # Start Kathara with specific configuration
-    if ! kathara lstart --noterminals
-    then
-        echo "Error: Failed to start Kathara for $CUR_MODE configuration"
-        kathara lclean
-        return 1
-    fi
+    run_configuration_mode "write"
+    run_configuration_mode "read"
 
-    echo "Kathara started successfully for $CUR_MODE configuration!"
-    
-    # Wait for containers to be ready
-    if ! wait_for_container "h1"; then
-        echo "Error: h1 failed to start properly"
-        kathara lclean
-        return 1
-    fi
-
-    if ! wait_for_container "h2"; then
-        echo "Error: h2 failed to start properly"
-        kathara lclean
-        return 1
-    fi
-
-    if ! wait_for_container "s1"; then
-        echo "Error: s1 failed to start properly"
-        kathara lclean
-        return 1
-    fi
-
-    if ! wait_for_container "s2"; then
-        echo "Error: s2 failed to start properly"
-        kathara lclean
-        return 1
-    fi
-
-    echo "Processing $CUR_MODE configuration..."
-
-    # RTT - Round Trip Time
-    if [ $MEASURE_RTT -eq 1 ]; then
-        echo "Measuring Round Trip Time..."
-        echo "Starting server in h2..."
-        kathara exec h2 $server &
-        # give server the time to start
-        sleep 2
-
-        echo "Starting client in h1..."
-        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
-        if ! kathara exec h1 "$client --test-rtt-write $client_mode" >/dev/tty 2>&1; then
-            echo "Error: RTT measurement failed"
-            exit
-        fi
-
-        if [ $MEASURE_PPT -eq 1 ]; then
-            measure_ppt "write"
-        fi
-
-        if [ $MEASURE_DEQ -eq 1 ]; then
-            measure_deq "write"
-        fi
-
-        echo "Starting client in h1..."
-        if ! kathara exec h1 "$client --test-rtt-read $client_mode" >/dev/tty 2>&1; then
-            echo "Error: RTT measurement failed"
-            exit
-        fi
-
-        if [ $MEASURE_PPT -eq 1 ]; then
-            measure_ppt "read"
-        fi
-
-        if [ $MEASURE_DEQ -eq 1 ]; then
-            measure_deq "read"
-        fi
-
-    fi
-
-    # PPT - Packet Prcessing Time
-    if [ $MEASURE_PPT -eq 1 ] && [ $MEASURE_RTT -ne 1 ]; then
-        echo "Measuring Packet Processing Time..."
-
-        # WRITE
-        #h2
-        echo "Starting server in h2..."
-        kathara exec h2 $server &
-        # give server the time to start
-        sleep 2
-
-        #h1
-        echo "Starting client in h1..."
-        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
-        if ! kathara exec h1 "$client --test-write $client_mode" >/dev/tty 2>&1; then
-            echo "Error: PPT measurement failed | error in modbus client on h1"
-            exit
-        fi
-        
-
-        measure_ppt "write"
-
-        if [ $MEASURE_DEQ -eq 1 ]; then
-            measure_deq "write"
-        fi
-
-        # READ
-        #h1
-        echo "Starting client in h1..."
-        if ! kathara exec h1 "$client --test-read $client_mode" >/dev/tty 2>&1; then
-            echo "Error: PPT measurement failed | error in modbus client on h1"
-            exit
-        fi      
-
-        measure_ppt "read"
-
-        if [ $MEASURE_DEQ -eq 1 ]; then
-            measure_deq "read"
-        fi
-    fi
-
-    # DEQ - Packet Dequeuing Timedelta
-    if [ $MEASURE_DEQ -eq 1 ] && [ $MEASURE_RTT -ne 1 ] && [ $MEASURE_PPT -ne 1 ]; then
-        echo "Measuring Dequeuing Timedelta..."
-
-        # WRITE
-        #h2
-        echo "Starting server in h2..."
-        kathara exec h2 $server &
-        # give server the time to start
-        sleep 2
-
-        #h1
-        echo "Starting client in h1..."
-        [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
-        if ! kathara exec h1 "$client --test-write $client_mode" >/dev/tty 2>&1; then
-            echo "Error: PPT measurement failed | error in modbus client on h1"
-            kathara lclean
-        fi
-
-        measure_deq "write"
-
-        # READ
-        #h1
-        echo "Starting client in h1..."
-        if ! kathara exec h1 "$client --test-read $client_mode" >/dev/tty 2>&1; then
-            echo "Error: PPT measurement failed | error in modbus client on h1"
-            kathara lclean
-        fi
-
-        measure_deq "read"    
-    fi
-    
-    # After processing, clean up
-    echo "Cleaning up $CUR_MODE configuration..."
     # restore the default client and server
     if [ "$MODE" = "tls" ];then 
         export client="$default_client"
         export server="$default_server"
     fi
-
-    rm -f shared/startup.temp
-    kathara lclean
 } ## run_configuration()
+
 
 # Set up trap for both SIGINT and EXIT
 #trap cleanup SIGINT EXIT
-rm -f shared/startup.temp
 
-rm -f shared/startup.temp
 # Process each selected configuration
 if [ $NO_ENCRYPTION -eq 1 ]; then
     run_configuration "no-encryption"
@@ -600,4 +560,9 @@ if [ $BIT_256 -eq 1 ]; then
     run_configuration "256"
 fi
 
-# cp shared/results* results/mul_key
+# move the results to the appropriate folders
+[[ $TLS -eq 1 ]] && mv -f shared/*tls* results/mul_key/Mobus_TLS
+[[ $NO_ENCRYPTION -eq 1 ]] && mv -f shared/*no_cipher* results/mul_key/No_cipher
+if [ $BIT_128 -eq 1 ] || [ $BIT_160 -eq 1 ] || [ $BIT_192 -eq 1 ] || [ $BIT_224 -eq 1 ] || [ $BIT_256 -eq 1 ]; then
+    mv -f shared/*cipher* results/mul_key/Cipher
+fi
