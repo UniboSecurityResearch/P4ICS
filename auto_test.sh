@@ -2,7 +2,7 @@
 
 # Function to print usage
 usage() {
-    echo "Usage: $0 [--all] [--128] [--160] [--192] [--224] [--256] [--rtt] [--ppt] [--deq] [--no-encryption] [--tls]"
+    echo "Usage: $0 [--all] [--128] [--160] [--192] [--224] [--256] [--rtt] [--ppt] [--deq] [--no-encryption] [--tls] [--noterminals]"
     echo "Options:"
     echo "  --all               Run all configurations"
     echo "  --no-encryption     Run test without encryption functionality"
@@ -16,10 +16,12 @@ usage() {
     echo "  --rtt               Measure Round Trip Time"
     echo "  --ppt               Measure Packet Processing Time"
     echo "  --deq               Measure Packet Dequeuing Timedelta"
-
+    echo "Additional option:"
+    echo "  --noterminals       Pass --noterminals flag to kathara lstart"
     echo "Note: If no measurement options are selected, all measurements will be performed"
     exit 1
 }
+
 
 # EXTENSIBILITY 
 # Set the command to execute the client
@@ -30,7 +32,7 @@ default_server="python server.py"
 export client="$default_client"
 export server="$default_server"
 
-KEYS=( "128" "160" "192" "224" "256" )
+# KEYS=( "128" "160" "192" "224" "256" )
 
 # Function to be executed on cleanup
 cleanup() {
@@ -79,8 +81,8 @@ MEASURE_RTT=0
 MEASURE_PPT=0
 MEASURE_DEQ=0
 
-# Parse command line arguments
-TEMP=$(getopt -o '' --long all,no-encryption,tls,128,160,192,224,256,rtt,ppt,deq -n "$0" -- "$@")
+# Parse command line arguments (added --noterminals in the getopt list)
+TEMP=$(getopt -o '' --long all,no-encryption,tls,128,160,192,224,256,rtt,ppt,deq,noterminals -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     usage
 fi
@@ -88,6 +90,7 @@ fi
 
 eval set -- "$TEMP"
 
+# Extract options
 # Extract options
 while true; do
     case "$1" in
@@ -133,6 +136,10 @@ while true; do
             ;;
         --deq)
             MEASURE_DEQ=1
+            shift
+            ;;
+        --noterminals)
+            KATHARA_OPTIONS="--noterminals"
             shift
             ;;
         --)
@@ -262,7 +269,7 @@ run_configuration_mode(){ #@note run_configuration_mode
     kathara lclean
     
     # Start Kathara with specific configuration
-    if ! kathara lstart --noterminals
+    if ! kathara lstart $KATHARA_OPTIONS
     then
         echo "Error: Failed to start Kathara for $CUR_MODE ($1) configuration"
         kathara lclean
@@ -388,113 +395,173 @@ run_configuration() { #@note run_configuration
 
     echo "Starting Kathara for $CUR_MODE configuration..."
 
-    # delete any line that starts with "register_write keys 4|5|6|7"
-    sed -i -E '/^register_write keys (4|5|6|7)/d' s1/commands.txt
-    sed -i -E '/^register_write keys (4|5|6|7)/d' s2/commands.txt
+    # create commands files with basic commands
+    echo "" > s1/auto_test_commands.txt
+    echo "" > s2/auto_test_commands.txt
+    echo "table_set_default ipv4_lpm drop
+table_add ipv4_lpm ipv4_forward 200.1.1.7/32 => 00:00:00:00:00:03 2
+table_add ipv4_lpm ipv4_forward 200.1.1.8/32 => 00:00:00:00:00:03 2
+table_add ipv4_lpm ipv4_forward 200.1.1.9/32 => 00:00:00:00:00:03 2
+table_add ipv4_lpm ipv4_forward 195.11.14.5/32 =>  00:00:0a:00:01:01 1
+table_add ipv4_lpm ipv4_forward 195.11.14.6/32 =>  00:00:0a:00:02:01 1
+table_add ipv4_lpm ipv4_forward 195.11.14.7/32 =>  00:00:0a:00:02:01 1" >> s1/auto_test_commands.txt
+    echo "table_set_default ipv4_lpm drop
+table_add ipv4_lpm ipv4_forward 195.11.14.5/32 =>  00:00:00:00:00:02 2
+table_add ipv4_lpm ipv4_forward 195.11.14.6/32 =>  00:00:00:00:00:02 2
+table_add ipv4_lpm ipv4_forward 195.11.14.7/32 =>  00:00:00:00:00:02 2
+table_add ipv4_lpm ipv4_forward 200.1.1.7/32 =>  00:00:0a:00:01:02 1
+table_add ipv4_lpm ipv4_forward 200.1.1.8/32 =>  00:00:0a:00:02:02 1
+table_add ipv4_lpm ipv4_forward 200.1.1.9/32 =>  00:00:0a:00:02:02 1" >> s2/auto_test_commands.txt
 
-    # Change the commands.txt in s1 and s2 according to the current size of the key
+    # append rule in auto_test_commands.txt in s1 and s2 according to the current mode
     case $MODE in
         no-encryption | tls)
             # set the register from 4 up to 7 to 0 in commands.txt in s1
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 0\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' ./s1/commands.txt
+#             sed -i '/^register_write keys 3/ a\
+# register_write keys 4 0\
+# register_write keys 5 0\
+# register_write keys 6 0\
+# register_write keys 7 0' ./s1/commands.txt
 
             # set the register from 4 up to 7 to 0 in commands.txt in s2
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 0\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' ./s2/commands.txt
+#             sed -i '/^register_write keys 3/ a\
+# register_write keys 4 0\
+# register_write keys 5 0\
+# register_write keys 6 0\
+# register_write keys 7 0' ./s2/commands.txt
             #delete the line that add the modbus_sec table to disable in-network encryption
-            sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
-            sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
+            # sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
+            # sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
             
         ;;
 
         128)
             # set the register from 4 up to 7 to 0 in commands.txt in s1
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 0\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' ./s1/commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 0
+register_write keys 5 0
+register_write keys 6 0
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s1/auto_test_commands.txt
 
-            # set the register from 4 up to 7 to 0 in commands.txt in s2
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 0\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' ./s2/commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 0
+register_write keys 5 0
+register_write keys 6 0
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s2/auto_test_commands.txt
         ;;
 
         160)
-            # set the register from 4 up to 7 to 0 in commands.txt in s1
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' ./s1/commands.txt
-
-            # set the register from 4 up to 7 to 0 in commands.txt in s2
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' ./s2/commands.txt
-
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 0
+register_write keys 6 0
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s1/auto_test_commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 0
+register_write keys 6 0
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s2/auto_test_commands.txt
         ;;
 
         192)
-            # set the register from 4 up to 7 to 0 in commands.txt in s1
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 0\
-register_write keys 7 0' ./s1/commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 0
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s1/auto_test_commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 0
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s2/auto_test_commands.txt
 
-            # set the register from 4 up to 7 to 0 in commands.txt in s2
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 0\
-register_write keys 7 0' ./s2/commands.txt
 
         ;;
 
         224)
-            # set the register from 4 up to 7 to 0 in commands.txt in s1
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 243695780\
-register_write keys 7 0' ./s1/commands.txt
-
-            # set the register from 4 up to 7 to 0 in commands.txt in s2
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 243695780\
-register_write keys 7 0' ./s2/commands.txt
-
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 243695780
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s1/auto_test_commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 243695780
+register_write keys 7 0
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s2/auto_test_commands.txt
         ;;
 
         256)
-            # set the register from 4 up to 7 to 0 in commands.txt in s1
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 243695780\
-register_write keys 7 096548217' ./s1/commands.txt
-
-            # set the register from 4 up to 7 to 0 in commands.txt in s2
-            sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 243695780\
-register_write keys 7 096548217' ./s2/commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 243695780
+register_write keys 7 096548217
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s1/auto_test_commands.txt
+            echo "register_write keys 0 729683222
+register_write keys 1 682545830
+register_write keys 2 2885096840
+register_write keys 3 164581180
+register_write keys 4 102358694
+register_write keys 5 259174683
+register_write keys 6 243695780
+register_write keys 7 096548217
+table_add modbus_sec decipher 1 =>
+table_add modbus_sec cipher 2 =>
+EOF" >> s2/auto_test_commands.txt
 
         ;;
 
@@ -503,19 +570,6 @@ register_write keys 7 096548217' ./s2/commands.txt
             echo 'Expected "128", "160", "192", "224" or "256"' >&2
             exit 1
     esac
-
-    if [[ "${KEYS[*]}" =~ $MODE ]]; then
-        # delete any rule that add an entry to modbus_sec to be sure that only the rules added after are in commands.txt
-        sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
-        sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
-        # add rules to enable in-network encryption
-        sed -i '/^register_write keys 7/ a\
-table_add modbus_sec decipher 1 =>\
-table_add modbus_sec cipher 2 =>' ./s1/commands.txt
-        sed -i '/^register_write keys 7/ a\
-table_add modbus_sec decipher 1 =>\
-table_add modbus_sec cipher 2 =>' ./s2/commands.txt
-    fi
     
     run_configuration_mode "write"
     run_configuration_mode "read"
@@ -560,9 +614,12 @@ if [ $BIT_256 -eq 1 ]; then
     run_configuration "256"
 fi
 
+rm -f s1/auto_test_commands.txt
+rm -f s2/auto_test_commands.txt
+
 # move the results to the appropriate folders
-[[ $TLS -eq 1 ]] && mv -f shared/*tls* results/mul_key/Mobus_TLS
-[[ $NO_ENCRYPTION -eq 1 ]] && mv -f shared/*no_cipher* results/mul_key/No_cipher
-if [ $BIT_128 -eq 1 ] || [ $BIT_160 -eq 1 ] || [ $BIT_192 -eq 1 ] || [ $BIT_224 -eq 1 ] || [ $BIT_256 -eq 1 ]; then
-    mv -f shared/*cipher* results/mul_key/Cipher
-fi
+# [[ $TLS -eq 1 ]] && mv -f shared/*tls* results/mul_key/Mobus_TLS
+# [[ $NO_ENCRYPTION -eq 1 ]] && mv -f shared/*no_cipher* results/mul_key/No_cipher
+# if [ $BIT_128 -eq 1 ] || [ $BIT_160 -eq 1 ] || [ $BIT_192 -eq 1 ] || [ $BIT_224 -eq 1 ] || [ $BIT_256 -eq 1 ]; then
+#     mv -f shared/*cipher* results/mul_key/Cipher
+# fi
