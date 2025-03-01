@@ -32,19 +32,19 @@ key_lengths = ['128-bit', '160-bit', '192-bit', '224-bit', '256-bit']
 base_dir = "./results/mul_key/"
 
 # ---------------------------
-# Plain (No_cipher) files for packet processing time tests (Switch 1 and Switch 2)
+# Plain (no_cipher) files for packet processing time tests (Switch 1 and Switch 2)
 # ---------------------------
 plain_read_file_s1 = os.path.join(
-    base_dir, "No_cipher", "results_s1_no_cipher_read_packet_processing_time.txt"
+    base_dir, "no_cipher", "results_s1_no_cipher_read_packet_processing_time.txt"
 )
 plain_read_file_s2 = os.path.join(
-    base_dir, "No_cipher", "results_s2_no_cipher_read_packet_processing_time.txt"
+    base_dir, "no_cipher", "results_s2_no_cipher_read_packet_processing_time.txt"
 )
 plain_write_file_s1 = os.path.join(
-    base_dir, "No_cipher", "results_s1_no_cipher_write_packet_processing_time.txt"
+    base_dir, "no_cipher", "results_s1_no_cipher_write_packet_processing_time.txt"
 )
 plain_write_file_s2 = os.path.join(
-    base_dir, "No_cipher", "results_s2_no_cipher_write_packet_processing_time.txt"
+    base_dir, "no_cipher", "results_s2_no_cipher_write_packet_processing_time.txt"
 )
 
 # Read and filter the plain data.
@@ -59,7 +59,7 @@ mean_plain_write_s1 = np.mean(plain_write_s1) if plain_write_s1 else 0
 mean_plain_write_s2 = np.mean(plain_write_s2) if plain_write_s2 else 0
 
 # ---------------------------
-# Modbus in-switch encryption (Cipher) files for packet processing time tests
+# Modbus in-switch encryption (cipher) files for packet processing time tests
 # (Switch 1 and Switch 2 for each key length)
 # ---------------------------
 cipher_read_s1 = {}
@@ -69,19 +69,19 @@ cipher_write_s2 = {}
 
 for kl in key_lengths:
     read_s1_file = os.path.join(
-        base_dir, "Cipher",
+        base_dir, "cipher",
         f"results_s1_cipher_read_packet_processing_time_{kl}.txt"
     )
     read_s2_file = os.path.join(
-        base_dir, "Cipher",
+        base_dir, "cipher",
         f"results_s2_cipher_read_packet_processing_time_{kl}.txt"
     )
     write_s1_file = os.path.join(
-        base_dir, "Cipher",
+        base_dir, "cipher",
         f"results_s1_cipher_write_packet_processing_time_{kl}.txt"
     )
     write_s2_file = os.path.join(
-        base_dir, "Cipher",
+        base_dir, "cipher",
         f"results_s2_cipher_write_packet_processing_time_{kl}.txt"
     )
     
@@ -96,29 +96,25 @@ mean_cipher_write_s1 = {}
 mean_cipher_write_s2 = {}
 
 for kl in key_lengths:
-    mean_cipher_read_s1[kl] = (np.mean(cipher_read_s1[kl])
-                                 if cipher_read_s1[kl] else 0)
-    mean_cipher_read_s2[kl] = (np.mean(cipher_read_s2[kl])
-                                 if cipher_read_s2[kl] else 0)
-    mean_cipher_write_s1[kl] = (np.mean(cipher_write_s1[kl])
-                                  if cipher_write_s1[kl] else 0)
-    mean_cipher_write_s2[kl] = (np.mean(cipher_write_s2[kl])
-                                  if cipher_write_s2[kl] else 0)
+    mean_cipher_read_s1[kl] = np.mean(cipher_read_s1[kl]) if cipher_read_s1[kl] else 0
+    mean_cipher_read_s2[kl] = np.mean(cipher_read_s2[kl]) if cipher_read_s2[kl] else 0
+    mean_cipher_write_s1[kl] = np.mean(cipher_write_s1[kl]) if cipher_write_s1[kl] else 0
+    mean_cipher_write_s2[kl] = np.mean(cipher_write_s2[kl]) if cipher_write_s2[kl] else 0
 
 # ---------------------------
 # Modbus TLS files for packet processing time tests (Switch 1 and Switch 2)
 # ---------------------------
 tls_read_file_s1 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s1_tls_read_packet_processing_time.txt"
+    base_dir, "modbus_tls", "results_s1_tls_read_packet_processing_time.txt"
 )
 tls_read_file_s2 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s2_tls_read_packet_processing_time.txt"
+    base_dir, "modbus_tls", "results_s2_tls_read_packet_processing_time.txt"
 )
 tls_write_file_s1 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s1_tls_write_packet_processing_time.txt"
+    base_dir, "modbus_tls", "results_s1_tls_write_packet_processing_time.txt"
 )
 tls_write_file_s2 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s2_tls_write_packet_processing_time.txt"
+    base_dir, "modbus_tls", "results_s2_tls_write_packet_processing_time.txt"
 )
 
 tls_read_s1 = read_and_filter(tls_read_file_s1)

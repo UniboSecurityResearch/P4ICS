@@ -35,16 +35,16 @@ base_dir = "./results/mul_key/"
 # Plain (No_cipher) files for read and write tests (Switch 1 and Switch 2)
 # ---------------------------
 plain_read_file_s1 = os.path.join(
-    base_dir, "No_cipher", "results_s1_no_cipher_read_packet_dequeuing_timedelta_array.txt"
+    base_dir, "no_cipher", "results_s1_no_cipher_read_packet_dequeuing_timedelta.txt"
 )
 plain_read_file_s2 = os.path.join(
-    base_dir, "No_cipher", "results_s2_no_cipher_read_packet_dequeuing_timedelta_array.txt"
+    base_dir, "no_cipher", "results_s2_no_cipher_read_packet_dequeuing_timedelta.txt"
 )
 plain_write_file_s1 = os.path.join(
-    base_dir, "No_cipher", "results_s1_no_cipher_write_packet_dequeuing_timedelta_array.txt"
+    base_dir, "no_cipher", "results_s1_no_cipher_write_packet_dequeuing_timedelta.txt"
 )
 plain_write_file_s2 = os.path.join(
-    base_dir, "No_cipher", "results_s2_no_cipher_write_packet_dequeuing_timedelta_array.txt"
+    base_dir, "no_cipher", "results_s2_no_cipher_write_packet_dequeuing_timedelta.txt"
 )
 
 # Read and filter the plain data.
@@ -69,20 +69,20 @@ cipher_write_s2 = {}
 
 for kl in key_lengths:
     read_s1_file = os.path.join(
-        base_dir, "Cipher",
-        f"results_s1_cipher_read_packet_dequeuing_timedelta_array_{kl}.txt"
+        base_dir, "cipher",
+        f"results_s1_cipher_read_packet_dequeuing_timedelta_{kl}.txt"
     )
     read_s2_file = os.path.join(
-        base_dir, "Cipher",
-        f"results_s2_cipher_read_packet_dequeuing_timedelta_array_{kl}.txt"
+        base_dir, "cipher",
+        f"results_s2_cipher_read_packet_dequeuing_timedelta_{kl}.txt"
     )
     write_s1_file = os.path.join(
-        base_dir, "Cipher",
-        f"results_s1_cipher_write_packet_dequeuing_timedelta_array_{kl}.txt"
+        base_dir, "cipher",
+        f"results_s1_cipher_write_packet_dequeuing_timedelta_{kl}.txt"
     )
     write_s2_file = os.path.join(
-        base_dir, "Cipher",
-        f"results_s2_cipher_write_packet_dequeuing_timedelta_array_{kl}.txt"
+        base_dir, "cipher",
+        f"results_s2_cipher_write_packet_dequeuing_timedelta_{kl}.txt"
     )
     
     cipher_read_s1[kl] = read_and_filter(read_s1_file)
@@ -105,16 +105,16 @@ for kl in key_lengths:
 # Modbus TLS files for read and write tests (Switch 1 and Switch 2)
 # ---------------------------
 tls_read_file_s1 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s1_tls_read_packet_dequeuing_timedelta_array.txt"
+    base_dir, "modbus_tls", "results_s1_tls_read_packet_dequeuing_timedelta.txt"
 )
 tls_read_file_s2 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s2_tls_read_packet_dequeuing_timedelta_array.txt"
+    base_dir, "modbus_tls", "results_s2_tls_read_packet_dequeuing_timedelta.txt"
 )
 tls_write_file_s1 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s1_tls_write_packet_dequeuing_timedelta_array.txt"
+    base_dir, "modbus_tls", "results_s1_tls_write_packet_dequeuing_timedelta.txt"
 )
 tls_write_file_s2 = os.path.join(
-    base_dir, "Mobus_TLS", "results_s2_tls_write_packet_dequeuing_timedelta_array.txt"
+    base_dir, "modbus_tls", "results_s2_tls_write_packet_dequeuing_timedelta.txt"
 )
 
 tls_read_s1 = read_and_filter(tls_read_file_s1)
@@ -187,7 +187,7 @@ ax.legend(fontsize=12)
 plt.tight_layout()
 plt.show()
 
-# ----- Write Times Stacked Bar Chart -----
+# ----- Write Stacked Bar Chart -----
 write_s1_means = (
     [mean_plain_write_s1, mean_tls_write_s1] +
     [mean_cipher_write_s1[kl] for kl in key_lengths]
@@ -204,7 +204,7 @@ bar_s2 = ax.bar(x, write_s2_means, width, bottom=write_s1_means,
                 label='Switch 2', color='tab:blue')
 
 ax.set_ylabel('Avg Packet Dequeuing Time (μs)', fontsize=14)
-ax.set_title('Write Times', fontsize=16)
+ax.set_title('Write', fontsize=16)
 ax.set_xticks(x)
 ax.set_xticklabels(categories, fontsize=12)
 ax.legend(fontsize=12)

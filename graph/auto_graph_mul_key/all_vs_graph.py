@@ -1,214 +1,198 @@
 #!/usr/bin/python3
-import math
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
-# ------------------------------
-# 1. Helper function: Process a list of numbers
-#    (truncate to 9 decimals and convert seconds to milliseconds)
-# ------------------------------
-def process_list(data_list):
-    factor = 10.0 ** 9  # for truncation to nine decimals
-    for i in range(len(data_list)):
-        data_list[i] = math.trunc(data_list[i] * factor) / factor
-        data_list[i] = data_list[i] * 1000  # convert to milliseconds
-    return data_list
-
-# ------------------------------
-# 2. Read Aggregated Data for Plain (Modbus) and TLS
-# ------------------------------
-# Plain (no encryption) from the No_cipher folder
+# Inizializza le liste per i dati
+r_cipher = []
 r_no_cipher = []
+w_cipher = []
 w_no_cipher = []
-no_cipher_read_file  = "./results/mul_key/No_cipher/results_10*10000_no_cipher_read.txt"
-no_cipher_write_file = "./results/mul_key/No_cipher/results_10*10000_no_cipher_write.txt"
-
-with open(no_cipher_read_file, 'r') as f:
-    for line in f:
-        line = line.strip()
-        if line:
-            r_no_cipher.append(float(line))
-with open(no_cipher_write_file, 'r') as f:
-    for line in f:
-        line = line.strip()
-        if line:
-            w_no_cipher.append(float(line))
-
-# TLS data from the Mobus_TLS folder
 r_tls = []
 w_tls = []
-tls_read_file  = "./results/mul_key/Mobus_TLS/results_tls_read.txt"
-tls_write_file = "./results/mul_key/Mobus_TLS/results_tls_write.txt"
 
-with open(tls_read_file, 'r') as f:
-    for line in f:
-        line = line.strip()
-        if line:
+# Specifica il percorso del file di testo
+file_path = "./results/results_10*10000_chiper_read.txt"
+
+# Leggi i dati dal file, prendendo solo una riga ogni 4
+with open(file_path, 'r') as file:
+    for line in file:
+        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
+        if line: 
+            r_cipher.append(float(line))
+
+
+file_path = "./results/mul_key/no_cipher/results_10*10000_no_cipher_read.txt"
+with open(file_path, 'r') as file:
+    for line in file:
+        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
+        if line: 
+            r_no_cipher.append(float(line))
+
+file_path = "./results/results_10*10000_chiper_write.txt"
+with open(file_path, 'r') as file:
+    for line in file:
+        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
+        if line: 
+            w_cipher.append(float(line))
+
+file_path = "./results/mul_key/no_cipher/results_10*10000_no_cipher_write.txt"
+with open(file_path, 'r') as file:
+    for line in file:
+        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
+        if line: 
+            w_no_cipher.append(float(line))
+
+file_path = "./results/mul_key/modbus_tls/results_10*10000_tls_read.txt"
+with open(file_path, 'r') as file:
+    for line in file:
+        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
+        if line: 
             r_tls.append(float(line))
-with open(tls_write_file, 'r') as f:
-    for line in f:
-        line = line.strip()
-        if line:
+
+file_path = "./results/mul_key/modbus_tls/results_10*10000_tls_write.txt"
+with open(file_path, 'r') as file:
+    for line in file:
+        line = line.strip()  # Rimuovi spazi bianchi e caratteri di nuova riga
+        if line: 
             w_tls.append(float(line))
 
-# Process aggregated plain and TLS data.
-r_no_cipher = process_list(r_no_cipher)
-w_no_cipher = process_list(w_no_cipher)
-r_tls       = process_list(r_tls)
-w_tls       = process_list(w_tls)
+#round all values to 9 decimal places
+factor = 10.0 ** 9
+for i in range(len(r_cipher)):
+    r_cipher[i] = math.trunc(r_cipher[i] * factor) / factor
+    r_cipher[i] = r_cipher[i] * 1000
+    r_tls[i] = math.trunc(r_tls[i] * factor) / factor
+    r_tls[i] = r_tls[i] * 1000
+    w_cipher[i] = math.trunc(w_cipher[i] * factor) / factor
+    w_cipher[i] = w_cipher[i] * 1000
+    w_tls[i] = math.trunc(w_tls[i] * factor) / factor
+    w_tls[i] = w_tls[i] * 1000
+    r_no_cipher[i] = math.trunc(r_no_cipher[i] * factor) / factor
+    r_no_cipher[i] = r_no_cipher[i] * 1000
+    w_no_cipher[i] = math.trunc(w_no_cipher[i] * factor) / factor
+    w_no_cipher[i] = w_no_cipher[i] * 1000
 
-# ------------------------------
-# 3. Read In-Network Encryption Data (Cipher) per Key Length
-# ------------------------------
-# Define key lengths for in-network encryption.
-key_lengths = ['128-bit', '160-bit', '192-bit', '224-bit', '256-bit']
+#Rimuovi i valori anomali
+# Q3, Q1 = np.percentile(r_cipher, [75, 25])
+# IQR = Q3 - Q1
+# upper_bound = Q3 + 1.5 * IQR
+# lower_bound = Q1 - 1.5 * IQR
+# for el in r_cipher:
+#     if el < upper_bound and el > lower_bound:
+#         r_cipher.remove(el)
 
-# Dictionaries to store read and write data per key.
-r_cipher_keys = {kl: [] for kl in key_lengths}
-w_cipher_keys = {kl: [] for kl in key_lengths}
+# Q3, Q1 = np.percentile(r_tls, [75, 25])
+# IQR = Q3 - Q1
+# upper_bound = Q3 + 1.5 * IQR
+# lower_bound = Q1 - 1.5 * IQR
+# for el in r_tls:
+#     if el < upper_bound and el > lower_bound:
+#         r_tls.remove(el)
 
-for kl in key_lengths:
-    # For file naming, convert e.g. "128-bit" to "128_bit"
-    kl_filename = kl.replace('-', '_')
-    
-    # Build file paths for read and write files in the Cipher folder.
-    read_file_path  = f"./results/mul_key/Cipher/results_10*10000_cipher_read_{kl_filename}_key.txt"
-    write_file_path = f"./results/mul_key/Cipher/results_10*10000_cipher_write_{kl_filename}_key.txt"
-    
-    # Read the "read" data.
-    try:
-        with open(read_file_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    r_cipher_keys[kl].append(float(line))
-    except Exception as e:
-        print(f"Error reading {read_file_path}: {e}")
-    
-    # Read the "write" data.
-    try:
-        with open(write_file_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    w_cipher_keys[kl].append(float(line))
-    except Exception as e:
-        print(f"Error reading {write_file_path}: {e}")
+# Q3, Q1 = np.percentile(w_cipher, [75, 25])
+# IQR = Q3 - Q1
+# upper_bound = Q3 + 1.5 * IQR
+# lower_bound = Q1 - 1.5 * IQR
+# for el in w_cipher:
+#     if el < upper_bound and el > lower_bound:
+#         w_cipher.remove(el)
 
-# Process the per-key data.
-for kl in key_lengths:
-    r_cipher_keys[kl] = process_list(r_cipher_keys[kl])
-    w_cipher_keys[kl] = process_list(w_cipher_keys[kl])
+# Q3, Q1 = np.percentile(w_tls, [75, 25])
+# IQR = Q3 - Q1
+# upper_bound = Q3 + 1.5 * IQR
+# lower_bound = Q1 - 1.5 * IQR
+# for el in w_tls:
+#     if el < upper_bound and el > lower_bound:
+#         w_tls.remove(el)
 
-# ------------------------------
-# 4. Compute Statistics (Mean and Standard Deviation)
-# ------------------------------
-# Aggregated statistics for Plain (Modbus) and TLS.
-mean_r_no   = np.mean(r_no_cipher) if r_no_cipher else 0
-std_r_no    = np.std(r_no_cipher)  if r_no_cipher else 0
-mean_w_no   = np.mean(w_no_cipher) if w_no_cipher else 0
-std_w_no    = np.std(w_no_cipher)  if w_no_cipher else 0
+# Q3, Q1 = np.percentile(r_no_cipher, [75, 25])
+# IQR = Q3 - Q1
+# upper_bound = Q3 + 1.5 * IQR
+# lower_bound = Q1 - 1.5 * IQR
+# for el in r_no_cipher:
+#     if el < upper_bound and el > lower_bound:
+#         r_no_cipher.remove(el)
 
-mean_r_tls  = np.mean(r_tls)  if r_tls else 0
-std_r_tls   = np.std(r_tls)   if r_tls else 0
-mean_w_tls  = np.mean(w_tls)  if w_tls else 0
-std_w_tls   = np.std(w_tls)   if w_tls else 0
+# Q3, Q1 = np.percentile(w_no_cipher, [75, 25])
+# IQR = Q3 - Q1
+# upper_bound = Q3 + 1.5 * IQR
+# lower_bound = Q1 - 1.5 * IQR
+# for el in w_no_cipher:
+#     if el < upper_bound and el > lower_bound:
+#         w_no_cipher.remove(el)
 
-# Compute statistics for in-network encryption per key.
-mean_r_cipher_keys = {}
-std_r_cipher_keys  = {}
-mean_w_cipher_keys = {}
-std_w_cipher_keys  = {}
+# Calcola la media
+mean_r_cipher = np.mean(r_cipher)
+mean_r_cipher = math.trunc(mean_r_cipher * factor) / factor
+mean_r_tls = np.mean(r_tls)
+mean_r_tls = math.trunc(mean_r_tls * factor) / factor
+mean_w_cipher = np.mean(w_cipher)
+mean_w_cipher = math.trunc(mean_w_cipher * factor) / factor
+mean_w_tls = np.mean(w_tls)
+mean_w_tls = math.trunc(mean_w_tls * factor) / factor
+mean_r_no_cipher = np.mean(r_no_cipher)
+mean_r_no_cipher = math.trunc(mean_r_no_cipher * factor) / factor
+mean_w_no_cipher = np.mean(w_no_cipher)
+mean_w_no_cipher = math.trunc(mean_w_no_cipher * factor) / factor
 
-for kl in key_lengths:
-    if r_cipher_keys[kl]:
-        mean_r_cipher_keys[kl] = np.mean(r_cipher_keys[kl])
-        std_r_cipher_keys[kl]  = np.std(r_cipher_keys[kl])
-    else:
-        mean_r_cipher_keys[kl] = 0
-        std_r_cipher_keys[kl]  = 0
-    if w_cipher_keys[kl]:
-        mean_w_cipher_keys[kl] = np.mean(w_cipher_keys[kl])
-        std_w_cipher_keys[kl]  = np.std(w_cipher_keys[kl])
-    else:
-        mean_w_cipher_keys[kl] = 0
-        std_w_cipher_keys[kl]  = 0
+# Stampa le medie
+print("Mean read without encryption: ", mean_r_no_cipher)
+print("Mean read with encryption: ", mean_r_cipher)
+print("Mean read with TLS: ", mean_r_tls)
+print("Mean write without encryption: ", mean_w_no_cipher)
+print("Mean write with encryption: ", mean_w_cipher)
+print("Mean write with TLS: ", mean_w_tls)
 
-# ------------------------------
-# 5. Organize Data for the Final Plots
-# ------------------------------
-# The final x-axis ordering:
-#   0: "Modbus" (Plain / No encryption)
-#   1: "Modbus TLS"
-#   2: "In-Network 128-bit"
-#   3: "In-Network 160-bit"
-#   4: "In-Network 192-bit"
-#   5: "In-Network 224-bit"
-#   6: "In-Network 256-bit"
-x_labels = [
-    "Modbus",
-    "Modbus TLS",
-    "In-Network 128-bit",
-    "In-Network 160-bit",
-    "In-Network 192-bit",
-    "In-Network 224-bit",
-    "In-Network 256-bit",
-]
+# Calcola la deviazione standard
+std_dev_r_chipher = np.std(r_cipher)
+std_dev_r_chipher = math.trunc(std_dev_r_chipher * factor) / factor
+std_dev_r_tls = np.std(r_tls)
+std_dev_r_tls = math.trunc(std_dev_r_tls * factor) / factor
+std_dev_w_chipher = np.std(w_cipher)
+std_dev_w_chipher = math.trunc(std_dev_w_chipher * factor) / factor
+std_dev_w_tls = np.std(w_tls)
+std_dev_w_tls = math.trunc(std_dev_w_tls * factor) / factor
+std_dev_r_no_chipher = np.std(r_no_cipher)
+std_dev_r_no_chipher = math.trunc(std_dev_r_no_chipher * factor) / factor
+std_dev_w_no_chipher = np.std(w_no_cipher)
+std_dev_w_no_chipher = math.trunc(std_dev_w_no_chipher * factor) / factor
 
-# Build arrays for read data.
-read_means = [mean_r_no, mean_r_tls] + [mean_r_cipher_keys[kl] for kl in key_lengths]
-read_std   = [std_r_no,  std_r_tls]  + [std_r_cipher_keys[kl]  for kl in key_lengths]
+# Crea una lista con le medie di read
+no_cipher_means = [mean_r_no_cipher, mean_w_no_cipher]
+cipher_means = [mean_r_cipher, mean_w_cipher]
+tls_means = [mean_r_tls, mean_w_tls]
+x_labels = ['Read', 'Write']
+width = 0.3
 
-# Build arrays for write data.
-write_means = [mean_w_no, mean_w_tls] + [mean_w_cipher_keys[kl] for kl in key_lengths]
-write_std   = [std_w_no,  std_w_tls]  + [std_w_cipher_keys[kl]  for kl in key_lengths]
 
-# ------------------------------
-# 6. Define Colors for Each Category
-# ------------------------------
-# Category 0 ("Modbus") → Blue
-# Category 1 ("Modbus TLS") → Green
-# Categories 2 - 6 ("In-Network" with various key lengths) → Unique colors
-colors = [
-    "tab:blue",        # Modbus (plain)
-    "tab:green",       # Modbus TLS
-    "crimson",     # In-Network 128-bit
-    "darkorange",  # In-Network 160-bit
-    "mediumorchid",# In-Network 192-bit
-    "gold",        # In-Network 224-bit
-    "chocolate",   # In-Network 256-bit
-]
+# Crea una lista di stringhe per i valori sull'asse delle x
+x_val = np.arange(len(x_labels))
 
-# ------------------------------
-# 7. Plot the Read Data (Bars Touching, No Space in Between)
-# ------------------------------
-n_read = len(read_means)
-x_read = np.arange(n_read)
-bar_width = 1.0
+fig, ax = plt.subplots()
+rects1 = ax.bar(x_val - width, no_cipher_means, width, label='Modbus')
+rects2 = ax.bar(x_val, cipher_means, width, label='In-Network Encryption')
+rects3 = ax.bar(x_val + width, tls_means, width, label='Modbus TLS')
 
-fig, ax = plt.subplots(figsize=(12, 7))
-# Use our color list (each bar gets its own unique color)
-bars = ax.bar(x_read, read_means, width=bar_width, yerr=read_std,
-              align="edge", capsize=4, color=colors)
-ax.set_xticks(x_read + bar_width/2)
-ax.set_xticklabels(x_labels, fontsize=14, rotation=15)
-ax.set_ylabel("Avg Read Time (ms)", fontsize=16)
-ax.set_title("Read Performance by Encryption Mode", fontsize=18)
-plt.tight_layout()
-plt.show()
+ax.errorbar(x_val - width, no_cipher_means, yerr=[std_dev_r_no_chipher, std_dev_w_no_chipher], fmt='none', ecolor='black', capsize=3)
+ax.errorbar(x_val, cipher_means, yerr=[std_dev_r_chipher, std_dev_w_chipher], fmt='none', ecolor='black', capsize=3)
+ax.errorbar(x_val + width, tls_means, yerr=[std_dev_r_tls, std_dev_w_tls], fmt='none', ecolor='black', capsize=3)
 
-# ------------------------------
-# 8. Plot the Write Data (Bars Touching, No Space in Between)
-# ------------------------------
-n_write = len(write_means)
-x_write = np.arange(n_write)
+ax.set_xticks(x_val)
+ax.set_xticklabels(x_labels)
+ax.legend()
+# Metti la legenda su una sola linea
+plt.legend(fontsize=15, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3, fancybox=True, shadow=True)
 
-fig, ax = plt.subplots(figsize=(12, 7))
-bars = ax.bar(x_write, write_means, width=bar_width, yerr=write_std,
-              align="edge", capsize=4, color=colors)
-ax.set_xticks(x_write + bar_width/2)
-ax.set_xticklabels(x_labels, fontsize=14, rotation=15)
-ax.set_ylabel("Avg Write Time (ms)", fontsize=16)
-ax.set_title("Write Performance by Encryption Mode", fontsize=18)
-plt.tight_layout()
+# Aggiungi barre di errore
+#plt.errorbar(x_val, y_val, yerr=[std_dev_r_chipher, std_dev_r_tls, std_dev_w_chipher, std_dev_w_tls], fmt='none', ecolor='red', capsize=3)
+
+#Aggiungi label sull'asse y
+plt.ylabel('Avg Time (ms)', fontsize=20)
+
+# Modifica la dimensione dei numeri sull'asse delle x e delle y
+plt.xticks(fontsize=20)  # Imposta la dimensione dei numeri sull'asse delle x a 20
+plt.yticks(fontsize=20)  # Imposta la dimensione dei numeri sull'asse delle y a 20
+
+# Mostra il grafico
 plt.show()
