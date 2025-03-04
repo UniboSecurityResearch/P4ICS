@@ -358,7 +358,6 @@ control MyIngress(inout headers hdr,
     }
 
     action no_cipher(){
-        bit<1> c;
     }
 
     action cipher() {
