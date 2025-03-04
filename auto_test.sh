@@ -415,26 +415,6 @@ table_add ipv4_lpm ipv4_forward 200.1.1.9/32 =>  00:00:0a:00:02:02 1" >> s2/auto
 
     # append rule in auto_test_commands.txt in s1 and s2 according to the current mode
     case $MODE in
-        no-encryption | tls)
-            # set the register from 4 up to 7 to 0 in commands.txt in s1
-#             sed -i '/^register_write keys 3/ a\
-# register_write keys 4 0\
-# register_write keys 5 0\
-# register_write keys 6 0\
-# register_write keys 7 0' ./s1/commands.txt
-
-            # set the register from 4 up to 7 to 0 in commands.txt in s2
-#             sed -i '/^register_write keys 3/ a\
-# register_write keys 4 0\
-# register_write keys 5 0\
-# register_write keys 6 0\
-# register_write keys 7 0' ./s2/commands.txt
-            #delete the line that add the modbus_sec table to disable in-network encryption
-            # sed -i -E '/^table_add modbus_sec/d' s1/commands.txt
-            # sed -i -E '/^table_add modbus_sec/d' s2/commands.txt
-            
-        ;;
-
         128)
             # set the register from 4 up to 7 to 0 in commands.txt in s1
             echo "register_write keys 0 729683222
