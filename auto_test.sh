@@ -598,8 +598,8 @@ rm -f s1/auto_test_commands.txt
 rm -f s2/auto_test_commands.txt
 
 # move the results to the appropriate folders
-[[ $TLS -eq 1 ]] && mv -f shared/*tls* results/mul_key/Mobus_TLS
-[[ $NO_ENCRYPTION -eq 1 ]] && mv -f shared/*no_cipher* results/mul_key/No_cipher
+[[ $TLS -eq 1 ]] && mv -f shared/*tls* results/mul_key/modbus_tls
+[[ $NO_ENCRYPTION -eq 1 ]] && mv -f shared/*no_cipher* results/mul_key/no_cipher
 if [ $BIT_128 -eq 1 ] || [ $BIT_160 -eq 1 ] || [ $BIT_192 -eq 1 ] || [ $BIT_224 -eq 1 ] || [ $BIT_256 -eq 1 ]; then
-    mv -f shared/*cipher* results/mul_key/Cipher
+    mv -f shared/*cipher* results/mul_key/cipher
 fi
