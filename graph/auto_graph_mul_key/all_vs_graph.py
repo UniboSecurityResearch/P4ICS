@@ -152,6 +152,29 @@ for kl in key_lengths:
     print("In-Network {} - Read: {:.9f} ms, Write: {:.9f} ms"
           .format(kl, mean_r_cipher_keys[kl], mean_w_cipher_keys[kl]))
 
+
+# ------------------------------
+# 4.2 Print percentage differences (compared to No cipher)
+# ------------------------------
+print("\n=== Percentage Differences (compared to Modbus without encryption) ===")
+# TLS percentage difference
+# read_tls_diff_pct = ((mean_r_tls - mean_r_no) / mean_r_no) * 100
+# write_tls_diff_pct = ((mean_w_tls - mean_w_no) / mean_w_no) * 100
+# print("Modbus TLS - Read: {:.2f}%, Write: {:.2f}%"
+#       .format(read_tls_diff_pct, write_tls_diff_pct))
+
+# In-Network encryption percentage differences
+for kl in key_lengths:
+    # Calculate percentage difference for read operations
+    read_diff_pct = ((mean_r_cipher_keys[kl] - mean_r_no) / mean_r_no) * 100
+    # Calculate percentage difference for write operations
+    write_diff_pct = ((mean_w_cipher_keys[kl] - mean_w_no) / mean_w_no) * 100
+    
+    print("In-Network {} - Read: {:.2f}%, Write: {:.2f}%"
+          .format(kl, read_diff_pct, write_diff_pct))
+
+
+
 # ------------------------------
 # 5. Organize Data for the Final Plots
 # ------------------------------
