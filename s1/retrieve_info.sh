@@ -4,11 +4,11 @@
 usage() {
     echo "Usage: $0 [--ppt MODE] [--deq MODE] [-r|--read] [-w|--write]"
     echo "Options:"
-    echo "  --ppt MODE    PPT option with mode (no-encryption/tls/128/160/192/224/256)"
-    echo "  --deq MODE    DEQ option with mode (no-encryption/tls/128/160/192/224/256)"
+    echo "  --ppt MODE    Retrieve Packet Processing Time with mode (no-encryption/tls/128/160/192/224/256)"
+    echo "  --deq MODE    Retrieve Packet Dequeuing Time with mode (no-encryption/tls/128/160/192/224/256)"
     echo "  -r, --read          Read option"
     echo "  -w, --write         Write option"
-    exit 1
+    exit 19
 }
 
 # Function to validate mode
