@@ -186,14 +186,14 @@ for kl in key_lengths:
 #   4: "In-Network 192-bit"
 #   5: "In-Network 224-bit"
 #   6: "In-Network 256-bit"
-x_labels = [
+categories = [
     "Modbus",
     # "Modbus TLS",
-    "In-Network 128-bit",
-    "In-Network 160-bit",
-    "In-Network 192-bit",
-    "In-Network 224-bit",
-    "In-Network 256-bit",
+    "Modbus\nIn-Network\nEncryption\n128-bit",
+    "Modbus\nIn-Network\nEncryption\n160-bit",
+    "Modbus\nIn-Network\nEncryption\n192-bit",
+    "Modbus\nIn-Network\nEncryption\n224-bit",
+    "Modbus\nIn-Network\nEncryption\n256-bit",
 ]
 
 # Build arrays for read data.
@@ -249,13 +249,13 @@ n_read = len(read_means)
 x_read = np.arange(n_read)
 bar_width = 1.0
 
-fig, ax = plt.subplots(figsize=(12, 7))
+fig, ax = plt.subplots(figsize=(15, 12))
 bars = ax.bar(x_read, read_means, width=bar_width, yerr=read_std,
               align="edge", capsize=4, color=colors)
 ax.set_xticks(x_read + bar_width / 2)
-ax.set_xticklabels(x_labels, fontsize=14, rotation=15)
+ax.set_xticklabels(categories, fontsize=14, rotation=15)
 ax.set_ylabel("Avg Read Time (ms)", fontsize=16)
-ax.set_title("Read Performance by Encryption Mode", fontsize=18)
+ax.set_title("Read Performance", fontsize=18)
 plt.tight_layout()
 plt.show()
 
@@ -265,12 +265,12 @@ plt.show()
 n_write = len(write_means)
 x_write = np.arange(n_write)
 
-fig, ax = plt.subplots(figsize=(12, 7))
+fig, ax = plt.subplots(figsize=(15, 12))
 bars = ax.bar(x_write, write_means, width=bar_width, yerr=write_std,
               align="edge", capsize=4, color=colors)
 ax.set_xticks(x_write + bar_width / 2)
-ax.set_xticklabels(x_labels, fontsize=14, rotation=15)
+ax.set_xticklabels(categories, fontsize=14, rotation=15)
 ax.set_ylabel("Avg Write Time (ms)", fontsize=16)
-ax.set_title("Write Performance by Encryption Mode", fontsize=18)
+ax.set_title("Write Performance", fontsize=18)
 plt.tight_layout()
 plt.show()

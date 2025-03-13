@@ -104,49 +104,93 @@ for kl in key_lengths:
 # ---------------------------
 # Modbus TLS files for read and write tests (Switch 1 and Switch 2)
 # ---------------------------
-tls_read_file_s1 = os.path.join(
-    base_dir, "modbus_tls", "results_s1_tls_read_packet_dequeuing_timedelta.txt"
-)
-tls_read_file_s2 = os.path.join(
-    base_dir, "modbus_tls", "results_s2_tls_read_packet_dequeuing_timedelta.txt"
-)
-tls_write_file_s1 = os.path.join(
-    base_dir, "modbus_tls", "results_s1_tls_write_packet_dequeuing_timedelta.txt"
-)
-tls_write_file_s2 = os.path.join(
-    base_dir, "modbus_tls", "results_s2_tls_write_packet_dequeuing_timedelta.txt"
-)
+# tls_read_file_s1 = os.path.join(
+#     base_dir, "modbus_tls", "results_s1_tls_read_packet_dequeuing_timedelta.txt"
+# )
+# tls_read_file_s2 = os.path.join(
+#     base_dir, "modbus_tls", "results_s2_tls_read_packet_dequeuing_timedelta.txt"
+# )
+# tls_write_file_s1 = os.path.join(
+#     base_dir, "modbus_tls", "results_s1_tls_write_packet_dequeuing_timedelta.txt"
+# )
+# tls_write_file_s2 = os.path.join(
+#     base_dir, "modbus_tls", "results_s2_tls_write_packet_dequeuing_timedelta.txt"
+# )
 
-tls_read_s1 = read_and_filter(tls_read_file_s1)
-tls_read_s2 = read_and_filter(tls_read_file_s2)
-tls_write_s1 = read_and_filter(tls_write_file_s1)
-tls_write_s2 = read_and_filter(tls_write_file_s2)
+# tls_read_s1 = read_and_filter(tls_read_file_s1)
+# tls_read_s2 = read_and_filter(tls_read_file_s2)
+# tls_write_s1 = read_and_filter(tls_write_file_s1)
+# tls_write_s2 = read_and_filter(tls_write_file_s2)
 
-mean_tls_read_s1 = np.mean(tls_read_s1) if tls_read_s1 else 0
-mean_tls_read_s2 = np.mean(tls_read_s2) if tls_read_s2 else 0
-mean_tls_write_s1 = np.mean(tls_write_s1) if tls_write_s1 else 0
-mean_tls_write_s2 = np.mean(tls_write_s2) if tls_write_s2 else 0
+# mean_tls_read_s1 = np.mean(tls_read_s1) if tls_read_s1 else 0
+# mean_tls_read_s2 = np.mean(tls_read_s2) if tls_read_s2 else 0
+# mean_tls_write_s1 = np.mean(tls_write_s1) if tls_write_s1 else 0
+# mean_tls_write_s2 = np.mean(tls_write_s2) if tls_write_s2 else 0
 
 # ---------------------------
 # Print out the computed means for verification.
 # ---------------------------
 print("===== READ TIMES =====")
-print("No encryption S1: Mean =", mean_plain_read_s1)
-print("No encryption S2: Mean =", mean_plain_read_s2)
-print("Modbus TLS S1: Mean =", mean_tls_read_s1)
-print("Modbus TLS S2: Mean =", mean_tls_read_s2)
+# print("No encryption S1: Mean =", mean_plain_read_s1)
+# print("No encryption S2: Mean =", mean_plain_read_s2)
+print("No encryption S1+S2: Mean =", mean_plain_read_s1 + mean_plain_read_s2)
+# print("Modbus TLS S1: Mean =", mean_tls_read_s1)
+# print("Modbus TLS S2: Mean =", mean_tls_read_s2)
 for kl in key_lengths:
-    print(f"Modbus in-switch encryption {kl} S1: Mean = {mean_cipher_read_s1[kl]}")
-    print(f"Modbus in-switch encryption {kl} S2: Mean = {mean_cipher_read_s2[kl]}")
+    # print(f"Modbus in-switch encryption {kl} S1: Mean = {mean_cipher_read_s1[kl]}")
+    # print(f"Modbus in-switch encryption {kl} S2: Mean = {mean_cipher_read_s2[kl]}")
+    print(f"Modbus in-switch encryption {kl} S1+S2: Mean = ",
+        mean_cipher_read_s1[kl]+mean_cipher_read_s2[kl])
 
 print("\n===== WRITE TIMES =====")
-print("No encryption S1: Mean =", mean_plain_write_s1)
-print("No encryption S2: Mean =", mean_plain_write_s2)
-print("Modbus TLS S1: Mean =", mean_tls_write_s1)
-print("Modbus TLS S2: Mean =", mean_tls_write_s2)
+# print("No encryption S1: Mean =", mean_plain_write_s1)
+# print("No encryption S2: Mean =", mean_plain_write_s2)
+print("No encryption S1+S2: Mean =", mean_plain_write_s1+mean_plain_write_s2)
+# print("Modbus TLS S1: Mean =", mean_tls_write_s1)
+# print("Modbus TLS S2: Mean =", mean_tls_write_s2)
 for kl in key_lengths:
-    print(f"Modbus in-switch encryption {kl} S1: Mean = {mean_cipher_write_s1[kl]}")
-    print(f"Modbus in-switch encryption {kl} S2: Mean = {mean_cipher_write_s2[kl]}")
+    # print(f"Modbus in-switch encryption {kl} S1: Mean = {mean_cipher_write_s1[kl]}")
+    # print(f"Modbus in-switch encryption {kl} S2: Mean = {mean_cipher_write_s2[kl]}")
+    print(f"Modbus in-switch encryption {kl} S1+S2: Mean = ",
+        mean_cipher_write_s1[kl]+mean_cipher_write_s2[kl])
+
+print("\n===== READ OPERATION PERCENTAGE DIFFERENCES =====")
+# print("Switch 1:")
+# for kl in key_lengths:
+#     percentage_diff = ((mean_cipher_read_s1[kl] - mean_plain_read_s1) / mean_plain_read_s1) * 100
+#     print(f"  {kl}: {percentage_diff:.2f}% difference from plain data")
+
+# print("\nSwitch 2:")
+# for kl in key_lengths:
+#     percentage_diff = ((mean_cipher_read_s2[kl] - mean_plain_read_s2) / mean_plain_read_s2) * 100
+#     print(f"  {kl}: {percentage_diff:.2f}% difference from plain data")
+
+# Combined (Switch 1 + Switch 2)
+print("\nCombined (Switch 1 + Switch 2):")
+for kl in key_lengths:
+    combined_plain = mean_plain_read_s1 + mean_plain_read_s2
+    combined_cipher = mean_cipher_read_s1[kl] + mean_cipher_read_s2[kl]
+    percentage_diff = ((combined_cipher - combined_plain) / combined_plain) * 100
+    print(f"  {kl}: {percentage_diff:.2f}% difference from plain data")
+
+print("\n===== WRITE OPERATION PERCENTAGE DIFFERENCES =====")
+# print("Switch 1:")
+# for kl in key_lengths:
+#     percentage_diff = ((mean_cipher_write_s1[kl] - mean_plain_write_s1) / mean_plain_write_s1) * 100
+#     print(f"  {kl}: {percentage_diff:.2f}% difference from plain data")
+
+# print("\nSwitch 2:")
+# for kl in key_lengths:
+#     percentage_diff = ((mean_cipher_write_s2[kl] - mean_plain_write_s2) / mean_plain_write_s2) * 100
+#     print(f"  {kl}: {percentage_diff:.2f}% difference from plain data")
+
+# Combined (Switch 1 + Switch 2)
+print("\nCombined (Switch 1 + Switch 2):")
+for kl in key_lengths:
+    combined_plain = mean_plain_write_s1 + mean_plain_write_s2
+    combined_cipher = mean_cipher_write_s1[kl] + mean_cipher_write_s2[kl]
+    percentage_diff = ((combined_cipher - combined_plain) / combined_plain) * 100
+    print(f"  {kl}: {percentage_diff:.2f}% difference from plain data")
 
 # ---------------------------
 # Prepare data arrays for the Stacked Bar Charts.
@@ -156,57 +200,81 @@ for kl in key_lengths:
 #  2. Modbus TLS
 #  3. Modbus in-switch encryption <key-length> (for each key)
 # ---------------------------
-categories = (
-    ["No encryption", "Modbus TLS"] +
-    [f"Modbus\nin-switch\nencryption\n{kl}" for kl in key_lengths]
-)
+categories = [
+    "Modbus",
+    # "Modbus TLS",
+    "Modbus\nIn-Network\nEncryption\n128-bit",
+    "Modbus\nIn-Network\nEncryption\n160-bit",
+    "Modbus\nIn-Network\nEncryption\n192-bit",
+    "Modbus\nIn-Network\nEncryption\n224-bit",
+    "Modbus\nIn-Network\nEncryption\n256-bit",
+]
+
 x = np.arange(len(categories))
 width = 0.5
 
 # ----- Read Times Stacked Bar Chart -----
+# read_s1_means = (
+#     [mean_plain_read_s1, mean_tls_read_s1] +
+#     [mean_cipher_read_s1[kl] for kl in key_lengths]
+# )
+# read_s2_means = (
+#     [mean_plain_read_s2, mean_tls_read_s2] +
+#     [mean_cipher_read_s2[kl] for kl in key_lengths]
+# )
+
 read_s1_means = (
-    [mean_plain_read_s1, mean_tls_read_s1] +
+    [mean_plain_read_s1] +
     [mean_cipher_read_s1[kl] for kl in key_lengths]
 )
 read_s2_means = (
-    [mean_plain_read_s2, mean_tls_read_s2] +
+    [mean_plain_read_s2] +
     [mean_cipher_read_s2[kl] for kl in key_lengths]
 )
 
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(15, 12))
 bar_s1 = ax.bar(x, read_s1_means, width, label='Switch 1',
                 color='tab:orange')
 bar_s2 = ax.bar(x, read_s2_means, width, bottom=read_s1_means,
                 label='Switch 2', color='tab:blue')
 
 ax.set_ylabel('Avg Packet Dequeuing Time (μs)', fontsize=14)
-ax.set_title('Read', fontsize=16)
+ax.set_title('Read Performance', fontsize=16)
 ax.set_xticks(x)
-ax.set_xticklabels(categories, fontsize=12)
-ax.legend(fontsize=12)
+ax.set_xticklabels(categories, fontsize=12, rotation=15)
+ax.legend(fontsize=12, loc='upper right')
 plt.tight_layout()
 plt.show()
 
 # ----- Write Stacked Bar Chart -----
+# write_s1_means = (
+#     [mean_plain_write_s1, mean_tls_write_s1] +
+#     [mean_cipher_write_s1[kl] for kl in key_lengths]
+# )
+# write_s2_means = (
+#     [mean_plain_write_s2, mean_tls_write_s2] +
+#     [mean_cipher_write_s2[kl] for kl in key_lengths]
+# )
+
 write_s1_means = (
-    [mean_plain_write_s1, mean_tls_write_s1] +
+    [mean_plain_write_s1] +
     [mean_cipher_write_s1[kl] for kl in key_lengths]
 )
 write_s2_means = (
-    [mean_plain_write_s2, mean_tls_write_s2] +
+    [mean_plain_write_s2] +
     [mean_cipher_write_s2[kl] for kl in key_lengths]
 )
 
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(15, 12))
 bar_s1 = ax.bar(x, write_s1_means, width, label='Switch 1',
                 color='tab:orange')
 bar_s2 = ax.bar(x, write_s2_means, width, bottom=write_s1_means,
                 label='Switch 2', color='tab:blue')
 
 ax.set_ylabel('Avg Packet Dequeuing Time (μs)', fontsize=14)
-ax.set_title('Write', fontsize=16)
+ax.set_title('Write Performance', fontsize=16)
 ax.set_xticks(x)
-ax.set_xticklabels(categories, fontsize=12)
-ax.legend(fontsize=12)
+ax.set_xticklabels(categories, fontsize=12, rotation=15)
+ax.legend(fontsize=12, loc='upper right')
 plt.tight_layout()
 plt.show()
