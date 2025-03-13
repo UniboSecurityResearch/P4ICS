@@ -378,6 +378,7 @@ run_configuration_mode(){ #@note run_configuration_mode
     
     # After processing, clean up
     echo "Cleaning up $CUR_MODE ($1) configuration..."
+    kathara lclean
     rm -f shared/startup.temp
 } ## run_configuration_mode
 
@@ -415,6 +416,10 @@ table_add ipv4_lpm ipv4_forward 200.1.1.9/32 =>  00:00:0a:00:02:02 1" >> s2/auto
 
     # append rule in auto_test_commands.txt in s1 and s2 according to the current mode
     case $MODE in
+        no-encryption|tls)
+            # do nothing
+        ;;
+
         128)
             # set the register from 4 up to 7 to 0 in commands.txt in s1
             echo "register_write keys 0 729683222
@@ -547,7 +552,7 @@ EOF" >> s2/auto_test_commands.txt
 
         *)
             # The wrong first argument.
-            echo 'Expected "128", "160", "192", "224" or "256"' >&2
+            echo 'Expected "no-encryption", "tls", "128", "160", "192", "224" or "256"' >&2
             exit 1
     esac
     
