@@ -326,6 +326,8 @@ void Cipher() {
       ShiftRows();
       MixColumns();
       AddRoundKey(round);
+      //DEBUG: print the round number
+      printf("Applying round number %lu\n", round);
    }
 	
    // The last round is given below.
@@ -484,7 +486,7 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     //if there is no register equal to 0, the value of Nk will be 8
     Nk = 8;
 
-    // Iterate starting from k0 (index 0) up to k8 (index 7)
+    // DEBUG: print keys from k0 (index 0) up to k8 (index 7)
     for (int i = 0; i <= 7; i++) {
         printf("%lu\n", keys[i].get_uint64());
         if (keys[i].get_uint64() == 0) {
@@ -493,7 +495,7 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
         }
     }
 
-
+    // DEBUG: print the Nk value
     printf("Nk=%ld\n",Nk);
 
 	// Calculate Nr from Nk and, implicitly, from Nb
@@ -545,7 +547,7 @@ void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
         Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
         Key[31] = (k8.get_uint64() & 0x000000ffUL);
     }
-  
+
 	// The KeyExpansion routine is called before encryption.
 	KeyExpansion();
 
@@ -645,7 +647,7 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
     //if there is no register equal to 0, the value of Nk will be 8
     Nk = 8;
 
-    // Iterate starting from k0 (index 0) up to k8 (index 7)
+    // DEBUG: print keys from k0 (index 0) up to k8 (index 7)
     for (int i = 0; i <= 7; i++) {
         printf("%lu\n", keys[i].get_uint64());
         if (keys[i].get_uint64() == 0) {
@@ -654,6 +656,7 @@ void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data 
         }
     }
 
+    // DEBUG: print Nk value
     printf("Nk=%ld\n",Nk);
 
 	// Calculate Nr from Nk and, implicitly, from Nb
