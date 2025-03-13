@@ -6,9 +6,9 @@ chmod u+x ./change_key.sh
 p4c-bm2-ss --emit-externs -o modbus_extraction.json modbus_extraction.p4
 cd extern_lib && make
 cd ..
-#echo '' > /shared/s1.log
-#simple_switch -i 1@eth0 -i 2@eth1 modbus_extraction.json --log-console -- --load-modules=extern_lib/definition.so > /shared/s1.log 2>&1 &
-simple_switch -i 1@eth0 -i 2@eth1 modbus_extraction.json --log-console -- --load-modules=extern_lib/definition.so &
+echo '' > /shared/s1.log
+simple_switch -i 1@eth0 -i 2@eth1 modbus_extraction.json --log-console -- --load-modules=extern_lib/definition.so > /shared/s1.log 2>&1 &
+#simple_switch -i 1@eth0 -i 2@eth1 modbus_extraction.json --log-console -- --load-modules=extern_lib/definition.so &
 while [[ $(pgrep simple_switch) -eq 0 ]]; do sleep 1; done
 until simple_switch_CLI <<< "help"; do sleep 1; done
 

@@ -570,6 +570,9 @@ EOF" >> s2/auto_test_commands.txt
 # Set up trap for both SIGINT and EXIT
 #trap cleanup SIGINT EXIT
 
+# Run kathara wipe just to be sure all machines are brand new
+kathara wipe -f
+
 # Process each selected configuration
 if [ $NO_ENCRYPTION -eq 1 ]; then
     run_configuration "no-encryption"
