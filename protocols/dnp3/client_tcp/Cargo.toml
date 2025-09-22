@@ -1,0 +1,8 @@
+[package]
+name = "client_tcp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dnp3 = { git = "https://github.com/stepfunc/dnp3.git", tag = "1.7.0-M1" }
+tokio = { version = "1", features = ["full"] }

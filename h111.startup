@@ -1,6 +1,0 @@
-ip link set eth0 address 00:00:0a:00:02:01
-ip addr add 195.11.14.7/24 dev eth0
-route add default gw 195.11.14.1 dev eth0
-arp -s 195.11.14.1 00:00:00:00:00:01
-echo java -jar dnp3-1.0.jar master tcp 200.1.1.9:20000
-#Master connects to outstation
