@@ -152,7 +152,7 @@ Scripts to reproduce the plots from the paper are available in the `results/` fo
 
 ## 📑 Reference
 
-If you use this repository, please cite the paper:
+If you use this repository, please cite our paper:
 
 ```bibtex
 @article{p4ics,
@@ -162,6 +162,8 @@ If you use this repository, please cite the paper:
   year    = {2025}
 }
 ```
+
+[![DOI](https://zenodo.org/badge/763412444.svg)](https://doi.org/10.5281/zenodo.17190336)
 
 ---
 
