@@ -89,6 +89,55 @@ Make sure both Docker and Kathara are properly installed and configured before s
 
 ---
 
+## ⚙️ Modbus Client Options
+
+The `modbus_client.py` provides a CLI with the following options:
+
+### 🔹 Basic Operations
+- **Write to a register**
+  ```bash
+  python3 modbus_client.py --write
+  ```
+- **Read from a register**
+  ```bash
+  python3 modbus_client.py --read
+  ```
+- **Write and then read (RW)**
+  ```bash
+  python3 modbus_client.py --rw
+  ```
+- **Connect to the server only** (repeat 5 times)
+  ```bash
+  python3 modbus_client.py --connect --connect-times 5
+  ```
+
+### 🔹 Performance Tests
+- **RTT test (write) with AES-128 key**
+  ```bash
+  python3 modbus_client.py --test-rtt-write 128
+  ```
+- **RTT test (read) without encryption** 
+  ```bash
+  python3 modbus_client.py --test-rtt-read no-encryption
+  ```
+- **Continuous read test with AES-256 key** 
+  ```bash
+  python3 modbus_client.py --test-read 256
+  ```
+- **Continuous write test with AES-192 key** 
+  ```bash
+  python3 modbus_client.py --test-write 192
+  ```
+
+### 🔹 Supported Encryption Modes
+```
+no-encryption | 128 | 192 | 256
+```
+
+These correspond to **AES key sizes in bits**, used in the P4ICS security pipeline.
+
+---
+
 ## 📊 Results
 
 - Experimental results include:
@@ -108,8 +157,8 @@ If you use this repository, please cite the paper:
 ```bibtex
 @article{rinieri2025p4ics,
   title   = {P4ICS: P4 In-Network Security for Industrial Control Systems Networks},
-  author  = {Rinieri, Lorenzo and et al.},
-  journal = {Preprint submitted to Elsevier},
+  author  = {},
+  journal = {Preprint submitted to Computer Networks},
   year    = {2025}
 }
 ```
