@@ -155,7 +155,7 @@ Scripts to reproduce the plots from the paper are available in the `results/` fo
 If you use this repository, please cite the paper:
 
 ```bibtex
-@article{rinieri2025p4ics,
+@article{p4ics,
   title   = {P4ICS: P4 In-Network Security for Industrial Control Systems Networks},
   author  = {},
   journal = {Preprint submitted to Computer Networks},
