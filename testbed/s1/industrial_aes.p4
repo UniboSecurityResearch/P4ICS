@@ -80,6 +80,13 @@ header tcp_options2_t {
     bit<24> windowScale;
 }//Due to java dnp3 implementation
 
+header udp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> total_len;
+    bit<16> checksum;
+}
+
 header modbus_tcp_t {
     bit<16> transactionId;
     bit<16> protocolId;
@@ -111,6 +118,12 @@ header dnp3_tcp_t {
     bit<16> checksum;
 }
 
+header bacnet_udp_t {
+    bit<8> bvlc_type;
+    bit<8> bvlc_function;
+    bit<16> bvlc_length; // where bvlc_length = header (4) + payload.
+}
+
 header payload_t {
    varbit<2048> content;
 }
@@ -124,8 +137,7 @@ header payload_decrypt_t {
 }
 //the size of fields payload_decrypt_t and payload_encrypt_t must be set in definition.cpp (max_size_content) divided by 8
 
-struct tcp_metadata_t
-{
+struct tcp_metadata_t {
     bit<16> full_length; //ipv4.totalLen - 20
     bit<16> full_length_in_bytes;
     bit<16> header_length;
@@ -134,9 +146,21 @@ struct tcp_metadata_t
     bit<16> payload_length_in_bytes;
 }
 
+struct udp_metadata_t {
+    bit<16> full_length; //ipv4.totalLen - 8
+    bit<16> full_length_in_bytes;
+    bit<16> header_length;
+    bit<16> header_length_in_bytes;
+    bit<16> payload_length;
+    bit<16> payload_length_in_bytes;
+}
+
+
 struct metadata {
     tcp_metadata_t tcp_metadata;
+    udp_metadata_t udp_metadata;
     bit<1> isSec;
+    bit<32> seqN;
 }
 
 struct headers {
@@ -146,10 +170,12 @@ struct headers {
     tcp_t tcp;
     tcp_options_t tcp_options;
     tcp_options2_t tcp_options2;
+    udp_t udp;
     modbus_tcp_t modbus_tcp;
     mqtt_tcp_t mqtt_tcp;
     cip_tcp_t cip_tcp;
     dnp3_tcp_t dnp3_tcp;
+    bacnet_udp_t bacnet_udp;
     payload_t payload;
     payload_encrypt_t payload_encrypt;
     payload_decrypt_t payload_decrypt;
@@ -167,11 +193,11 @@ parser MyParser(packet_in packet,
                 inout standard_metadata_t standard_metadata) {
 
     state start {
-        meta.isSec = 0;
+       meta.isSec = 0;
        transition parse_ethernet;
     }
 
-     state parse_ethernet {
+    state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             TYPE_IPV4: parse_ipv4;
@@ -192,6 +218,7 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.ipv4_options);
         transition select(hdr.ipv4.protocol) {
             6: parse_tcp;  // Protocol 6 corresponds to TCP
+            17: parse_udp; // Protocol 17 corresponds to UDP
             _ : accept;    // For other protocols, skip to accept
         }
     }
@@ -199,6 +226,7 @@ parser MyParser(packet_in packet,
     state no_parse_ipv4_options {
         transition select(hdr.ipv4.protocol) {
             6: parse_tcp;  // Protocol 6 corresponds to TCP
+            17: parse_udp; // Protocol 17 corresponds to UDP
             _ : accept;    // For other protocols, skip to accept
         }
     }
@@ -236,6 +264,35 @@ parser MyParser(packet_in packet,
             1883 : extract_mqtt_tcp;
             44818 : extract_cip_tcp;
             20000 : extract_dnp3_tcp;
+            default : accept;
+        }
+    }
+
+    state parse_udp {
+        packet.extract(hdr.udp);
+
+        meta.udp_metadata.full_length = (hdr.ipv4.totalLen - IPV4_LEN) * 8;
+        meta.udp_metadata.header_length = ((bit<16>) 8*8);
+        meta.udp_metadata.payload_length = meta.udp_metadata.full_length - meta.udp_metadata.header_length;
+
+        transition select(meta.udp_metadata.payload_length) {
+            0 : accept;
+            _ : check_dst_port_udp;
+        }
+    }
+
+    state check_dst_port_udp {
+        transition select(hdr.udp.srcPort) {
+            // 47808 : extract_bacnet_udp;
+            47808 : parse_payload_bacnet_udp;
+            default : check_src_port_udp;
+        }
+    }
+
+    state check_src_port_udp {
+        transition select(hdr.udp.dstPort) {
+            // 47808 : extract_bacnet_udp;
+            47808 : parse_payload_bacnet_udp;
             default : accept;
         }
     }
@@ -292,6 +349,14 @@ parser MyParser(packet_in packet,
         }
     }
 
+    state extract_bacnet_udp {
+        packet.extract(hdr.bacnet_udp);
+        transition select(hdr.bacnet_udp.bvlc_length) {
+           0: accept;
+           _: parse_payload_bacnet_udp;
+        }
+    }
+
     state parse_payload_modbus {
         bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 7) * 8);
         packet.extract(hdr.payload, (bit<32>)(calculated_length));
@@ -312,6 +377,12 @@ parser MyParser(packet_in packet,
 
     state parse_payload_dnp3_tcp {
         bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 10) * 8);
+        packet.extract(hdr.payload, (bit<32>)(calculated_length));
+        transition accept;
+    }
+
+    state parse_payload_bacnet_udp {
+        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4)) * 8 - meta.udp_metadata.header_length);
         packet.extract(hdr.payload, (bit<32>)(calculated_length));
         transition accept;
     }
@@ -382,12 +453,20 @@ control MyIngress(inout headers hdr,
         } else if(hdr.mqtt_tcp.isValid()) {
             useful_length_fixed = (bit<16>)(hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2);
         } else if(hdr.cip_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
+            useful_length_fixed = (bit<16>)(hdr.cip_tcp.length);
         } else if(hdr.dnp3_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
+            useful_length_fixed = (bit<16>)(hdr.dnp3_tcp.length - 3);
+        } else if(hdr.udp.isValid()){
+            //useful_length_fixed = (bit<16>)(hdr.bacnet_udp.bvlc_length - 4);
+            useful_length_fixed = (bit<16>)(meta.udp_metadata.payload_length >> 3); //Shifted by three equals divided by 8 (transform in bytes)
         }
         hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed;
-        sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed);
+        if(hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
+            meta.seqN = hdr.tcp.seqNo;
+        } else { // Bacnet uses UDP so hdr.tcp.seqNo cannot be used for sha256
+            meta.seqN = ((bit<32>)hdr.udp.srcPort) ^ (((bit<32>)hdr.udp.dstPort) << 16);
+        }
+        sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, meta.seqN, hdr.payload.content, useful_length_fixed);
         hdr.ipv4.ihl = 14;
         Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed);
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
@@ -409,17 +488,25 @@ control MyIngress(inout headers hdr,
         keys.read(k7, 6);
         keys.read(k8, 7);
         bit<16> useful_length_fixed = 0;
-        if (hdr.modbus_tcp.isValid()) {
+        if(hdr.modbus_tcp.isValid()) {
             useful_length_fixed = hdr.modbus_tcp.length - 1;
-        } else if (hdr.mqtt_tcp.isValid()) {
+        } else if(hdr.mqtt_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.ipv4_options.savedLen;
-        } else if (hdr.cip_tcp.isValid()) {
+        } else if(hdr.cip_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
-        } else if (hdr.dnp3_tcp.isValid()) {
+        } else if(hdr.dnp3_tcp.isValid()) {
             useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
+        } else if(hdr.udp.isValid()){
+            //useful_length_fixed = (bit<16>)(hdr.bacnet_udp.bvlc_length - 4);
+            useful_length_fixed = (bit<16>)(hdr.udp.total_len - 8);
         }
         hdr.temp.setValid();
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed, hdr.ipv4_options.sha, hdr.tcp.seqNo, hdr.temp.shaCalculated);//check metadata
+        if(hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
+            meta.seqN = hdr.tcp.seqNo;
+        } else {
+            meta.seqN = ((bit<32>)hdr.udp.srcPort) ^ (((bit<32>)hdr.udp.dstPort) << 16);
+        }
+        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed, hdr.ipv4_options.sha, meta.seqN, hdr.temp.shaCalculated);//check metadata
         hdr.ipv4.ihl = 5;
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
         hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed - 36;
@@ -445,8 +532,8 @@ control MyIngress(inout headers hdr,
     apply {
         if (hdr.ipv4.isValid()){
             ipv4_lpm.apply();
-            if (hdr.tcp.isValid()){
-                if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
+            if (hdr.tcp.isValid() || hdr.udp.isValid()){
+                if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid() || hdr.udp.isValid()){
                     modbus_sec.apply();
                 }
             }
@@ -534,10 +621,12 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.tcp);
         packet.emit(hdr.tcp_options);
         packet.emit(hdr.tcp_options2);
+        packet.emit(hdr.udp);
         packet.emit(hdr.modbus_tcp);
         packet.emit(hdr.mqtt_tcp);
         packet.emit(hdr.cip_tcp);
         packet.emit(hdr.dnp3_tcp);
+        packet.emit(hdr.bacnet_udp);
         packet.emit(hdr.payload_encrypt);
         packet.emit(hdr.payload_decrypt);
         packet.emit(hdr.payload);
