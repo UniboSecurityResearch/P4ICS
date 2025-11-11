@@ -1,4 +1,3 @@
-
 FROM alpine:latest
 
 RUN mkdir -p /bacnet
@@ -18,7 +17,6 @@ COPY server-client ./server-client/
 
 WORKDIR /bacnet/bacnet-stack
 
-# esegue la compilazione automaticamente
 RUN make || true
 
 CMD ["sh"]

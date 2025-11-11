@@ -196,107 +196,150 @@ int main(int argc, char const *argv[]){
 
     /* inizializza oggetti BACnet chiamando direttamente la callback */
     BACnet_Object_Table_Init(NULL);
-    while(1){
-        BACnet_Object_Task(NULL);
-        int bytes_received = recvfrom(sockfd, client_message, sizeof(client_message), 0, (struct sockaddr*)&client_addr, &client_len);
+    while (1) {
+    BACnet_Object_Task(NULL);
 
-        if (bytes_received < 0) {
-            perror("Errore ricezione");
-        }
+    /* IMPORTANTISSIMO: reimposta client_len prima di ogni recvfrom */
+    client_len = sizeof(client_addr);
 
-        printf("Richiesta inviata da IP: %s e porta: %i\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-        printf("Messaggio ricevuto: %s\n", client_message);
+    /* Ricevi al massimo sizeof-1 e chiudi la stringa */
+    int bytes_received = recvfrom(sockfd,
+                                  client_message,
+                                  sizeof(client_message) - 1,
+                                  0,
+                                  (struct sockaddr *)&client_addr,
+                                  &client_len);
 
-        char *token = strtok(client_message, " ");
-        if (token && strcmp(token, "READ") == 0) {
+    if (bytes_received < 0) {
+        perror("Errore ricezione");
+        continue;
+    }
+    if (bytes_received == 0) {
+        /* Datagramma vuoto: ignora */
+        continue;
+    }
+
+    /* Termina la stringa e togli CR/LF finali, se presenti */
+    client_message[bytes_received] = '\0';
+    while (bytes_received > 0 &&
+          (client_message[bytes_received - 1] == '\n' ||
+           client_message[bytes_received - 1] == '\r')) {
+        client_message[--bytes_received] = '\0';
+    }
+
+    /* Stampa sicura limitata alla lunghezza davvero ricevuta */
+    printf("Richiesta inviata da IP: %s e porta: %d\n",
+           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+    printf("Messaggio ricevuto: %.*s\n", bytes_received, client_message);
+
+    /* --- PARSING --- */
+    char *token = strtok(client_message, " ");
+    if (token && strcmp(token, "READ") == 0) {
+        token = strtok(NULL, " ");
+        if (token) {
+            /* copia sicura: forza sempre il terminatore */
+            strncpy(device_id, token, sizeof(device_id) - 1);
+            device_id[sizeof(device_id) - 1] = '\0';
+
             token = strtok(NULL, " ");
             if (token) {
-                strncpy(device_id, token, sizeof(device_id));
+                strncpy(object_type, token, sizeof(object_type) - 1);
+                object_type[sizeof(object_type) - 1] = '\0';
+
                 token = strtok(NULL, " ");
                 if (token) {
-                    strncpy(object_type, token, sizeof(object_type));
-                    token = strtok(NULL, " ");
-                    if (token) {
-                        instance = (unsigned int)strtoul(token, NULL, 10);
-                        printf("Device ID: %s, Object Type: %s, Instance: %u\n", device_id, object_type, instance);
-                        // qui puoi continuare con la logica
-                        if(strcmp(object_type, "analog-input") == 0){
-                            value = Analog_Input_Present_Value(instance);
-                            snprintf(server_message,sizeof(server_message), "analog-input %u = %.2f", instance, value);
-                             // Invia richiesta al server
-                            if (sendto(sockfd, server_message, strlen(server_message), 0, (struct sockaddr *)&client_addr, client_len) < 0) {
-                                perror("Errore invio");
-                                close(sockfd);
-                                return 1;   
-                            }
+                    instance = (unsigned int)strtoul(token, NULL, 10);
+                    printf("Device ID: %s, Object Type: %s, Instance: %u\n",
+                           device_id, object_type, instance);
+
+                    if (strcmp(object_type, "analog-input") == 0) {
+                        value = Analog_Input_Present_Value(instance);
+                        snprintf(server_message, sizeof(server_message),
+                                 "analog-input %u = %.2f", instance, value);
+
+                        if (sendto(sockfd, server_message, strlen(server_message), 0,
+                                   (struct sockaddr *)&client_addr, client_len) < 0) {
+                            perror("Errore invio");
+                            /* non chiudere il socket: continua ad accettare richieste */
                         }
-                    } else {
-                        printf("Errore: manca instance\n");
                     }
                 } else {
-                    printf("Errore: manca object_type\n");
+                    printf("Errore: manca instance\n");
                 }
             } else {
-                printf("Errore: manca device_id\n");
+                printf("Errore: manca object_type\n");
             }
-        } else if(token && strcmp(token, "WRITE") == 0){
-            token = strtok(NULL, " ");
-
-            if (token) {
-                strncpy(device_id, token, sizeof(device_id));
-                token = strtok(NULL, " ");
-
-                if (token) {
-                    strncpy(object_type, token, sizeof(object_type));
-                    token = strtok(NULL, " ");
-
-                    if (token) {
-                        instance = (unsigned int)strtoul(token, NULL, 10);
-
-                        // qui puoi continuare con la logica
-                        if(strcmp(object_type, "analog-output") == 0){
-                            token = strtok(NULL, " ");
-                            read_value = (float)strtof(token, NULL);
-                            printf("Device ID: %s, Object Type: %s, Instance: %u, Read_value: %.2f\n", device_id, object_type, instance, read_value);
-                            float old_value = Analog_Output_Present_Value(instance);
-                            if(!Analog_Output_Present_Value_Set(instance,read_value,8)){
-                                printf("Errore nello scrivere il valore\n");
-                                snprintf(server_message,sizeof(server_message), "Valore: %.2f NON scritto correttamente", read_value);
-                            }else{
-                                printf("Valore: %.2f scritto correttamente\n",read_value);
-                                snprintf(server_message,sizeof(server_message), "Valore: %.2f scritto in analog-output: %u", read_value, instance);
-                                printf("Valore modificato da %.2f a %.2f\n",old_value, Analog_Output_Present_Value(instance));
-                                 // Invia richiesta al server
-                                if (sendto(sockfd, server_message, strlen(server_message), 0, (struct sockaddr *)&client_addr, client_len) < 0) {
-                                    perror("Errore invio");
-                                    close(sockfd);
-                                    return 1;
-                                }
-                            }
-                        }
-                    } else{
-                        printf("Errore: manca instance\n");
-                    } 
-                } else{
-                    printf("Errore: manca object_type\n");
-                }
-            }else{
-                printf("Errore: manca device_id\n");
-            }
-        }else if(token && strcmp(token, "PING") == 0){
-            snprintf(server_message,sizeof(server_message), "risposta al ping");
-            printf("\nping arrivato al server\n");
-            // Invia richiesta al server
-            if (sendto(sockfd, server_message, strlen(server_message), 0, (struct sockaddr *)&client_addr, client_len) < 0) {
-                perror("Errore invio");
-                close(sockfd);
-                return 1;
-            }
-        } else{
-            printf("Errore: comando non riconosciuto o malformato\n");
-
+        } else {
+            printf("Errore: manca device_id\n");
         }
+
+    } else if (token && strcmp(token, "WRITE") == 0) {
+        token = strtok(NULL, " ");
+        if (token) {
+            strncpy(device_id, token, sizeof(device_id) - 1);
+            device_id[sizeof(device_id) - 1] = '\0';
+
+            token = strtok(NULL, " ");
+            if (token) {
+                strncpy(object_type, token, sizeof(object_type) - 1);
+                object_type[sizeof(object_type) - 1] = '\0';
+
+                token = strtok(NULL, " ");
+                if (token) {
+                    instance = (unsigned int)strtoul(token, NULL, 10);
+
+                    if (strcmp(object_type, "analog-output") == 0) {
+                        token = strtok(NULL, " ");
+                        if (!token) {
+                            printf("Errore: manca valore per WRITE\n");
+                            continue;
+                        }
+                        read_value = (float)strtof(token, NULL);
+                        printf("Device ID: %s, Object Type: %s, Instance: %u, Read_value: %.2f\n",
+                               device_id, object_type, instance, read_value);
+
+                        float old_value = Analog_Output_Present_Value(instance);
+                        if (!Analog_Output_Present_Value_Set(instance, read_value, 8)) {
+                            printf("Errore nello scrivere il valore\n");
+                            snprintf(server_message, sizeof(server_message),
+                                     "Valore: %.2f NON scritto correttamente", read_value);
+                        } else {
+                            printf("Valore: %.2f scritto correttamente\n", read_value);
+                            snprintf(server_message, sizeof(server_message),
+                                     "Valore: %.2f scritto in analog-output: %u",
+                                     read_value, instance);
+                            printf("Valore modificato da %.2f a %.2f\n",
+                                   old_value, Analog_Output_Present_Value(instance));
+                        }
+
+                        if (sendto(sockfd, server_message, strlen(server_message), 0,
+                                   (struct sockaddr *)&client_addr, client_len) < 0) {
+                            perror("Errore invio");
+                        }
+                    }
+                } else {
+                    printf("Errore: manca instance\n");
+                }
+            } else {
+                printf("Errore: manca object_type\n");
+            }
+        } else {
+            printf("Errore: manca device_id\n");
+        }
+
+    } else if (token && strcmp(token, "PING") == 0) {
+        snprintf(server_message, sizeof(server_message), "risposta al ping");
+        printf("\nping arrivato al server\n");
+        if (sendto(sockfd, server_message, strlen(server_message), 0,
+                   (struct sockaddr *)&client_addr, client_len) < 0) {
+            perror("Errore invio");
+        }
+
+    } else {
+        printf("Errore: comando non riconosciuto o malformato\n");
     }
+}
+
     close(sockfd);
     return 0;
 }
