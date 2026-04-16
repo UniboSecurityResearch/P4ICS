@@ -3,7 +3,7 @@
 This repository contains the source files, testbed configurations, and evaluation results for the paper:
 **P4ICS: P4 In-Network Security for Industrial Control Systems Networks**.
 
-P4ICS is a framework that shifts security functions for Industrial Control Systems (ICS) from endpoints into P4-programmable switches, providing confidentiality, integrity, and replay protection for protocols such as **Modbus, DNP3, EtherNet/IP, and MQTT**.
+P4ICS is a framework that shifts security functions for Industrial Control Systems (ICS) from endpoints into P4-programmable switches, providing confidentiality, integrity, and replay protection for protocols such as **Modbus, DNP3, EtherNet/IP, and MQTT**. In the testbed pipeline, confidentiality and integrity are implemented in switch externs with **AES-CBC** and **HMAC-SHA256**.
 
 ---
 
@@ -131,10 +131,11 @@ The `modbus_client.py` provides a CLI with the following options:
 
 ### 🔹 Supported Encryption Modes
 ```
-no-encryption | 128 | 192 | 256
+no-encryption | 128 | 160 | 192 | 224 | 256
 ```
 
 These correspond to **AES key sizes in bits**, used in the P4ICS security pipeline.
+For secure modes, the switch externs use AES-CBC encryption and HMAC-SHA256 authentication bound to packet context.
 
 ---
 

@@ -389,7 +389,7 @@ control MyIngress(inout headers hdr,
         hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed;
         sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed);
         hdr.ipv4.ihl = 14;
-        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed);
+        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed, hdr.tcp.seqNo);
         bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
         hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36; //36 is the ipv4 options size in bytes
         hdr.payload.setInvalid();
@@ -557,4 +557,3 @@ V1Switch(
     MyComputeChecksum(),
     MyDeparser()
 ) main;
-

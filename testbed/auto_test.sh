@@ -68,6 +68,28 @@ wait_for_container() {
     return 1
 }
 
+wait_for_modbus_service() {
+    local max_attempts=20
+    local attempt=1
+    local delay=1
+
+    echo "Waiting for Modbus service (200.1.1.7:502) to be reachable..."
+
+    while [ $attempt -le $max_attempts ]; do
+        if kathara exec modbusclient "python -c 'import socket,sys; s=socket.socket(); s.settimeout(1); rc=s.connect_ex((\"200.1.1.7\",502)); s.close(); sys.exit(0 if rc==0 else 1)'" >/dev/null 2>&1; then
+            echo "Modbus service is reachable!"
+            return 0
+        fi
+
+        echo "Attempt $attempt/$max_attempts: Modbus service not reachable yet, waiting..."
+        sleep $delay
+        attempt=$((attempt + 1))
+    done
+
+    echo "Timeout waiting for Modbus service"
+    return 1
+}
+
 # Initialize all flags to 0
 ALL=0
 NO_ENCRYPTION=0
@@ -303,15 +325,17 @@ run_configuration_mode(){ #@note run_configuration_mode
         return 1
     fi
 
+    if ! wait_for_modbus_service; then
+        echo "Error: Modbus service is not reachable"
+        kathara lclean
+        return 1
+    fi
+
     echo "Processing $CUR_MODE ($1) configuration..."
 
     # RTT - Round Trip Time
     if [ $MEASURE_RTT -eq 1 ]; then
         echo "Measuring Round Trip Time..."
-        echo "Starting server in modbusserver..."
-        kathara exec modbusserver $server &
-        # give server the time to start
-        sleep 2
 
         echo "Starting client in modbusclient..."
         [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
@@ -333,12 +357,6 @@ run_configuration_mode(){ #@note run_configuration_mode
     if [ $MEASURE_PPT -eq 1 ] && [ $MEASURE_RTT -ne 1 ]; then
         echo "Measuring Packet Processing Time..."
 
-        #modbusserver
-        echo "Starting server in modbusserver..."
-        kathara exec modbusserver $server &
-        # give server the time to start
-        sleep 2
-
         #modbusclient
         echo "Starting client in modbusclient..."
         [[ "$MODE" = "tls" ]] && client_mode="" || client_mode=$MODE
@@ -358,12 +376,6 @@ run_configuration_mode(){ #@note run_configuration_mode
     # DEQ - Packet Dequeuing Timedelta
     if [ $MEASURE_DEQ -eq 1 ] && [ $MEASURE_RTT -ne 1 ] && [ $MEASURE_PPT -ne 1 ]; then
         echo "Measuring Dequeuing Timedelta..."
-
-        #modbusserver
-        echo "Starting server in modbusserver..."
-        kathara exec modbusserver $server &
-        # give server the time to start
-        sleep 2
 
         #modbusclient
         echo "Starting client in modbusclient..."

@@ -26,6 +26,7 @@ using namespace std;
 int modulo=pow(2,32);
 
 std::string sha256_hash_1024_internal(bm::Data & b, bm::Data & c, bm::Data & d, std::string e);
+std::string get_hash(std::string s);
 
 // ------------- end defines for sha
 
@@ -476,290 +477,389 @@ long get_shift_size(long crypt_payload_length) {
     return max_size_content - crypt_payload_length; //in byte
 }
 
+std::array<unsigned char, 4> data_to_u32_be_bytes(const bm::Data &value) {
+    uint64_t raw = value.get_uint64();
+    return {
+        static_cast<unsigned char>((raw >> 24) & 0xff),
+        static_cast<unsigned char>((raw >> 16) & 0xff),
+        static_cast<unsigned char>((raw >> 8) & 0xff),
+        static_cast<unsigned char>(raw & 0xff)
+    };
+}
 
-void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len, bm::Data & sha, bm::Data & seqNo, bm::Data & shaCalculated) {
-	int i;
-
-    // Create an array of pointers to the references.
+void load_aes_key_material(
+    bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4,
+    bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8
+) {
     bm::Data keys[] = { k1, k2, k3, k4, k5, k6, k7, k8 };
 
-    //if there is no register equal to 0, the value of Nk will be 8
     Nk = 8;
-
-    // DEBUG: print keys from k0 (index 0) up to k8 (index 7)
     for (int i = 0; i <= 7; i++) {
-        //printf("%lu\n", keys[i].get_uint64());
         if (keys[i].get_uint64() == 0) {
             Nk = i;
             break;
         }
     }
 
-    // DEBUG: print the Nk value
-    //printf("Nk=%ld\n",Nk);
+    Nr = Nk + 6;
 
-	// Calculate Nr from Nk and, implicitly, from Nb
-	Nr = Nk + 6;
-
-	// The key values are read here
     Key[0] = (k1.get_uint64() & 0xff000000UL) >> 24;
     Key[1] = (k1.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[2] = (k1.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[3] = (k1.get_uint64() & 0x000000ffUL)      ;
+    Key[2] = (k1.get_uint64() & 0x0000ff00UL) >> 8;
+    Key[3] = (k1.get_uint64() & 0x000000ffUL);
 
     Key[4] = (k2.get_uint64() & 0xff000000UL) >> 24;
     Key[5] = (k2.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[6] = (k2.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[7] = (k2.get_uint64() & 0x000000ffUL)      ;
+    Key[6] = (k2.get_uint64() & 0x0000ff00UL) >> 8;
+    Key[7] = (k2.get_uint64() & 0x000000ffUL);
 
     Key[8] = (k3.get_uint64() & 0xff000000UL) >> 24;
     Key[9] = (k3.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[10] = (k3.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[11] = (k3.get_uint64() & 0x000000ffUL)      ;
+    Key[10] = (k3.get_uint64() & 0x0000ff00UL) >> 8;
+    Key[11] = (k3.get_uint64() & 0x000000ffUL);
 
     Key[12] = (k4.get_uint64() & 0xff000000UL) >> 24;
     Key[13] = (k4.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
+    Key[14] = (k4.get_uint64() & 0x0000ff00UL) >> 8;
+    Key[15] = (k4.get_uint64() & 0x000000ffUL);
 
-    if(Nk > 4){
+    if (Nk > 4) {
         Key[16] = (k5.get_uint64() & 0xff000000UL) >> 24;
         Key[17] = (k5.get_uint64() & 0x00ff0000UL) >> 16;
         Key[18] = (k5.get_uint64() & 0x0000ff00UL) >> 8;
         Key[19] = (k5.get_uint64() & 0x000000ffUL);
     }
-    if(Nk > 5){
+    if (Nk > 5) {
         Key[20] = (k6.get_uint64() & 0xff000000UL) >> 24;
         Key[21] = (k6.get_uint64() & 0x00ff0000UL) >> 16;
         Key[22] = (k6.get_uint64() & 0x0000ff00UL) >> 8;
         Key[23] = (k6.get_uint64() & 0x000000ffUL);
     }
-    if(Nk > 6){
+    if (Nk > 6) {
         Key[24] = (k7.get_uint64() & 0xff000000UL) >> 24;
         Key[25] = (k7.get_uint64() & 0x00ff0000UL) >> 16;
         Key[26] = (k7.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[27] = (k7.get_uint64() & 0x000000ffUL);   
+        Key[27] = (k7.get_uint64() & 0x000000ffUL);
     }
-    
-    if(Nk > 7){
+    if (Nk > 7) {
         Key[28] = (k8.get_uint64() & 0xff000000UL) >> 24;
         Key[29] = (k8.get_uint64() & 0x00ff0000UL) >> 16;
         Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
         Key[31] = (k8.get_uint64() & 0x000000ffUL);
     }
+}
 
-	// The KeyExpansion routine is called before encryption.
-	KeyExpansion();
+std::vector<unsigned char> normalize_payload_bytes(const std::string &input, long total_length) {
+    if (total_length <= 0) return {};
 
-	long totalLength = len.get_uint64();
-	string input = a.get_string();
-	char str[input.length()+1];
+    std::size_t target_size = static_cast<std::size_t>(total_length);
+    std::vector<unsigned char> normalized(target_size, 0x00);
 
+    if (input.size() >= target_size) {
+        std::size_t source_start = input.size() - target_size;
+        for (std::size_t i = 0; i < target_size; i++) {
+            normalized[i] = static_cast<unsigned char>(input[source_start + i]);
+        }
+        return normalized;
+    }
+
+    std::size_t initial_padding = target_size - input.size();
+    for (std::size_t i = 0; i < input.size(); i++) {
+        normalized[initial_padding + i] = static_cast<unsigned char>(input[i]);
+    }
+    return normalized;
+}
+
+void append_hex_byte(std::string &output, unsigned char value) {
+    static const char hex_chars[] = "0123456789abcdef";
+    output.push_back(hex_chars[(value >> 4) & 0x0f]);
+    output.push_back(hex_chars[value & 0x0f]);
+}
+
+std::string bytes_to_hex(const unsigned char *bytes, std::size_t len) {
+    std::string hex;
+    hex.reserve(len * 2);
+    for (std::size_t i = 0; i < len; i++) {
+        append_hex_byte(hex, bytes[i]);
+    }
+    return hex;
+}
+
+std::string bytes_to_hex(const std::vector<unsigned char> &bytes) {
+    if (bytes.empty()) return "";
+    return bytes_to_hex(bytes.data(), bytes.size());
+}
+
+int hex_nibble_value(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+bool is_hex_string(const std::string &value) {
+    for (char c : value) {
+        if (!std::isxdigit(static_cast<unsigned char>(c))) return false;
+    }
+    return true;
+}
+
+std::string lowercase_hex(const std::string &value) {
+    std::string out = value;
+    for (std::size_t i = 0; i < out.size(); i++) {
+        out[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(out[i])));
+    }
+    return out;
+}
+
+std::vector<unsigned char> hex_to_bytes(const std::string &hex) {
+    if (hex.size() % 2 != 0) return {};
+
+    std::vector<unsigned char> out;
+    out.reserve(hex.size() / 2);
+    for (std::size_t i = 0; i < hex.size(); i += 2) {
+        int hi = hex_nibble_value(hex[i]);
+        int lo = hex_nibble_value(hex[i + 1]);
+        if (hi < 0 || lo < 0) return {};
+        out.push_back(static_cast<unsigned char>((hi << 4) | lo));
+    }
+    return out;
+}
+
+std::string sha256_hex_bytes(const std::vector<unsigned char> &data) {
+    std::string raw(data.begin(), data.end());
+    return get_hash(raw);
+}
+
+std::vector<unsigned char> sha256_raw_bytes(const std::vector<unsigned char> &data) {
+    std::string digest_hex = sha256_hex_bytes(data);
+    std::vector<unsigned char> digest_raw = hex_to_bytes(digest_hex);
+    if (digest_raw.empty()) digest_raw.assign(32, 0x00);
+    return digest_raw;
+}
+
+std::vector<unsigned char> derive_hmac_key(const bm::Data &k1, const bm::Data &k2) {
+    auto k1_bytes = data_to_u32_be_bytes(k1);
+    auto k2_bytes = data_to_u32_be_bytes(k2);
+
+    std::vector<unsigned char> base_key;
+    base_key.reserve(8);
+    base_key.insert(base_key.end(), k1_bytes.begin(), k1_bytes.end());
+    base_key.insert(base_key.end(), k2_bytes.begin(), k2_bytes.end());
+
+    const std::string label = "P4ICS-HMAC-KDF-v1";
+    std::vector<unsigned char> kdf_message(label.begin(), label.end());
+    std::vector<unsigned char> hmac_key = base_key;
+
+    if (hmac_key.size() > 64) hmac_key = sha256_raw_bytes(hmac_key);
+    hmac_key.resize(64, 0x00);
+
+    std::vector<unsigned char> inner_pad(64), outer_pad(64);
+    for (std::size_t i = 0; i < 64; i++) {
+        inner_pad[i] = static_cast<unsigned char>(hmac_key[i] ^ 0x36);
+        outer_pad[i] = static_cast<unsigned char>(hmac_key[i] ^ 0x5c);
+    }
+
+    std::vector<unsigned char> inner_data = inner_pad;
+    inner_data.insert(inner_data.end(), kdf_message.begin(), kdf_message.end());
+    std::vector<unsigned char> inner_hash = sha256_raw_bytes(inner_data);
+
+    std::vector<unsigned char> outer_data = outer_pad;
+    outer_data.insert(outer_data.end(), inner_hash.begin(), inner_hash.end());
+    std::vector<unsigned char> derived = sha256_raw_bytes(outer_data);
+    if (derived.empty()) derived.assign(32, 0x00);
+    return derived;
+}
+
+std::string hmac_sha256_hex(const std::vector<unsigned char> &key_material, const std::vector<unsigned char> &message) {
+    std::vector<unsigned char> hmac_key = key_material;
+    if (hmac_key.size() > 64) hmac_key = sha256_raw_bytes(hmac_key);
+    hmac_key.resize(64, 0x00);
+
+    std::vector<unsigned char> inner_pad(64), outer_pad(64);
+    for (std::size_t i = 0; i < 64; i++) {
+        inner_pad[i] = static_cast<unsigned char>(hmac_key[i] ^ 0x36);
+        outer_pad[i] = static_cast<unsigned char>(hmac_key[i] ^ 0x5c);
+    }
+
+    std::vector<unsigned char> inner_data = inner_pad;
+    inner_data.insert(inner_data.end(), message.begin(), message.end());
+    std::vector<unsigned char> inner_hash = sha256_raw_bytes(inner_data);
+
+    std::vector<unsigned char> outer_data = outer_pad;
+    outer_data.insert(outer_data.end(), inner_hash.begin(), inner_hash.end());
+    return sha256_hex_bytes(outer_data);
+}
+
+std::string canonical_payload_hex_for_mac(const std::string &payload_hex_or_raw) {
+    if ((payload_hex_or_raw.size() % 2 == 0) && is_hex_string(payload_hex_or_raw)) {
+        return lowercase_hex(payload_hex_or_raw);
+    }
+    return bytes_to_hex(
+        reinterpret_cast<const unsigned char *>(payload_hex_or_raw.data()),
+        payload_hex_or_raw.size()
+    );
+}
+
+std::string compute_payload_hmac_hex(const bm::Data &k1, const bm::Data &k2, const bm::Data &seqNo, const std::string &payload_hex) {
+    std::vector<unsigned char> hmac_key = derive_hmac_key(k1, k2);
+    std::vector<unsigned char> message;
+
+    const std::string domain = "P4ICS-HMAC-PAYLOAD-v1";
+    message.insert(message.end(), domain.begin(), domain.end());
+
+    auto seq_bytes = data_to_u32_be_bytes(seqNo);
+    message.insert(message.end(), seq_bytes.begin(), seq_bytes.end());
+
+    std::string canonical_payload_hex = canonical_payload_hex_for_mac(payload_hex);
+    message.insert(message.end(), canonical_payload_hex.begin(), canonical_payload_hex.end());
+
+    return hmac_sha256_hex(hmac_key, message);
+}
+
+std::array<unsigned char, 16> derive_packet_iv(const bm::Data &k1, const bm::Data &k2, const bm::Data &seqNo) {
+    std::vector<unsigned char> hmac_key = derive_hmac_key(k1, k2);
+    std::vector<unsigned char> message;
+
+    const std::string domain = "P4ICS-IV-v1";
+    message.insert(message.end(), domain.begin(), domain.end());
+
+    auto seq_bytes = data_to_u32_be_bytes(seqNo);
+    message.insert(message.end(), seq_bytes.begin(), seq_bytes.end());
+
+    std::string iv_hex = hmac_sha256_hex(hmac_key, message);
+    std::vector<unsigned char> iv_bytes = hex_to_bytes(iv_hex);
+
+    std::array<unsigned char, 16> iv{};
+    for (std::size_t i = 0; i < iv.size() && i < iv_bytes.size(); i++) {
+        iv[i] = iv_bytes[i];
+    }
+    return iv;
+}
+
+void append_zero_hex_bytes(std::string &output, long count) {
+    if (count <= 0) return;
+    output.append(static_cast<std::size_t>(count) * 2, '0');
+}
+
+std::vector<unsigned char> hash_data_to_32_bytes(const bm::Data &hash_data) {
+    std::string hash_string = hash_data.get_string();
+    std::vector<unsigned char> normalized;
+
+    if (hash_string.size() == 64 && is_hex_string(hash_string)) {
+        normalized = hex_to_bytes(hash_string);
+    } else {
+        normalized.assign(hash_string.begin(), hash_string.end());
+    }
+
+    if (normalized.size() > 32) {
+        normalized.erase(normalized.begin(), normalized.begin() + (normalized.size() - 32));
+    } else if (normalized.size() < 32) {
+        normalized.insert(normalized.begin(), 32 - normalized.size(), 0x00);
+    }
+    return normalized;
+}
+
+
+void Decrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len, bm::Data & sha, bm::Data & seqNo, bm::Data & shaCalculated) {
+    (void)sha;
+
+    load_aes_key_material(k1, k2, k3, k4, k5, k6, k7, k8);
+    KeyExpansion();
+
+    long totalLength = len.get_uint64();
     long crypt_payload_length = get_crypt_payload_length(totalLength);
     long shift_size = get_shift_size(crypt_payload_length);
 
-	// Copy the input string to str
-    long initialPadding = crypt_payload_length - input.length();
+    std::vector<unsigned char> ciphertext = normalize_payload_bytes(a.get_string(), crypt_payload_length);
+    std::array<unsigned char, 16> prev_cipher_block = derive_packet_iv(k1, k2, seqNo);
 
-    for (i=0; i < initialPadding; i++) {
-        str[i] = 0x00;
-    }
-    for (i=initialPadding; i < crypt_payload_length; i++) {
-        str[i] = input[i-initialPadding];
-    }
-    str[crypt_payload_length] = '\0';
+    std::string plaintext_hex;
+    if (totalLength > 0) plaintext_hex.reserve(static_cast<std::size_t>(totalLength) * 2);
 
-    string result;
+    int nBlocks = crypt_payload_length / (Nb * 4);
+    int bytesNotInserted = 0;
 
-    int nBlocks = ((totalLength / 16) + 1);
+    for (int block = 0; block < nBlocks; block++) {
+        std::array<unsigned char, 16> current_cipher_block{};
+        std::size_t block_offset = static_cast<std::size_t>(block) * (Nb * 4);
 
-    int bytesNotInserted;
-
-    for(int block = 0; block < nBlocks; block++) {
-        int number;
-        for (int j=0 ; j < Nb*4 ; j++){
-            i = j + block * 16;
-            if((int)str[i] < 0)
-                number = (int)str[i] + 256;
-            else
-                number = (int)str[i];
-            in[j] = (unsigned char)number;
+        for (int j = 0; j < Nb * 4; j++) {
+            unsigned char cipher_byte = ciphertext[block_offset + static_cast<std::size_t>(j)];
+            in[j] = cipher_byte;
+            current_cipher_block[static_cast<std::size_t>(j)] = cipher_byte;
         }
 
-        // The block is decrypted here - the result is in the array 'out'
         InvCipher();
 
         bool isLastBlock = block == (nBlocks - 1);
+        int bytesInBlock = isLastBlock ? (totalLength % (Nb * 4)) : (Nb * 4);
+        bytesNotInserted = (Nb * 4) - bytesInBlock;
 
-        int bytesInBlock = isLastBlock ? totalLength % (Nb*4) : Nb*4;
-
-        bytesNotInserted = (Nb*4) - bytesInBlock;
-
-        for (i=0; i < bytesInBlock; i++) {
-            char s[3];
-            sprintf(s, "%02x", out[i]);
-            result += s;
+        for (int i = 0; i < bytesInBlock; i++) {
+            unsigned char plain_byte = static_cast<unsigned char>(out[i] ^ prev_cipher_block[static_cast<std::size_t>(i)]);
+            append_hex_byte(plaintext_hex, plain_byte);
         }
+
+        prev_cipher_block = current_cipher_block;
     }
 
-    string shaCalculatedString = sha256_hash_1024_internal(k1, k2, seqNo, result);
-
-    for(int i = 0; i < shift_size + bytesNotInserted; i++) {
-        char s[9];
-        sprintf(s, "%02x", '\0');
-        result += s;
-    }
+    std::string shaCalculatedString = sha256_hash_1024_internal(k1, k2, seqNo, plaintext_hex);
+    std::string padded_plaintext_hex = plaintext_hex;
+    append_zero_hex_bytes(padded_plaintext_hex, shift_size + bytesNotInserted);
 
     shaCalculated.set(shaCalculatedString);
-    b.set(result);
+    b.set(padded_plaintext_hex);
 }
 
 void verify_hash_equals(bm::Data & equals, bm::Data & hash1, bm::Data & hash2) {
-    string hash1String = hash1.get_string();
-    string hash2String = hash2.get_string();
-    unsigned char shaSavedChar1[32+1];
-    unsigned char shaSavedChar2[32+1];
-    bool areEquals = true;
+    std::vector<unsigned char> tag1 = hash_data_to_32_bytes(hash1);
+    std::vector<unsigned char> tag2 = hash_data_to_32_bytes(hash2);
 
-    for(int i = 0; i < 32; i++) {
-        shaSavedChar1[i] = hash1String[i];
+    unsigned char diff = 0x00;
+    for (std::size_t i = 0; i < 32; i++) {
+        diff |= static_cast<unsigned char>(tag1[i] ^ tag2[i]);
     }
-    for(int i = 0; i < 32; i++) {
-        shaSavedChar2[i] = hash2String[i];
-    }
-    for(int i = 0; i < 32; i++) {
-        areEquals &= shaSavedChar1[i] == shaSavedChar2[i];
-    }
-    if(areEquals) {
-        //printf("\n\nEQUALS\n\n");
-    } else {
-        //printf("\n\nNOT EQUALS\n\n");
-    }
-    equals.set(areEquals);
+    equals.set(diff == 0x00);
 }
 
-void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len) {
-	int i;
+void Encrypt(bm::Data & a, bm::Data & b, bm::Data & k1, bm::Data & k2, bm::Data & k3, bm::Data & k4, bm::Data & k5, bm::Data & k6, bm::Data & k7, bm::Data & k8, bm::Data & len, bm::Data & seqNo) {
+    load_aes_key_material(k1, k2, k3, k4, k5, k6, k7, k8);
+    KeyExpansion();
 
-    // Create an array of pointers to the references.
-    bm::Data keys[] = { k1, k2, k3, k4, k5, k6, k7, k8 };
+    long totalLength = len.get_uint64();
+    long crypt_payload_length = get_crypt_payload_length(totalLength);
+    long shift_size = get_shift_size(crypt_payload_length);
 
-    //if there is no register equal to 0, the value of Nk will be 8
-    Nk = 8;
+    std::vector<unsigned char> plaintext = normalize_payload_bytes(a.get_string(), totalLength);
+    plaintext.resize(static_cast<std::size_t>(crypt_payload_length), 0x00);
 
-    // DEBUG: print keys from k0 (index 0) up to k8 (index 7)
-    for (int i = 0; i <= 7; i++) {
-        //printf("%lu\n", keys[i].get_uint64());
-        if (keys[i].get_uint64() == 0) {
-            Nk = i;
-            break;
+    std::array<unsigned char, 16> prev_cipher_block = derive_packet_iv(k1, k2, seqNo);
+
+    std::string result;
+    if (crypt_payload_length + shift_size > 0) {
+        result.reserve(static_cast<std::size_t>(crypt_payload_length + shift_size) * 2);
+    }
+
+    int nBlocks = crypt_payload_length / (Nb * 4);
+    for (int block = 0; block < nBlocks; block++) {
+        std::size_t block_offset = static_cast<std::size_t>(block) * (Nb * 4);
+        for (int i = 0; i < Nb * 4; i++) {
+            unsigned char plain_byte = plaintext[block_offset + static_cast<std::size_t>(i)];
+            in[i] = static_cast<unsigned char>(plain_byte ^ prev_cipher_block[static_cast<std::size_t>(i)]);
+        }
+
+        Cipher();
+
+        for (int i = 0; i < Nb * 4; i++) {
+            unsigned char cipher_byte = out[i];
+            append_hex_byte(result, cipher_byte);
+            prev_cipher_block[static_cast<std::size_t>(i)] = cipher_byte;
         }
     }
 
-    // DEBUG: print Nk value
-    //printf("Nk=%ld\n",Nk);
-
-	// Calculate Nr from Nk and, implicitly, from Nb
-	Nr = Nk + 6;
-
-	// The key values are read here
-    Key[0] = (k1.get_uint64() & 0xff000000UL) >> 24;
-    Key[1] = (k1.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[2] = (k1.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[3] = (k1.get_uint64() & 0x000000ffUL)      ;
-
-    Key[4] = (k2.get_uint64() & 0xff000000UL) >> 24;
-    Key[5] = (k2.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[6] = (k2.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[7] = (k2.get_uint64() & 0x000000ffUL)      ;
-
-    Key[8] = (k3.get_uint64() & 0xff000000UL) >> 24;
-    Key[9] = (k3.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[10] = (k3.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[11] = (k3.get_uint64() & 0x000000ffUL)      ;
-
-    Key[12] = (k4.get_uint64() & 0xff000000UL) >> 24;
-    Key[13] = (k4.get_uint64() & 0x00ff0000UL) >> 16;
-    Key[14] = (k4.get_uint64() & 0x0000ff00UL) >>  8;
-    Key[15] = (k4.get_uint64() & 0x000000ffUL)      ;
-
-    if(Nk > 4){
-        Key[16] = (k5.get_uint64() & 0xff000000UL) >> 24;
-        Key[17] = (k5.get_uint64() & 0x00ff0000UL) >> 16;
-        Key[18] = (k5.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[19] = (k5.get_uint64() & 0x000000ffUL);
-    }
-    if(Nk > 5){
-        Key[20] = (k6.get_uint64() & 0xff000000UL) >> 24;
-        Key[21] = (k6.get_uint64() & 0x00ff0000UL) >> 16;
-        Key[22] = (k6.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[23] = (k6.get_uint64() & 0x000000ffUL);
-    }
-    if(Nk > 6){
-        Key[24] = (k7.get_uint64() & 0xff000000UL) >> 24;
-        Key[25] = (k7.get_uint64() & 0x00ff0000UL) >> 16;
-        Key[26] = (k7.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[27] = (k7.get_uint64() & 0x000000ffUL);   
-    }
-    
-    if(Nk > 7){
-        Key[28] = (k8.get_uint64() & 0xff000000UL) >> 24;
-        Key[29] = (k8.get_uint64() & 0x00ff0000UL) >> 16;
-        Key[30] = (k8.get_uint64() & 0x0000ff00UL) >> 8;
-        Key[31] = (k8.get_uint64() & 0x000000ffUL);
-    }
-
-
-    // Get the input string
-	string input = a.get_string();
-	long totalLength = len.get_uint64();
-
-	char str[totalLength+1];
-
-	long inputLength = totalLength;
-
-	// Copy the input string to str
-	long initialPadding = totalLength - input.length();
-
-	long crypt_payload_length = get_crypt_payload_length(totalLength);
-    long shift_size = get_shift_size(crypt_payload_length);
-
-	for (i=0; i < initialPadding; i++) {
-        str[i] = 0x00;
-    }
-
-	for (i=initialPadding; i < totalLength; i++) {
-	    str[i] = input[i-initialPadding];
-	}
-	str[totalLength] = '\0';
-
-	// The KeyExpansion routine is called before encryption.
-	KeyExpansion();
-
-	string result;
-	// sz is the cursor into the input string
-	int sz=0;
-	// Each iteration encrypts one block = Nb*4 bytes = 128 bits in this case
-	while (sz < inputLength) {
-		// Fill the array 'in' with the next plaintext block
-		sz = fillBlock (sz, str, in, inputLength);
-
-		// The block is encrypted here - the result is in the array 'out'
-		Cipher();
-		// Output the encrypted block.
-		for (int i = 0; i < Nb*4; i++) {
-			char s[9];
-			sprintf(s, "%02x", out[i]);
-			result += s;
-		}
-	}
-
-    for(int i = 0; i < shift_size; i++) {
-        char s[9];
-        sprintf(s, "%02x", '\0');
-        result += s;
-    }
-	b.set(result);
+    append_zero_hex_bytes(result, shift_size);
+    b.set(result);
 }
 
 
@@ -1054,54 +1154,15 @@ void sha256_hash_512(bm::Data & a, bm::Data & b, bm::Data & c) {
 }
 
 void sha256_hash_1024(bm::Data & a, bm::Data & b, bm::Data & c, bm::Data & d, bm::Data & e, bm::Data & len) {
-    std::string str;
-    std::string result = "";
-
-    string input = e.get_string();
     long totalLength = len.get_uint64();
-
-    char payload[totalLength+1];
-
-    long initialPadding = totalLength - input.length();
-
-    for (int i = 0; i < initialPadding; i++) {
-        payload[i] = 0x00;
-    }
-
-    for (int i = initialPadding; i < totalLength; i++) {
-        payload[i] = input[i-initialPadding];
-    }
-    payload[totalLength] = '\0';
-
-	str = b.get_string();
-	str = str + c.get_string();
-    str = str + d.get_string();
-//	str = str + payload;
-
-
-	for (int i = 0; i < totalLength; i++) {
-        char s[9];
-        sprintf(s, "%02x", payload[i]);
-        str += s;
-    }
-
-    unsigned char calculatedSha[32+1];
-
-	result = get_hash(str);
-
+    std::vector<unsigned char> payload_bytes = normalize_payload_bytes(e.get_string(), totalLength);
+    std::string payload_hex = bytes_to_hex(payload_bytes);
+    std::string result = compute_payload_hmac_hex(b, c, d, payload_hex);
     a.set(result);
 }
 
 std::string sha256_hash_1024_internal(bm::Data & b, bm::Data & c, bm::Data & d, std::string e) {
-    std::string str;
-    std::string result = "";
-
-	str = b.get_string();
-	str = str + c.get_string();
-    str = str + d.get_string();
-	str = str + e;
-
-	return get_hash(str);
+	return compute_payload_hmac_hex(b, c, d, e);
 }
 
 
@@ -1115,7 +1176,7 @@ BM_REGISTER_EXTERN_FUNCTION(verify_hash_equals, bm::Data &, bm::Data &, bm::Data
 BM_REGISTER_EXTERN_FUNCTION(Encrypt, bm::Data &, bm::Data &,
     bm::Data &, bm::Data &, bm::Data &, bm::Data &,
     bm::Data &, bm::Data &, bm::Data &, bm::Data &,
-    bm::Data &);
+    bm::Data &, bm::Data &);
 BM_REGISTER_EXTERN_FUNCTION(Decrypt, bm::Data &, bm::Data &,
     bm::Data &, bm::Data &, bm::Data &, bm::Data &,
     bm::Data &, bm::Data &, bm::Data &, bm::Data &,
