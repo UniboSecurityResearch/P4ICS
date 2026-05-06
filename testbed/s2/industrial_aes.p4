@@ -429,7 +429,7 @@ control MyIngress(inout headers hdr,
         hdr.ipv4_options.setInvalid();
     }
 
-    table modbus_sec {
+    table ics_sec {
         key = {
             standard_metadata.egress_spec: exact;
         }
@@ -447,7 +447,7 @@ control MyIngress(inout headers hdr,
             ipv4_lpm.apply();
             if (hdr.tcp.isValid()){
                 if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
-                    modbus_sec.apply();
+                    ics_sec.apply();
                 }
             }
         }

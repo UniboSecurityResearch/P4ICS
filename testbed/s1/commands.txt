@@ -13,6 +13,6 @@ register_write keys 4 102358694
 register_write keys 5 259174683
 register_write keys 6 243695780
 register_write keys 7 096548217
-table_add modbus_sec decipher 1 =>
-table_add modbus_sec cipher 2 =>
+table_add ics_sec decipher 1 =>
+table_add ics_sec cipher 2 =>
 EOF
