@@ -157,10 +157,14 @@ If you use this repository, please cite our paper:
 
 ```bibtex
 @article{p4ics,
-  title   = {P4ICS: P4 In-Network Security for Industrial Control Systems Networks},
-  author  = {},
-  journal = {Preprint submitted to Computer Networks},
-  year    = {2025}
+  title   = {{P4ICS}: {P4} in-network security for Industrial Control Systems networks},
+  author  = {Rinieri, Lorenzo and Melis, Andrea and Girau, Roberto and Pau, Giovanni and Prandini, Marco and Callegati, Franco},
+  journal = {Computer Networks},
+  pages   = {112560},
+  year    = {2026},
+  issn    = {1389-1286},
+  doi     = {10.1016/j.comnet.2026.112560},
+  url     = {https://www.sciencedirect.com/science/article/pii/S1389128626005724}
 }
 ```
 
