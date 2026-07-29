@@ -160,11 +160,12 @@ If you use this repository, please cite our paper:
   title   = {{P4ICS}: {P4} in-network security for Industrial Control Systems networks},
   author  = {Rinieri, Lorenzo and Melis, Andrea and Girau, Roberto and Pau, Giovanni and Prandini, Marco and Callegati, Franco},
   journal = {Computer Networks},
+  volume  = {287},
   pages   = {112560},
   year    = {2026},
   issn    = {1389-1286},
   doi     = {10.1016/j.comnet.2026.112560},
-  url     = {https://www.sciencedirect.com/science/article/pii/S1389128626005724}
+  url     = {https://doi.org/10.1016/j.comnet.2026.112560}
 }
 ```
 
