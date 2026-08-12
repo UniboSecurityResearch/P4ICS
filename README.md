@@ -57,7 +57,7 @@ Make sure both Docker and Kathara are properly installed and configured before s
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/<your-org>/P4ICS.git
+   git clone https://github.com/UniboSecurityResearch/P4ICS.git
    cd P4ICS/testbed
    ```
 
