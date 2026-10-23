@@ -1,0 +1,36 @@
+# Publish the protocol images built from this repository when a release tag
+# (v*) is pushed: loriringhio97/<image>:<tag>, plus :latest for the DNP3 and
+# EtherNet/IP images. Needs the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN
+# repository secrets. loriringhio97/modbus:latest is left as published.
+name: images
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - image: dnp3
+            latest: true
+          - image: enip
+            latest: true
+          - image: modbus
+            latest: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile/${{ matrix.image }}.Dockerfile
+          push: true
+          tags: |
+            loriringhio97/${{ matrix.image }}:${{ github.ref_name }}
+            ${{ matrix.latest && format('loriringhio97/{0}:latest', matrix.image) || '' }}

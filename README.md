@@ -10,7 +10,7 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
 ## 📂 Repository Structure
 
 - **Dockerfile/**
-  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (including `dnp3.Dockerfile` and `enip.Dockerfile` for DNP3 and EtherNet/IP).
+  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (`modbus`, `dnp3`, `enip`, MQTT). Pushing a `v*` tag publishes the Modbus, DNP3 and EtherNet/IP images with that tag (`.github/workflows/images.yml`).
 
 - **docs/**
   Specification of the P4ICS protected packet format.

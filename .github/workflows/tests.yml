@@ -1,0 +1,49 @@
+# Checks of the P4ICS switch: the wire-format reference, the testbed scripts,
+# the switch (bmv2 + extern) against the reference, and the real Modbus, DNP3
+# and EtherNet/IP stacks through two switches.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+env:
+  # The bmv2/p4c image the testbed was validated with (bmv2 1.15.0, p4c 1.2.5.11).
+  P4_IMAGE: loriringhio97/p4@sha256:4ecf4ad5c433ff214f076ad06d051c2c9b5b9394bb6dfc0bb81a102b53fff5f2
+
+jobs:
+  reference:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cryptography
+      - run: python tests/test_reference.py
+      - name: s1 and s2 run the same program
+        run: testbed/sync_switches.sh --check
+      - name: shell scripts parse
+        run: for f in testbed/*.sh testbed/*.startup testbed/*.shutdown testbed/s*/*.sh tests/*/*.sh; do bash -n "$f"; done
+
+  testbed:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: switch startup/shutdown scripts (lab key, mode, SPI, counter)
+        run: tests/testbed/run_startup.sh
+
+  interop:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: switch vs reference, 4 protocols, tampering, replays
+        run: tests/bmv2/run_interop.sh
+
+  protocols:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f Dockerfile/dnp3.Dockerfile -t loriringhio97/dnp3 .
+      - name: pymodbus, DNP3 and cpppo through two switches
+        run: tests/protocols/run_protocols.sh
