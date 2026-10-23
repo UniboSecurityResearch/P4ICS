@@ -3,7 +3,7 @@
 This repository contains the source files, testbed configurations, and evaluation results for the paper:
 **P4ICS: P4 In-Network Security for Industrial Control Systems Networks**.
 
-P4ICS is a framework that shifts security functions for Industrial Control Systems (ICS) from endpoints into P4-programmable switches, providing confidentiality, integrity, and replay protection for protocols such as **Modbus, DNP3, EtherNet/IP, and MQTT**. In the testbed pipeline, confidentiality and integrity are implemented in switch externs with **AES-CBC** and **HMAC-SHA256**.
+P4ICS is a framework that shifts security functions for Industrial Control Systems (ICS) from endpoints into P4-programmable switches, providing confidentiality, integrity, and replay protection for protocols such as **Modbus, DNP3, EtherNet/IP, and MQTT**. In the testbed pipeline, confidentiality and integrity are implemented in switch externs with **AES-CBC** and **HMAC-SHA256** (encrypt-then-MAC), and replays are rejected with per-sender packet counters. The protected packet format is specified in [`docs/WIRE_FORMAT.md`](docs/WIRE_FORMAT.md).
 
 ---
 
@@ -11,6 +11,9 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
 
 - **Dockerfile/**
   Contains container definitions for running industrial protocol clients and servers on the Kathara testbed.
+
+- **docs/**
+  Specification of the P4ICS protected packet format.
 
 - **modbus_tep_case_study/**
   Files and results for the **Modbus case study** presented in the paper (based on the Tennessee Eastman Process).
@@ -87,6 +90,8 @@ Make sure both Docker and Kathara are properly installed and configured before s
      python3 mqtt_client_tls.py
      ```
 
+Each switch has its own sender identifier (`register_write p4ics_spi 0 <1..255>` in `commands.txt`), and its startup script initialises the packet counter from the current time, so counters never repeat across restarts. After restarting a switch that decrypts, rotate the key (`change_key.sh`): its anti-replay state starts empty. `counter_read MyIngress.p4ics_events <0..3>` reports protected, unprotected, rejected (tag) and rejected (replay) packets.
+
 ---
 
 ## ⚙️ Modbus Client Options
@@ -135,7 +140,7 @@ no-encryption | 128 | 160 | 192 | 224 | 256
 ```
 
 These correspond to **AES key sizes in bits**, used in the P4ICS security pipeline.
-For secure modes, the switch externs use AES-CBC encryption and HMAC-SHA256 authentication bound to packet context.
+For secure modes, the switch externs use AES-CBC encryption followed by an HMAC-SHA256 tag over the ciphertext and the packet context (addresses, ports, TCP sequence number, protocol header, sender and counter), verified before decryption.
 
 ---
 

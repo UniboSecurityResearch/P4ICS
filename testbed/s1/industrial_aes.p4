@@ -43,10 +43,12 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
-// P4ICS trailer of the IPv4 header (IHL 5 -> 14): plaintext length + HMAC tag.
+// P4ICS trailer of the IPv4 header (IHL 5 -> 13): 32 bytes of "options".
 header ipv4_options_t {
-    bit<32> savedLen;
-    bit<256> sha;
+    bit<32>  savedLen;  // plaintext length; first byte 0 = IPv4 End of Option List
+    bit<32>  spi;       // sender (security association) identifier
+    bit<64>  counter;   // per-sender packet counter: anti-replay and IV input
+    bit<128> tag;       // HMAC-SHA256-128 over the packet context and the ciphertext
 }
 
 header tcp_t {
@@ -177,7 +179,7 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.ipv4);
         transition select(hdr.ipv4.ihl) {
             5: no_parse_ipv4_options;
-            14: parse_ipv4_options;
+            13: parse_ipv4_options;
             _ : accept;    // For other protocols, skip to accept
         }
     }
@@ -352,6 +354,15 @@ control MyIngress(inout headers hdr,
 
    register<bit<32>>(8) keys;
 
+    // Security association state (set by the control plane, see commands.txt
+    // and the switch startup script).
+    register<bit<32>>(1) p4ics_spi;          // SPI of this switch as a sender: 1..255, 0 = unset
+    register<bit<64>>(1) p4ics_tx_counter;   // last counter sent; startup sets ns since 2020
+    register<bit<64>>(256) p4ics_rx_last;    // per sender (SPI & 0xff): highest counter accepted
+    register<bit<64>>(256) p4ics_rx_window;  // per sender: bitmap of the 64 counters below it
+    // 0: protected, 1: unprotected, 2: rejected (tag/length), 3: rejected (replay)
+    counter(4, CounterType.packets) p4ics_events;
+
     action drop() {
         mark_to_drop(standard_metadata);
     }
@@ -395,22 +406,34 @@ control MyIngress(inout headers hdr,
             keys.read(k7, 6);
             keys.read(k8, 7);
             bit<256> key = k1 ++ k2 ++ k3 ++ k4 ++ k5 ++ k6 ++ k7 ++ k8;
-            bit<1> done = 0;
+            bit<32> spi;
+            bit<64> tx_counter;
+            p4ics_spi.read(spi, 0);
+            p4ics_tx_counter.read(tx_counter, 0);
+            tx_counter = tx_counter + 1;
+            p4ics_tx_counter.write(0, tx_counter);
             hdr.ipv4_options.setValid();
-            p4ics_cipher(hdr.slices, hdr.tail, hdr.ipv4_options.savedLen,
-                         hdr.ipv4_options.sha, hdr.tcp.seqNo, key, done);
+            hdr.ipv4_options.spi = spi;
+            hdr.ipv4_options.counter = tx_counter;
+            bit<1> done = 0;
+            p4ics_cipher(hdr.slices, hdr.tail, hdr.ipv4_options, hdr.ipv4, hdr.tcp,
+                         hdr.modbus_tcp, hdr.mqtt_tcp, hdr.cip_tcp, hdr.dnp3_tcp, key, done);
             bit<16> crypt_payload_length = ((meta.p4ics.payload_len >> 4) + 1) << 4;
             bit<32> new_len = (bit<32>)hdr.ipv4.totalLen + (bit<32>)crypt_payload_length
-                              - (bit<32>)meta.p4ics.payload_len + 36; //36 is the ipv4 options size in bytes
-            hdr.ipv4.ihl = 14;
+                              - (bit<32>)meta.p4ics.payload_len + 32; //32 is the ipv4 options size in bytes
+            hdr.ipv4.ihl = 13;
             hdr.ipv4.totalLen = (bit<16>)new_len;
             // Fail closed: never forward a payload that could not be protected.
-            meta.p4ics.drop = (done == 0 || new_len > 65535) ? 1w1 : 1w0;
+            meta.p4ics.drop = (done == 0 || spi == 0 || new_len > 65535) ? 1w1 : 1w0;
+            if (meta.p4ics.drop == 0) {
+                p4ics_events.count(0);
+            }
         }
     }
 
-    // Protected -> plaintext, only if the HMAC tag verifies; dropped otherwise
-    // (also when the segment is not protected at all).
+    // Protected -> plaintext. Dropped unless the HMAC tag verifies (checked
+    // before decrypting) and the counter is fresh; also dropped when the
+    // segment is not protected at all.
     action decipher() {
         meta.isSec = 1;
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
@@ -425,17 +448,54 @@ control MyIngress(inout headers hdr,
         keys.read(k8, 7);
         bit<256> key = k1 ++ k2 ++ k3 ++ k4 ++ k5 ++ k6 ++ k7 ++ k8;
         bit<1> verified = 0;
+        bit<1> fresh = 0;
         if (hdr.ipv4_options.isValid()) {
-            p4ics_decipher(hdr.slices, hdr.tail, hdr.ipv4_options.savedLen,
-                           hdr.ipv4_options.sha, hdr.tcp.seqNo, key, verified);
+            p4ics_decipher(hdr.slices, hdr.tail, hdr.ipv4_options, hdr.ipv4, hdr.tcp,
+                           hdr.modbus_tcp, hdr.mqtt_tcp, hdr.cip_tcp, hdr.dnp3_tcp, key, verified);
         }
+        // Anti-replay window as in IPsec ESP (RFC 4303), updated only for
+        // authenticated frames so that forged ones cannot move it.
         if (verified == 1) {
+            bit<32> sa = (bit<32>)hdr.ipv4_options.spi[7:0];
+            bit<64> last;
+            bit<64> window;
+            p4ics_rx_last.read(last, sa);
+            p4ics_rx_window.read(window, sa);
+            bit<64> rx_counter = hdr.ipv4_options.counter;
+            if (rx_counter > last) {
+                bit<64> ahead = rx_counter - last;
+                if (ahead >= 64) {
+                    window = 1;
+                } else {
+                    window = (window << (bit<8>)ahead) | 1;
+                }
+                last = rx_counter;
+                fresh = 1;
+            } else {
+                bit<64> behind = last - rx_counter;
+                if (behind < 64) {
+                    bit<64> seen = 64w1 << (bit<8>)behind;
+                    if ((window & seen) == 0) {
+                        window = window | seen;
+                        fresh = 1;
+                    }
+                }
+            }
+            p4ics_rx_last.write(sa, last);
+            p4ics_rx_window.write(sa, window);
+        }
+        if (fresh == 1) {
             hdr.ipv4.ihl = 5;
             hdr.ipv4.totalLen = hdr.ipv4.totalLen - meta.p4ics.payload_len
-                                + (bit<16>)hdr.ipv4_options.savedLen - 36;
+                                + (bit<16>)hdr.ipv4_options.savedLen - 32;
             hdr.ipv4_options.setInvalid();
+            p4ics_events.count(1);
+        } else if (verified == 1) {
+            p4ics_events.count(3);
+        } else {
+            p4ics_events.count(2);
         }
-        meta.p4ics.drop = ~verified;
+        meta.p4ics.drop = ~fresh;
     }
 
     table ics_sec {
@@ -539,7 +599,7 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
               hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
-        // RFC 791: the checksum also covers the 36 bytes of P4ICS options.
+        // RFC 791: the checksum also covers the 32 bytes of P4ICS options.
         update_checksum(
             hdr.ipv4.isValid() && hdr.ipv4_options.isValid(),
             { hdr.ipv4.version,
@@ -554,7 +614,9 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
               hdr.ipv4.srcAddr,
               hdr.ipv4.dstAddr,
               hdr.ipv4_options.savedLen,
-              hdr.ipv4_options.sha },
+              hdr.ipv4_options.spi,
+              hdr.ipv4_options.counter,
+              hdr.ipv4_options.tag },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
     }

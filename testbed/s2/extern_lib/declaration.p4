@@ -7,14 +7,20 @@
  * slices + tail). Algorithms: see the header of definition.cpp.
  *
  * key: the 8 words of the `keys` register, k1 first (k1 ++ ... ++ k8).
+ * opts: the P4ICS IPv4 options (savedLen, spi, counter, tag). The tag also
+ * covers the addresses (ipv4), ports and sequence number (tcp) and the
+ * industrial header, whichever of modbus/mqtt/cip/dnp3 is valid.
  */
 
-// Plaintext -> AES-CBC ciphertext. savedLen = plaintext length,
-// tag = HMAC-SHA256 tag; done = 0 if the payload could not be protected.
-extern void p4ics_cipher<S, T, L, H, Q, K, R>(inout S slices, inout T tail, out L savedLen,
-                                             out H tag, in Q seqNo, in K key, out R done);
+// Plaintext -> AES-CBC ciphertext, then tag (encrypt-then-MAC). Reads
+// opts.spi/opts.counter, writes opts.savedLen/opts.tag; done = 0 if the
+// payload could not be protected.
+extern void p4ics_cipher<S, T, O, I, P, M, Q, C, D, K, R>(
+    inout S slices, inout T tail, inout O opts, in I ipv4, in P tcp,
+    in M modbus, in Q mqtt, in C cip, in D dnp3, in K key, out R done);
 
-// Ciphertext -> plaintext, only if the tag verifies (verified = 1); the
-// payload is left untouched otherwise.
-extern void p4ics_decipher<S, T, L, H, Q, K, R>(inout S slices, inout T tail, in L savedLen,
-                                               in H tag, in Q seqNo, in K key, out R verified);
+// Verify the tag, then decrypt (verified = 1). The payload is left untouched
+// if the tag or the lengths do not match.
+extern void p4ics_decipher<S, T, O, I, P, M, Q, C, D, K, R>(
+    inout S slices, inout T tail, in O opts, in I ipv4, in P tcp,
+    in M modbus, in Q mqtt, in C cip, in D dnp3, in K key, out R verified);

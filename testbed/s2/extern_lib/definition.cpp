@@ -7,13 +7,16 @@
  * result back with its exact length. A single primitive thus serves every
  * payload size, instead of one primitive per number of slices.
  *
- * Protected payload (L plaintext bytes, seq = TCP sequence number, big endian):
- *   hk  = HMAC-SHA256(be32(k1) || be32(k2), "P4ICS-HMAC-KDF-v1")
- *   IV  = HMAC-SHA256(hk, "P4ICS-IV-v1" || seq)[0:16]
- *   tag = HMAC-SHA256(hk, "P4ICS-HMAC-PAYLOAD-v1" || seq || lower-case hex(plaintext))
- *   ct  = AES-CBC(key, IV, plaintext || 1..16 zero bytes)
- * The AES key is k1..kNk, the register words before the first zero word
- * (Nk = 4..8, Nr = Nk + 6). savedLen = L travels in the IPv4 options.
+ * P4ICS v2 (all integers big endian, L plaintext bytes):
+ *   K       = k1 .. kNk, the register words before the first zero word (Nk = 4..8)
+ *   enc_key = HKDF-SHA256(K, salt "P4ICS-v2", info "P4ICS-v2 enc", 4 * Nk)
+ *   mac_key = HKDF-SHA256(K, salt "P4ICS-v2", info "P4ICS-v2 mac", 32)
+ *   IV      = AES(enc_key, spi || 0^4 || counter)
+ *   ct      = AES-CBC(enc_key, IV, plaintext || 1..16 zero bytes)
+ *   aad     = "P4ICS-v2" || spi || counter || L || IPv4 src, dst
+ *             || TCP ports, seq || industrial header
+ *   tag     = HMAC-SHA256(mac_key, aad || ct)[0:16]        (encrypt-then-MAC)
+ * savedLen = L, spi, counter and tag travel in the IPv4 options.
  */
 #include <bm/bm_sim/extern.h>
 #include <bm/bm_sim/headers.h>
@@ -32,12 +35,15 @@ namespace {
 using Bytes = std::vector<unsigned char>;
 
 constexpr size_t kSliceBytes = 256;
-constexpr size_t kTagBytes = 32;
+constexpr size_t kTagBytes = 16;        // HMAC-SHA256 truncated to 128 bits
 constexpr int kKeyWords = 8;
 
-const char kKdfLabel[] = "P4ICS-HMAC-KDF-v1";
-const char kIvDomain[] = "P4ICS-IV-v1";
-const char kMacDomain[] = "P4ICS-HMAC-PAYLOAD-v1";
+// Fields of ipv4_options_t, in declaration order.
+constexpr int kOptSavedLen = 0, kOptSpi = 1, kOptCounter = 2, kOptTag = 3;
+
+const char kLabel[] = "P4ICS-v2";
+const char kEncInfo[] = "P4ICS-v2 enc";
+const char kMacInfo[] = "P4ICS-v2 mac";
 
 size_t crypt_len(size_t plain_len) {
     return (plain_len / P4ICS_AES_BLOCK + 1) * P4ICS_AES_BLOCK;
@@ -117,6 +123,18 @@ void hmac_sha256(const unsigned char *key, size_t klen, const unsigned char *msg
     outer.final(out);
 }
 
+// RFC 5869 with SHA-256, for length <= 32 (a single expand block).
+void hkdf_sha256(const unsigned char *ikm, size_t ikm_len, const char *info, unsigned char *out,
+                 size_t len) {
+    unsigned char prk[32], block[32];
+    Bytes msg(info, info + strlen(info));
+
+    hmac_sha256(reinterpret_cast<const unsigned char *>(kLabel), strlen(kLabel), ikm, ikm_len, prk);
+    msg.push_back(0x01);
+    hmac_sha256(prk, sizeof(prk), msg.data(), msg.size(), block);
+    memcpy(out, block, len);
+}
+
 // ---- Packet payload <-> bytes -----------------------------------------------
 
 // Big-endian bytes of a value, left-padded to n (bmv2 strips leading zeros).
@@ -172,6 +190,41 @@ bool scatter(bm::HeaderStack &slices, bm::Header &tail, const Bytes &data) {
     return true;
 }
 
+Bytes deparse(const bm::Header &h) {
+    Bytes out(static_cast<size_t>(h.get_nbytes_packet()));
+    h.deparse(reinterpret_cast<char *>(out.data()));
+    return out;
+}
+
+// What the tag binds besides the ciphertext.
+Bytes mac_context(__u32 spi, uint64_t counter, uint64_t plain_len, const bm::Header &ipv4,
+                  const bm::Header &tcp, const bm::Header *industrial) {
+    Bytes aad(kLabel, kLabel + strlen(kLabel));
+    unsigned char fields[16];
+    Bytes ip = deparse(ipv4), l4 = deparse(tcp);
+
+    P4ICS_PUTU32(fields, spi);
+    P4ICS_PUTU32(fields + 4, static_cast<__u32>(counter >> 32));
+    P4ICS_PUTU32(fields + 8, static_cast<__u32>(counter));
+    P4ICS_PUTU32(fields + 12, static_cast<__u32>(plain_len));
+    aad.insert(aad.end(), fields, fields + sizeof(fields));
+    aad.insert(aad.end(), ip.begin() + 12, ip.begin() + 20);    // source, destination
+    aad.insert(aad.end(), l4.begin(), l4.begin() + 8);          // ports, sequence number
+    if (industrial) {
+        Bytes h = deparse(*industrial);
+        aad.insert(aad.end(), h.begin(), h.end());
+    }
+    return aad;
+}
+
+const bm::Header *industrial_header(const bm::Header &modbus, const bm::Header &mqtt,
+                                    const bm::Header &cip, const bm::Header &dnp3) {
+    for (const bm::Header *h : {&modbus, &mqtt, &cip, &dnp3})
+        if (h->is_valid())
+            return h;
+    return nullptr;
+}
+
 // ---- Keys and per-packet crypto ---------------------------------------------
 
 struct KeyMaterial {
@@ -179,7 +232,7 @@ struct KeyMaterial {
     __u32 nr;
     __u32 enc_rk[P4ICS_AES_RK_WORDS];
     __u32 dec_rk[P4ICS_AES_RK_WORDS];
-    unsigned char hk[32];   // HMAC key
+    unsigned char mac_key[32];
     bool valid;
 };
 
@@ -203,35 +256,32 @@ const KeyMaterial *key_material(const bm::Data &key) {
     cache.valid = false;
     if (nk < 4)
         return nullptr;
-    cache.nr = p4ics_aes_expand_key(raw.data(), static_cast<__u32>(nk), cache.enc_rk, cache.dec_rk);
-    hmac_sha256(raw.data(), 8, reinterpret_cast<const unsigned char *>(kKdfLabel),
-                strlen(kKdfLabel), cache.hk);
+    unsigned char enc_key[4 * kKeyWords];
+    size_t key_len = 4 * static_cast<size_t>(nk);
+    hkdf_sha256(raw.data(), key_len, kEncInfo, enc_key, key_len);
+    hkdf_sha256(raw.data(), key_len, kMacInfo, cache.mac_key, sizeof(cache.mac_key));
+    cache.nr = p4ics_aes_expand_key(enc_key, static_cast<__u32>(nk), cache.enc_rk, cache.dec_rk);
     memcpy(cache.words, words, sizeof(words));
     cache.valid = true;
     return &cache;
 }
 
-void packet_iv(const KeyMaterial &k, __u32 seq, unsigned char iv[P4ICS_AES_BLOCK]) {
-    Bytes msg(kIvDomain, kIvDomain + strlen(kIvDomain));
-    unsigned char mac[32];
+// IV = AES(enc_key, spi || 0^4 || counter): unpredictable and unique per packet.
+void packet_iv(const KeyMaterial &k, __u32 spi, uint64_t counter, unsigned char iv[P4ICS_AES_BLOCK]) {
+    __u32 s[4] = { spi, 0, static_cast<__u32>(counter >> 32), static_cast<__u32>(counter) };
 
-    msg.resize(msg.size() + 4);
-    P4ICS_PUTU32(msg.data() + msg.size() - 4, seq);
-    hmac_sha256(k.hk, sizeof(k.hk), msg.data(), msg.size(), mac);
-    memcpy(iv, mac, P4ICS_AES_BLOCK);
+    p4ics_aes_encrypt_words(k.enc_rk, k.nr, s);
+    for (int i = 0; i < 4; i++)
+        P4ICS_PUTU32(iv + 4 * i, s[i]);
 }
 
-void payload_tag(const KeyMaterial &k, __u32 seq, const Bytes &plain, unsigned char tag[kTagBytes]) {
-    static const char hex[] = "0123456789abcdef";
-    Bytes msg(kMacDomain, kMacDomain + strlen(kMacDomain));
+void mac_tag(const KeyMaterial &k, const Bytes &aad, const Bytes &ct, unsigned char tag[kTagBytes]) {
+    Bytes msg(aad);
+    unsigned char mac[32];
 
-    msg.resize(msg.size() + 4);
-    P4ICS_PUTU32(msg.data() + msg.size() - 4, seq);
-    for (unsigned char b : plain) {
-        msg.push_back(static_cast<unsigned char>(hex[b >> 4]));
-        msg.push_back(static_cast<unsigned char>(hex[b & 0x0f]));
-    }
-    hmac_sha256(k.hk, sizeof(k.hk), msg.data(), msg.size(), tag);
+    msg.insert(msg.end(), ct.begin(), ct.end());
+    hmac_sha256(k.mac_key, sizeof(k.mac_key), msg.data(), msg.size(), mac);
+    memcpy(tag, mac, kTagBytes);
 }
 
 void cbc(const KeyMaterial &k, bool encrypt, const unsigned char iv[P4ICS_AES_BLOCK], Bytes &data) {
@@ -261,58 +311,73 @@ void cbc(const KeyMaterial &k, bool encrypt, const unsigned char iv[P4ICS_AES_BL
 
 }  // namespace
 
-void p4ics_cipher(bm::HeaderStack &slices, bm::Header &tail, bm::Data &saved_len,
-                  bm::Data &tag, const bm::Data &seq_no, const bm::Data &key, bm::Data &done) {
+void p4ics_cipher(bm::HeaderStack &slices, bm::Header &tail, bm::Header &opts,
+                  const bm::Header &ipv4, const bm::Header &tcp, const bm::Header &modbus,
+                  const bm::Header &mqtt, const bm::Header &cip, const bm::Header &dnp3,
+                  const bm::Data &key, bm::Data &done) {
     const KeyMaterial *k = key_material(key);
-    __u32 seq = static_cast<__u32>(seq_no.get_uint64());
-    unsigned char iv[P4ICS_AES_BLOCK], mac[kTagBytes];
+    unsigned char iv[P4ICS_AES_BLOCK], tag[kTagBytes];
 
     done.set(0);
     if (!k)
         return;
+    __u32 spi = static_cast<__u32>(opts.get_field(kOptSpi).get_uint64());
+    uint64_t counter = opts.get_field(kOptCounter).get_uint64();
     Bytes data = gather(slices, tail);
     size_t plain_len = data.size();
 
-    payload_tag(*k, seq, data, mac);
-    packet_iv(*k, seq, iv);
+    packet_iv(*k, spi, counter, iv);
     data.resize(crypt_len(plain_len), 0);   // zero padding, 1..16 bytes
     cbc(*k, true, iv, data);
+    mac_tag(*k, mac_context(spi, counter, plain_len, ipv4, tcp,
+                            industrial_header(modbus, mqtt, cip, dnp3)), data, tag);
     if (!scatter(slices, tail, data))
         return;
-    saved_len.set(static_cast<uint64_t>(plain_len));
-    tag.set(reinterpret_cast<const char *>(mac), sizeof(mac));
+    opts.get_field(kOptSavedLen).set(static_cast<uint64_t>(plain_len));
+    opts.get_field(kOptTag).set(reinterpret_cast<const char *>(tag), sizeof(tag));
     done.set(1);
 }
 
-void p4ics_decipher(bm::HeaderStack &slices, bm::Header &tail, const bm::Data &saved_len,
-                    const bm::Data &tag, const bm::Data &seq_no, const bm::Data &key,
-                    bm::Data &verified) {
+void p4ics_decipher(bm::HeaderStack &slices, bm::Header &tail, const bm::Header &opts,
+                    const bm::Header &ipv4, const bm::Header &tcp, const bm::Header &modbus,
+                    const bm::Header &mqtt, const bm::Header &cip, const bm::Header &dnp3,
+                    const bm::Data &key, bm::Data &verified) {
     const KeyMaterial *k = key_material(key);
-    __u32 seq = static_cast<__u32>(seq_no.get_uint64());
-    unsigned char iv[P4ICS_AES_BLOCK], mac[kTagBytes];
+    unsigned char iv[P4ICS_AES_BLOCK], tag[kTagBytes];
     unsigned char diff = 0;
 
     verified.set(0);
     if (!k)
         return;
+    uint64_t plain_len = opts.get_field(kOptSavedLen).get_uint64();
+    __u32 spi = static_cast<__u32>(opts.get_field(kOptSpi).get_uint64());
+    uint64_t counter = opts.get_field(kOptCounter).get_uint64();
     Bytes data = gather(slices, tail);
-    uint64_t plain_len = saved_len.get_uint64();
     if (plain_len >= data.size() || data.size() != crypt_len(plain_len))
         return;
 
-    packet_iv(*k, seq, iv);
+    // Encrypt-then-MAC: authenticate the ciphertext before decrypting it.
+    mac_tag(*k, mac_context(spi, counter, plain_len, ipv4, tcp,
+                            industrial_header(modbus, mqtt, cip, dnp3)), data, tag);
+    Bytes received = data_bytes(opts.get_field(kOptTag), kTagBytes);
+    for (size_t i = 0; i < kTagBytes; i++)
+        diff |= tag[i] ^ received[i];
+    if (diff)
+        return;
+
+    packet_iv(*k, spi, counter, iv);
     cbc(*k, false, iv, data);
     data.resize(plain_len);
-    payload_tag(*k, seq, data, mac);
-    Bytes received = data_bytes(tag, kTagBytes);
-    for (size_t i = 0; i < kTagBytes; i++)
-        diff |= mac[i] ^ received[i];
-    if (diff || !scatter(slices, tail, data))
+    if (!scatter(slices, tail, data))
         return;
     verified.set(1);
 }
 
-BM_REGISTER_EXTERN_FUNCTION(p4ics_cipher, bm::HeaderStack &, bm::Header &, bm::Data &, bm::Data &,
-                            const bm::Data &, const bm::Data &, bm::Data &);
-BM_REGISTER_EXTERN_FUNCTION(p4ics_decipher, bm::HeaderStack &, bm::Header &, const bm::Data &,
-                            const bm::Data &, const bm::Data &, const bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(p4ics_cipher, bm::HeaderStack &, bm::Header &, bm::Header &,
+                            const bm::Header &, const bm::Header &, const bm::Header &,
+                            const bm::Header &, const bm::Header &, const bm::Header &,
+                            const bm::Data &, bm::Data &);
+BM_REGISTER_EXTERN_FUNCTION(p4ics_decipher, bm::HeaderStack &, bm::Header &, const bm::Header &,
+                            const bm::Header &, const bm::Header &, const bm::Header &,
+                            const bm::Header &, const bm::Header &, const bm::Header &,
+                            const bm::Data &, bm::Data &);
