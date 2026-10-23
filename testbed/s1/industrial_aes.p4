@@ -5,11 +5,18 @@
 
 #define COLLECTION_TIMEDELTA 55000
 
+/*
+ * p4c limits a header field to 2048 bits, so the application payload is
+ * parsed into 256-byte slices (a header stack filled by a parser loop) plus a
+ * varbit tail for the last < 256 bytes. 255 slices + a 255-byte tail cover
+ * any IPv4 packet; lower this to trade the maximum payload for a smaller PHV.
+ */
+#define P4ICS_MAX_SLICES 255
+
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 const bit<16> TYPE_IPV4 = 0x800;
-const bit<16> IPV4_LEN = 16w20;
 
 typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
@@ -36,14 +43,10 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
+// P4ICS trailer of the IPv4 header (IHL 5 -> 14): plaintext length + HMAC tag.
 header ipv4_options_t {
     bit<32> savedLen;
     bit<256> sha;
-}
-
-header sha_temp_store_t {
-    bit<32> equals;
-    bit<256> shaCalculated;
 }
 
 header tcp_t {
@@ -66,19 +69,10 @@ header tcp_t {
     bit<16> urgentPtr;
 }
 
+// Whatever options the segment carries (dataOffset - 5 words, at most 40 bytes).
 header tcp_options_t {
-    bit<8> nop;
-    bit<8> nop2;
-    bit<80> timestamps;
-} //Due to pymodbus implementation
-
-header tcp_options2_t {
-    bit<32> maxSegmentSize;
-    bit<16> sackPermitted;
-    bit<80> timestamps;
-    bit<8> nop;
-    bit<24> windowScale;
-}//Due to java dnp3 implementation
+    varbit<320> options;
+}
 
 header modbus_tcp_t {
     bit<16> transactionId;
@@ -90,7 +84,7 @@ header modbus_tcp_t {
 header mqtt_tcp_t {
     bit<4> packetType;
     bit<4> flags;
-    bit<8> length;//if 0, there are no data in the tcp packet after this value
+    bit<8> length;
 }
 
 header cip_tcp_t {
@@ -111,31 +105,32 @@ header dnp3_tcp_t {
     bit<16> checksum;
 }
 
-header payload_t {
-   varbit<2048> content;
+// Application payload: full 256-byte slices, then the remaining bytes.
+header payload_slice_t {
+    bit<2048> data;
 }
 
-header payload_encrypt_t {
-   bit<2048> content;
+header payload_tail_t {
+    varbit<2040> data;
 }
 
-header payload_decrypt_t {
-   bit<2048> content;
-}
-//the size of fields payload_decrypt_t and payload_encrypt_t must be set in definition.cpp (max_size_content) divided by 8
+const bit<8> PROTO_MODBUS = 1;
+const bit<8> PROTO_MQTT = 2;
+const bit<8> PROTO_CIP = 3;
+const bit<8> PROTO_DNP3 = 4;
 
-struct tcp_metadata_t
-{
-    bit<16> full_length; //ipv4.totalLen - 20
-    bit<16> full_length_in_bytes;
-    bit<16> header_length;
-    bit<16> header_length_in_bytes;
-    bit<16> payload_length;
-    bit<16> payload_length_in_bytes;
+struct p4ics_metadata_t {
+    bit<8>  proto;
+    bit<16> app_len;        // bytes after the TCP header
+    bit<16> hdr_len;        // bytes of the industrial protocol header
+    bit<17> diff;           // app_len - hdr_len, bit 16 set if negative
+    bit<16> payload_len;    // bytes after the industrial header: what P4ICS protects
+    bit<16> remaining;      // parser loop counter
+    bit<1>  drop;
 }
 
 struct metadata {
-    tcp_metadata_t tcp_metadata;
+    p4ics_metadata_t p4ics;
     bit<1> isSec;
 }
 
@@ -145,16 +140,13 @@ struct headers {
     ipv4_options_t ipv4_options;
     tcp_t tcp;
     tcp_options_t tcp_options;
-    tcp_options2_t tcp_options2;
     modbus_tcp_t modbus_tcp;
     mqtt_tcp_t mqtt_tcp;
     cip_tcp_t cip_tcp;
     dnp3_tcp_t dnp3_tcp;
-    payload_t payload;
-    payload_encrypt_t payload_encrypt;
-    payload_decrypt_t payload_decrypt;
-    sha_temp_store_t temp;
-} //modify payload for modbus
+    payload_slice_t[P4ICS_MAX_SLICES] slices;
+    payload_tail_t tail;
+}
 
 
 /*************************************************************************
@@ -168,10 +160,12 @@ parser MyParser(packet_in packet,
 
     state start {
         meta.isSec = 0;
-       transition parse_ethernet;
+        meta.p4ics.payload_len = 0;
+        meta.p4ics.drop = 0;
+        transition parse_ethernet;
     }
 
-     state parse_ethernet {
+    state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             TYPE_IPV4: parse_ipv4;
@@ -205,16 +199,24 @@ parser MyParser(packet_in packet,
 
     state parse_tcp {
         packet.extract(hdr.tcp);
+        transition select(hdr.tcp.dataOffset) {
+            4w0 &&& 4w0xC: accept;     // 0..3: malformed
+            4: accept;
+            5: parse_tcp_payload_len;
+            default: parse_tcp_options;
+        }
+    }
 
-        meta.tcp_metadata.full_length = (hdr.ipv4.totalLen - IPV4_LEN) * 8;
-        meta.tcp_metadata.header_length = (((bit<16>)hdr.tcp.dataOffset) << 5);
-        meta.tcp_metadata.payload_length = meta.tcp_metadata.full_length - meta.tcp_metadata.header_length;
+    state parse_tcp_options {
+        packet.extract(hdr.tcp_options, (bit<32>)((((bit<16>)hdr.tcp.dataOffset) << 2) - 20) << 3);
+        transition parse_tcp_payload_len;
+    }
 
-        // meta.tcp_metadata.full_length_in_bytes =  (hdr.ipv4.totalLen - IPV4_LEN);
-        // meta.tcp_metadata.header_length_in_bytes = (bit<16>)hdr.tcp.dataOffset << 2;
-        // meta.tcp_metadata.payload_length_in_bytes = (hdr.ipv4.totalLen - IPV4_LEN) - ((bit<16>)hdr.tcp.dataOffset << 2);
-
-        transition select(meta.tcp_metadata.payload_length) {
+    // L_app = IPv4.TotalLength - 4 * IPv4.IHL - 4 * TCP.DataOffset
+    state parse_tcp_payload_len {
+        meta.p4ics.app_len = hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) << 2)
+                             - (((bit<16>)hdr.tcp.dataOffset) << 2);
+        transition select(meta.p4ics.app_len) {
             0 : accept;
             _ : check_dst_port_tcp;
         }
@@ -222,97 +224,112 @@ parser MyParser(packet_in packet,
 
     state check_dst_port_tcp {
         transition select(hdr.tcp.dstPort) {
-            502 : extract_modbus_tcp;
-            1883 : extract_mqtt_tcp;
-            44818 : extract_cip_tcp;
-            20000 : extract_dnp3_tcp;
+            502 : proto_modbus;
+            1883 : proto_mqtt;
+            44818 : proto_cip;
+            20000 : proto_dnp3;
             default : check_src_port_tcp;
         }
     }
 
     state check_src_port_tcp {
         transition select(hdr.tcp.srcPort) {
-            502 : extract_modbus_tcp;
-            1883 : extract_mqtt_tcp;
-            44818 : extract_cip_tcp;
-            20000 : extract_dnp3_tcp;
+            502 : proto_modbus;
+            1883 : proto_mqtt;
+            44818 : proto_cip;
+            20000 : proto_dnp3;
+            default : accept;
+        }
+    }
+
+    state proto_modbus {
+        meta.p4ics.proto = PROTO_MODBUS;
+        meta.p4ics.hdr_len = 7;
+        transition check_app_len;
+    }
+
+    state proto_mqtt {
+        meta.p4ics.proto = PROTO_MQTT;
+        meta.p4ics.hdr_len = 2;
+        transition check_app_len;
+    }
+
+    state proto_cip {
+        meta.p4ics.proto = PROTO_CIP;
+        meta.p4ics.hdr_len = 24;
+        transition check_app_len;
+    }
+
+    state proto_dnp3 {
+        meta.p4ics.proto = PROTO_DNP3;
+        meta.p4ics.hdr_len = 10;
+        transition check_app_len;
+    }
+
+    // Segments shorter than the protocol header carry no protectable data.
+    state check_app_len {
+        meta.p4ics.diff = (bit<17>)meta.p4ics.app_len - (bit<17>)meta.p4ics.hdr_len;
+        transition select(meta.p4ics.diff[16:16], meta.p4ics.proto) {
+            (1, _) : accept;
+            (0, PROTO_MODBUS) : extract_modbus_tcp;
+            (0, PROTO_MQTT) : extract_mqtt_tcp;
+            (0, PROTO_CIP) : extract_cip_tcp;
+            (0, PROTO_DNP3) : extract_dnp3_tcp;
             default : accept;
         }
     }
 
     state extract_modbus_tcp {
-        packet.extract(hdr.tcp_options);
         packet.extract(hdr.modbus_tcp);
-        transition select(hdr.modbus_tcp.length) {
-           1: accept;
-           _: parse_payload_modbus;
-        }
+        transition parse_payload;
     }
 
     state extract_mqtt_tcp {
-        packet.extract(hdr.tcp_options);
         packet.extract(hdr.mqtt_tcp);
-        transition select(hdr.mqtt_tcp.length) {
-           0: accept;
-           _: parse_payload_mqtt;
-        }
+        transition parse_payload;
     }
 
     state extract_cip_tcp {
-        packet.extract(hdr.tcp_options);
         packet.extract(hdr.cip_tcp);
-        transition select(hdr.cip_tcp.length) {
-           0: accept;
-           _: parse_payload_cip_tcp;
-        }
+        transition parse_payload;
     }
 
     state extract_dnp3_tcp {
-        transition select(hdr.tcp.syn) {
-           0: extract_dnp3_tcp_opt1;
-           1: extract_dnp3_tcp_opt2;
-        }
-    }
-
-    state extract_dnp3_tcp_opt1 {
-        packet.extract(hdr.tcp_options);
-        transition extract_dnp3_tcp_opt;
-    }
-
-    state extract_dnp3_tcp_opt2 {
-        packet.extract(hdr.tcp_options2);
-        transition extract_dnp3_tcp_opt;
-    }
-
-    state extract_dnp3_tcp_opt {
         packet.extract(hdr.dnp3_tcp);
-        transition select(hdr.dnp3_tcp.length) {
-           0: accept;
-           _: parse_payload_dnp3_tcp;
+        transition parse_payload;
+    }
+
+    state parse_payload {
+        meta.p4ics.payload_len = meta.p4ics.diff[15:0];
+        meta.p4ics.remaining = meta.p4ics.payload_len;
+        transition parse_slices;
+    }
+
+    // One 256-byte slice per iteration while at least 256 bytes remain. A
+    // payload larger than the stack ends in a StackOutOfBounds parser error,
+    // which the ingress turns into a drop for protected ports.
+    state parse_slices {
+        transition select(meta.p4ics.remaining[15:8]) {
+            0 : parse_tail;
+            _ : parse_slice;
         }
     }
 
-    state parse_payload_modbus {
-        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 7) * 8);
-        packet.extract(hdr.payload, (bit<32>)(calculated_length));
-        transition accept;
+    state parse_slice {
+        packet.extract(hdr.slices.next);
+        meta.p4ics.remaining = meta.p4ics.remaining - 256;
+        transition parse_slices;
     }
 
-    state parse_payload_mqtt {
-        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2) * 8);
-        packet.extract(hdr.payload, (bit<32>)(calculated_length));
-        transition accept;
+    state parse_tail {
+        transition select(meta.p4ics.remaining) {
+            0 : accept;
+            _ : extract_tail;
+        }
     }
 
-    state parse_payload_cip_tcp {
-        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 24) * 8);
-        packet.extract(hdr.payload, (bit<32>)(calculated_length));
-        transition accept;
-    }
-
-    state parse_payload_dnp3_tcp {
-        bit<32> calculated_length = (bit<32>)((hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 10) * 8);
-        packet.extract(hdr.payload, (bit<32>)(calculated_length));
+    state extract_tail {
+        packet.extract(hdr.tail, ((bit<32>)meta.p4ics.remaining) << 3);
         transition accept;
     }
 }
@@ -362,42 +379,40 @@ control MyIngress(inout headers hdr,
     action no_cipher(){
     }
 
+    // Plaintext -> protected. A segment that is already protected (e.g. by a
+    // host that terminates P4ICS itself) is forwarded as is.
     action cipher() {
-        meta.isSec = 1;
-        hdr.payload_encrypt.setValid();
-        hdr.ipv4_options.setValid();
-        bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
-        bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
-        keys.read(k1, 0);
-        keys.read(k2, 1);
-        keys.read(k3, 2);
-        keys.read(k4, 3);
-        keys.read(k5, 4);
-        keys.read(k6, 5);
-        keys.read(k7, 6);
-        keys.read(k8, 7);
-        bit<16> useful_length_fixed = 0;
-        if(hdr.modbus_tcp.isValid()) {
-            useful_length_fixed = hdr.modbus_tcp.length - 1;
-        } else if(hdr.mqtt_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)(hdr.ipv4.totalLen - (((bit<16>)hdr.ipv4.ihl) * 4) - (((bit<16>)hdr.tcp.dataOffset) * 4) - 2);
-        } else if(hdr.cip_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
-        } else if(hdr.dnp3_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
+        if (!hdr.ipv4_options.isValid()) {
+            meta.isSec = 1;
+            bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
+            bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
+            keys.read(k1, 0);
+            keys.read(k2, 1);
+            keys.read(k3, 2);
+            keys.read(k4, 3);
+            keys.read(k5, 4);
+            keys.read(k6, 5);
+            keys.read(k7, 6);
+            keys.read(k8, 7);
+            bit<256> key = k1 ++ k2 ++ k3 ++ k4 ++ k5 ++ k6 ++ k7 ++ k8;
+            bit<1> done = 0;
+            hdr.ipv4_options.setValid();
+            p4ics_cipher(hdr.slices, hdr.tail, hdr.ipv4_options.savedLen,
+                         hdr.ipv4_options.sha, hdr.tcp.seqNo, key, done);
+            bit<16> crypt_payload_length = ((meta.p4ics.payload_len >> 4) + 1) << 4;
+            bit<32> new_len = (bit<32>)hdr.ipv4.totalLen + (bit<32>)crypt_payload_length
+                              - (bit<32>)meta.p4ics.payload_len + 36; //36 is the ipv4 options size in bytes
+            hdr.ipv4.ihl = 14;
+            hdr.ipv4.totalLen = (bit<16>)new_len;
+            // Fail closed: never forward a payload that could not be protected.
+            meta.p4ics.drop = (done == 0 || new_len > 65535) ? 1w1 : 1w0;
         }
-        hdr.ipv4_options.savedLen = (bit<32>)useful_length_fixed;
-        sha256_hash_1024(hdr.ipv4_options.sha, k1, k2, hdr.tcp.seqNo, hdr.payload.content, useful_length_fixed);
-        hdr.ipv4.ihl = 14;
-        Encrypt(hdr.payload.content, hdr.payload_encrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed, hdr.tcp.seqNo);
-        bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - useful_length_fixed + crypt_payload_length + 36; //36 is the ipv4 options size in bytes
-        hdr.payload.setInvalid();
     }
 
+    // Protected -> plaintext, only if the HMAC tag verifies; dropped otherwise
+    // (also when the segment is not protected at all).
     action decipher() {
         meta.isSec = 1;
-        hdr.payload_decrypt.setValid();
         bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
         bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
         keys.read(k1, 0);
@@ -408,25 +423,19 @@ control MyIngress(inout headers hdr,
         keys.read(k6, 5);
         keys.read(k7, 6);
         keys.read(k8, 7);
-        bit<16> useful_length_fixed = 0;
-        if (hdr.modbus_tcp.isValid()) {
-            useful_length_fixed = hdr.modbus_tcp.length - 1;
-        } else if (hdr.mqtt_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.ipv4_options.savedLen;
-        } else if (hdr.cip_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.cip_tcp.length;
-        } else if (hdr.dnp3_tcp.isValid()) {
-            useful_length_fixed = (bit<16>)hdr.dnp3_tcp.length - 3;
+        bit<256> key = k1 ++ k2 ++ k3 ++ k4 ++ k5 ++ k6 ++ k7 ++ k8;
+        bit<1> verified = 0;
+        if (hdr.ipv4_options.isValid()) {
+            p4ics_decipher(hdr.slices, hdr.tail, hdr.ipv4_options.savedLen,
+                           hdr.ipv4_options.sha, hdr.tcp.seqNo, key, verified);
         }
-        hdr.temp.setValid();
-        Decrypt(hdr.payload.content, hdr.payload_decrypt.content, k1, k2, k3, k4, k5, k6, k7, k8, useful_length_fixed, hdr.ipv4_options.sha, hdr.tcp.seqNo, hdr.temp.shaCalculated);//check metadata
-        hdr.ipv4.ihl = 5;
-        bit<16> crypt_payload_length = ((useful_length_fixed / 16) + 1) * 16;
-        hdr.ipv4.totalLen = hdr.ipv4.totalLen - crypt_payload_length + useful_length_fixed - 36;
-        verify_hash_equals(hdr.temp.equals, hdr.ipv4_options.sha, hdr.temp.shaCalculated);
-        hdr.temp.setInvalid();
-        hdr.payload.setInvalid();
-        hdr.ipv4_options.setInvalid();
+        if (verified == 1) {
+            hdr.ipv4.ihl = 5;
+            hdr.ipv4.totalLen = hdr.ipv4.totalLen - meta.p4ics.payload_len
+                                + (bit<16>)hdr.ipv4_options.savedLen - 36;
+            hdr.ipv4_options.setInvalid();
+        }
+        meta.p4ics.drop = ~verified;
     }
 
     table ics_sec {
@@ -445,9 +454,20 @@ control MyIngress(inout headers hdr,
     apply {
         if (hdr.ipv4.isValid()){
             ipv4_lpm.apply();
-            if (hdr.tcp.isValid()){
+            if (hdr.tcp.isValid() && meta.p4ics.payload_len != 0){
                 if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
-                    ics_sec.apply();
+                    switch (ics_sec.apply().action_run) {
+                        cipher: {
+                            if (standard_metadata.parser_error != error.NoError || meta.p4ics.drop == 1) {
+                                mark_to_drop(standard_metadata);
+                            }
+                        }
+                        decipher: {
+                            if (standard_metadata.parser_error != error.NoError || meta.p4ics.drop == 1) {
+                                mark_to_drop(standard_metadata);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -505,7 +525,7 @@ control MyEgress(inout headers hdr,
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
      apply {
         update_checksum(
-            hdr.ipv4.isValid(),
+            hdr.ipv4.isValid() && !hdr.ipv4_options.isValid(),
             { hdr.ipv4.version,
               hdr.ipv4.ihl,
               hdr.ipv4.diffserv,
@@ -517,6 +537,24 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
               hdr.ipv4.protocol,
               hdr.ipv4.srcAddr,
               hdr.ipv4.dstAddr },
+            hdr.ipv4.hdrChecksum,
+            HashAlgorithm.csum16);
+        // RFC 791: the checksum also covers the 36 bytes of P4ICS options.
+        update_checksum(
+            hdr.ipv4.isValid() && hdr.ipv4_options.isValid(),
+            { hdr.ipv4.version,
+              hdr.ipv4.ihl,
+              hdr.ipv4.diffserv,
+              hdr.ipv4.totalLen,
+              hdr.ipv4.identification,
+              hdr.ipv4.flags,
+              hdr.ipv4.fragOffset,
+              hdr.ipv4.ttl,
+              hdr.ipv4.protocol,
+              hdr.ipv4.srcAddr,
+              hdr.ipv4.dstAddr,
+              hdr.ipv4_options.savedLen,
+              hdr.ipv4_options.sha },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
     }
@@ -533,14 +571,12 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ipv4_options);
         packet.emit(hdr.tcp);
         packet.emit(hdr.tcp_options);
-        packet.emit(hdr.tcp_options2);
         packet.emit(hdr.modbus_tcp);
         packet.emit(hdr.mqtt_tcp);
         packet.emit(hdr.cip_tcp);
         packet.emit(hdr.dnp3_tcp);
-        packet.emit(hdr.payload_encrypt);
-        packet.emit(hdr.payload_decrypt);
-        packet.emit(hdr.payload);
+        packet.emit(hdr.slices);
+        packet.emit(hdr.tail);
     }
 }
 

@@ -35,7 +35,7 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
   A Kathara-based virtual lab to reproduce the P4ICS pipeline outside the physical testbed.
   Includes:
   - Modbus and MQTT support
-  - P4 source files (folders `s1/` and `s2/`)
+  - P4 source files (folders `s1/` and `s2/`): payloads are parsed into a header stack of 256-byte slices plus a `varbit` tail, and handed to a single extern per direction
   - Network topology for Kathara
 
 ---

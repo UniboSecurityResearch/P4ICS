@@ -1,24 +1,20 @@
-/* Copyright 2022 P4lang Authors
+/*
+ * P4ICS crypto externs, implemented in definition.cpp.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * The payload is passed as the parser left it: the header stack of 256-byte
+ * slices plus the varbit tail. One primitive therefore covers every payload
+ * size, and the result is written back with its exact length (re-packed into
+ * slices + tail). Algorithms: see the header of definition.cpp.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * key: the 8 words of the `keys` register, k1 first (k1 ++ ... ++ k8).
  */
 
-// Example custom extern function.
-extern void sha256_hash_256<T, B>(inout T a, in B b);
-extern void sha256_hash_512<T, B, C>(inout T a, in B b, in C c);
-extern void sha256_hash_1024<T, B, C, D, E, F>(inout T a, in B b, in C c, in D d, in E e, in F f);
-extern void verify_hash_equals<A, B, C>(inout A a, in B b, in C c);
+// Plaintext -> AES-CBC ciphertext. savedLen = plaintext length,
+// tag = HMAC-SHA256 tag; done = 0 if the payload could not be protected.
+extern void p4ics_cipher<S, T, L, H, Q, K, R>(inout S slices, inout T tail, out L savedLen,
+                                             out H tag, in Q seqNo, in K key, out R done);
 
-
-extern void Encrypt<T, B, K, L, N, M, O, P, Q, R, S, U>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O k5, in P k6, in Q k7, in R k8, in S len, in U seqNo);
-extern void Decrypt<T, B, K, L, N, M, O, P, Q, R, S, W, Z, Y>(in T a, inout B b, in K k1, in L k2, in N k3, in M k4, in O k5, in P k6, in Q k7, in R k8, in S len, in W sha, in Z seqNo, inout Y shaCalculated);
+// Ciphertext -> plaintext, only if the tag verifies (verified = 1); the
+// payload is left untouched otherwise.
+extern void p4ics_decipher<S, T, L, H, Q, K, R>(inout S slices, inout T tail, in L savedLen,
+                                               in H tag, in Q seqNo, in K key, out R verified);

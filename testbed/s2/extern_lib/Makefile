@@ -8,9 +8,8 @@ LDFLAGS = -shared
 
 all: $(LIBS)
 
-%.so: %.cpp
+%.so: %.cpp p4ics_crypto.h p4ics_aes_tables.h
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
 
 clean:
 	rm -f $(LIBS)
-
