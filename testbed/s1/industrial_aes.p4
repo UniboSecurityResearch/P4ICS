@@ -46,7 +46,7 @@ header ipv4_t {
 // P4ICS trailer of the IPv4 header (IHL 5 -> 13): 32 bytes of "options".
 header ipv4_options_t {
     bit<32>  savedLen;  // plaintext length; first byte 0 = IPv4 End of Option List
-    bit<32>  spi;       // sender (security association) identifier
+    bit<32>  spi;       // bit 31: key phase; bits 7..0: sender (security association) id
     bit<64>  counter;   // per-sender packet counter: anti-replay and IV input
     bit<128> tag;       // HMAC-SHA256-128 over the packet context and the ciphertext
 }
@@ -129,6 +129,23 @@ struct p4ics_metadata_t {
     bit<16> payload_len;    // bytes after the industrial header: what P4ICS protects
     bit<16> remaining;      // parser loop counter
     bit<1>  drop;
+    bit<32> spi;            // this switch as a sender (p4ics_local)
+    bit<1>  tx_phase;       // key phase used to protect (p4ics_local)
+    bit<64> epoch;          // counter base (p4ics_local)
+    bit<1>  key_phase;      // phase of the key to use for this frame
+    bit<1>  has_key;
+    bit<256> key;           // p4ics_keys
+}
+
+// Sent to the controller (P4Runtime digest) for an industrial flow that has
+// no tunnel at a switch whose ics_sec default action is request_tunnel.
+struct p4ics_tunnel_request_t {
+    ip4Addr_t srcAddr;
+    ip4Addr_t dstAddr;
+    bit<16>   srcPort;
+    bit<16>   dstPort;
+    bit<9>    egressPort;
+    bit<1>    isProtected;   // already protected: the switch would decipher
 }
 
 struct metadata {
@@ -164,6 +181,7 @@ parser MyParser(packet_in packet,
         meta.isSec = 0;
         meta.p4ics.payload_len = 0;
         meta.p4ics.drop = 0;
+        meta.p4ics.has_key = 0;
         transition parse_ethernet;
     }
 
@@ -352,16 +370,16 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-   register<bit<32>>(8) keys;
-
-    // Security association state (set by the control plane, see commands.txt
-    // and the switch startup script).
-    register<bit<32>>(1) p4ics_spi;          // SPI of this switch as a sender: 1..255, 0 = unset
-    register<bit<64>>(1) p4ics_tx_counter;   // last counter sent; startup sets ns since 2020
+    // Security associations. Configured through tables, so that both
+    // simple_switch_CLI (s1/p4ics_setup.sh) and a P4Runtime controller
+    // (controller/) can manage them: bmv2's P4Runtime server cannot write
+    // registers. The registers below are data-plane state only.
+    register<bit<64>>(1) p4ics_tx_count;     // packets protected since the switch started
     register<bit<64>>(256) p4ics_rx_last;    // per sender (SPI & 0xff): highest counter accepted
     register<bit<64>>(256) p4ics_rx_window;  // per sender: bitmap of the 64 counters below it
-    // 0: protected, 1: unprotected, 2: rejected (tag/length), 3: rejected (replay)
-    counter(4, CounterType.packets) p4ics_events;
+    // 0: protected, 1: unprotected, 2: rejected (tag/length/no key),
+    // 3: rejected (replay), 4: dropped waiting for an on-demand tunnel
+    counter(5, CounterType.packets) p4ics_events;
 
     action drop() {
         mark_to_drop(standard_metadata);
@@ -387,7 +405,54 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
+    // This switch as a sender: SPI (1..255), the key phase it protects with,
+    // and the counter base (ns since 2020, set when configured: counters stay
+    // above every value used before, also across restarts).
+    action set_local_sa(bit<32> spi, bit<1> tx_phase, bit<64> epoch) {
+        meta.p4ics.spi = spi;
+        meta.p4ics.tx_phase = tx_phase;
+        meta.p4ics.epoch = epoch;
+    }
+
+    table p4ics_local {
+        key = {}
+        actions = {
+            set_local_sa;
+            NoAction;
+        }
+        default_action = NoAction();
+    }
+
+    // One key per phase. Rekeying installs the new key in the idle phase on
+    // every endpoint, then switches tx_phase: receivers pick the key by the
+    // phase bit of the SPI, so frames in flight keep verifying.
+    action set_key(bit<256> key) {
+        meta.p4ics.key = key;
+        meta.p4ics.has_key = 1;
+    }
+
+    table p4ics_keys {
+        key = {
+            meta.p4ics.key_phase: exact;
+        }
+        actions = {
+            set_key;
+            NoAction;
+        }
+        size = 2;
+        default_action = NoAction();
+    }
+
     action no_cipher(){
+    }
+
+    // On-demand tunnels: no tunnel for this flow yet. Ask the controller
+    // (digest) and drop; TCP retransmits once the tunnel is installed.
+    action request_tunnel() {
+        bit<1> is_protected = hdr.ipv4_options.isValid() ? 1w1 : 1w0;
+        digest<p4ics_tunnel_request_t>(1, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, hdr.tcp.srcPort,
+                                           hdr.tcp.dstPort, standard_metadata.egress_spec, is_protected});
+        p4ics_events.count(4);
     }
 
     // Plaintext -> protected. A segment that is already protected (e.g. by a
@@ -395,36 +460,24 @@ control MyIngress(inout headers hdr,
     action cipher() {
         if (!hdr.ipv4_options.isValid()) {
             meta.isSec = 1;
-            bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
-            bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
-            keys.read(k1, 0);
-            keys.read(k2, 1);
-            keys.read(k3, 2);
-            keys.read(k4, 3);
-            keys.read(k5, 4);
-            keys.read(k6, 5);
-            keys.read(k7, 6);
-            keys.read(k8, 7);
-            bit<256> key = k1 ++ k2 ++ k3 ++ k4 ++ k5 ++ k6 ++ k7 ++ k8;
-            bit<32> spi;
-            bit<64> tx_counter;
-            p4ics_spi.read(spi, 0);
-            p4ics_tx_counter.read(tx_counter, 0);
-            tx_counter = tx_counter + 1;
-            p4ics_tx_counter.write(0, tx_counter);
+            bit<64> sent;
+            p4ics_tx_count.read(sent, 0);
+            sent = sent + 1;
+            p4ics_tx_count.write(0, sent);
             hdr.ipv4_options.setValid();
-            hdr.ipv4_options.spi = spi;
-            hdr.ipv4_options.counter = tx_counter;
+            hdr.ipv4_options.spi = (((bit<32>)meta.p4ics.tx_phase) << 31) | meta.p4ics.spi;
+            hdr.ipv4_options.counter = meta.p4ics.epoch + sent;
             bit<1> done = 0;
             p4ics_cipher(hdr.slices, hdr.tail, hdr.ipv4_options, hdr.ipv4, hdr.tcp,
-                         hdr.modbus_tcp, hdr.mqtt_tcp, hdr.cip_tcp, hdr.dnp3_tcp, key, done);
+                         hdr.modbus_tcp, hdr.mqtt_tcp, hdr.cip_tcp, hdr.dnp3_tcp, meta.p4ics.key, done);
             bit<16> crypt_payload_length = ((meta.p4ics.payload_len >> 4) + 1) << 4;
             bit<32> new_len = (bit<32>)hdr.ipv4.totalLen + (bit<32>)crypt_payload_length
                               - (bit<32>)meta.p4ics.payload_len + 32; //32 is the ipv4 options size in bytes
             hdr.ipv4.ihl = 13;
             hdr.ipv4.totalLen = (bit<16>)new_len;
             // Fail closed: never forward a payload that could not be protected.
-            meta.p4ics.drop = (done == 0 || spi == 0 || new_len > 65535) ? 1w1 : 1w0;
+            meta.p4ics.drop = (done == 0 || meta.p4ics.has_key == 0 || meta.p4ics.spi == 0 ||
+                               new_len > 65535) ? 1w1 : 1w0;
             if (meta.p4ics.drop == 0) {
                 p4ics_events.count(0);
             }
@@ -436,22 +489,12 @@ control MyIngress(inout headers hdr,
     // segment is not protected at all.
     action decipher() {
         meta.isSec = 1;
-        bit<32> k1; bit<32> k2; bit<32> k3; bit<32> k4;
-        bit<32> k5; bit<32> k6; bit<32> k7; bit<32> k8;
-        keys.read(k1, 0);
-        keys.read(k2, 1);
-        keys.read(k3, 2);
-        keys.read(k4, 3);
-        keys.read(k5, 4);
-        keys.read(k6, 5);
-        keys.read(k7, 6);
-        keys.read(k8, 7);
-        bit<256> key = k1 ++ k2 ++ k3 ++ k4 ++ k5 ++ k6 ++ k7 ++ k8;
         bit<1> verified = 0;
         bit<1> fresh = 0;
-        if (hdr.ipv4_options.isValid()) {
+        if (hdr.ipv4_options.isValid() && meta.p4ics.has_key == 1) {
             p4ics_decipher(hdr.slices, hdr.tail, hdr.ipv4_options, hdr.ipv4, hdr.tcp,
-                           hdr.modbus_tcp, hdr.mqtt_tcp, hdr.cip_tcp, hdr.dnp3_tcp, key, verified);
+                           hdr.modbus_tcp, hdr.mqtt_tcp, hdr.cip_tcp, hdr.dnp3_tcp, meta.p4ics.key,
+                           verified);
         }
         // Anti-replay window as in IPsec ESP (RFC 4303), updated only for
         // authenticated frames so that forged ones cannot move it.
@@ -498,16 +541,22 @@ control MyIngress(inout headers hdr,
         meta.p4ics.drop = ~fresh;
     }
 
+    // Tunnel activation. Static: one wildcard entry per port. On demand: one
+    // entry per endpoint pair, installed by the controller after a
+    // request_tunnel digest (set request_tunnel as the default action).
     table ics_sec {
         key = {
-            standard_metadata.egress_spec: exact;
+            standard_metadata.egress_spec: ternary;
+            hdr.ipv4.srcAddr: ternary;
+            hdr.ipv4.dstAddr: ternary;
         }
         actions = {
             no_cipher;
             cipher;
             decipher;
+            request_tunnel;
         }
-        size = 2;
+        size = 1024;
         default_action = no_cipher();
     }
 
@@ -516,6 +565,13 @@ control MyIngress(inout headers hdr,
             ipv4_lpm.apply();
             if (hdr.tcp.isValid() && meta.p4ics.payload_len != 0){
                 if (hdr.modbus_tcp.isValid() || hdr.mqtt_tcp.isValid() || hdr.cip_tcp.isValid() || hdr.dnp3_tcp.isValid()){
+                    p4ics_local.apply();
+                    if (hdr.ipv4_options.isValid()) {
+                        meta.p4ics.key_phase = hdr.ipv4_options.spi[31:31];
+                    } else {
+                        meta.p4ics.key_phase = meta.p4ics.tx_phase;
+                    }
+                    p4ics_keys.apply();
                     switch (ics_sec.apply().action_run) {
                         cipher: {
                             if (standard_metadata.parser_error != error.NoError || meta.p4ics.drop == 1) {
@@ -526,6 +582,9 @@ control MyIngress(inout headers hdr,
                             if (standard_metadata.parser_error != error.NoError || meta.p4ics.drop == 1) {
                                 mark_to_drop(standard_metadata);
                             }
+                        }
+                        request_tunnel: {
+                            mark_to_drop(standard_metadata);
                         }
                     }
                 }

@@ -69,8 +69,23 @@ class Switch:
                               input=commands, text=True, check=True,
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
 
+    def install_key(self, phase, words):
+        """Key of one key phase (p4ics_keys), from the 8 register-style words."""
+        if not hasattr(self, "_key_handles"):
+            self._key_handles = {}
+        hexkey = "0x" + "".join("%08x" % w for w in words)
+        if phase in self._key_handles:
+            self.cli("table_modify p4ics_keys set_key %d => %s\n" % (self._key_handles[phase], hexkey))
+        else:
+            out = self.cli("table_add p4ics_keys set_key %d => %s\n" % (phase, hexkey))
+            self._key_handles[phase] = int(re.search(r"handle (\d+)", out).group(1))
+
     def set_keys(self, words):
-        self.cli("".join("register_write keys %d %d\n" % (i, w) for i, w in enumerate(words)))
+        self.install_key(0, words)
+
+    def set_local(self, spi, phase, epoch):
+        """This switch as a sender (p4ics_local): SPI, key phase, counter base."""
+        self.cli("table_set_default p4ics_local set_local_sa %d %d %d\n" % (spi, phase, epoch))
 
     def register_read(self, name, index):
         out = self.cli("register_read %s %d\n" % (name, index))

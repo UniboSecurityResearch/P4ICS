@@ -1,25 +1,39 @@
 #!/bin/bash
-# P4ICS switch configuration that does not live in commands.txt.
+# P4ICS switch configuration that does not live in commands.txt, through
+# simple_switch_CLI (a P4Runtime controller, controller/, can do the same).
 #
-#   ./p4ics_setup.sh init        at startup, after commands.txt
-#   ./p4ics_setup.sh key [BITS]  load the lab key truncated to BITS
-#                                (128..256; default: the lab mode, else 256)
+#   ./p4ics_setup.sh init                at startup, after commands.txt
+#   ./p4ics_setup.sh key [BITS]          reload the lab key truncated to BITS
+#                                        (128..256; default: the lab mode, else 256)
+#   ./p4ics_setup.sh install PHASE FILE  load the key in FILE into key phase PHASE
+#   ./p4ics_setup.sh activate PHASE      protect with PHASE from now on
 #
 # Key: one random 256-bit key per lab run in /shared/p4ics_key (8 decimal
 # words), created by the first switch that starts and removed at lclean by
-# s1.shutdown/s2.shutdown; rotate it with testbed/rotate_keys.sh. It is never
-# part of the repository.
+# s1.shutdown/s2.shutdown. rotate_keys.sh replaces it without dropping
+# traffic: install in the idle phase everywhere, then activate it.
 # Mode: /shared/p4ics_mode, written by auto_test.sh: 128|160|192|224|256 (key
 # size) or no-encryption|tls (ics_sec emptied: plaintext and TLS baselines).
 set -eu
 
 SHARED=${P4ICS_SHARED:-/shared}
 KEY=$SHARED/p4ics_key
+PHASE_FILE=$SHARED/p4ics_phase
 LOCK=$SHARED/.p4ics_key.lock
 CLI=${P4ICS_CLI:-simple_switch_CLI}
+COMMANDS=${P4ICS_COMMANDS:-commands.txt}
 
 mode() {
     cat "$SHARED/p4ics_mode" 2>/dev/null || echo 256
+}
+
+phase() {
+    cat "$PHASE_FILE" 2>/dev/null || echo 0
+}
+
+# SPI of this switch, from "table_set_default p4ics_local set_local_sa <spi> ..."
+spi() {
+    awk '$1 == "table_set_default" && $2 == "p4ics_local" { print $4 }' "$COMMANDS"
 }
 
 ensure_key() {
@@ -40,19 +54,39 @@ ensure_key() {
     exit 1
 }
 
-load_key() {
-    local bits=${1:-$(mode)} cmds="" i v
+# 0x + 64 hex digits: the words of FILE, zero after the first BITS/32.
+key_hex() {
+    local file=$1 bits=$2 hex="0x" i v
     case $bits in
         128|160|192|224|256) ;;
         *) echo "p4ics_setup: key size must be 128, 160, 192, 224 or 256" >&2; exit 1 ;;
     esac
-    IFS=, read -r -a words < "$KEY"
+    IFS=, read -r -a words < "$file"
     for i in 0 1 2 3 4 5 6 7; do
         v=0
         [ "$i" -lt $((bits / 32)) ] && v=${words[$i]}
-        cmds+="register_write keys $i $v"$'\n'
+        hex+=$(printf '%08x' "$v")
     done
-    $CLI <<< "$cmds" > /dev/null
+    echo "$hex"
+}
+
+install_key() {   # install_key PHASE FILE BITS
+    local handle
+    handle=$($CLI <<< "table_dump_entry_from_key p4ics_keys $1" 2>/dev/null |
+             grep -o 'Dumping entry 0x[0-9a-f]*' | awk '{ print $3 }' || true)
+    if [ -n "$handle" ]; then
+        # table_dump prints the handle in hex, table_modify wants it in decimal
+        $CLI <<< "table_modify p4ics_keys set_key $((handle)) => $(key_hex "$2" "$3")" > /dev/null
+    else
+        $CLI <<< "table_add p4ics_keys set_key $1 => $(key_hex "$2" "$3")" > /dev/null
+    fi
+}
+
+# The counter base is the current time in ns since 2020-01-01: no switch
+# sends a packet per nanosecond, so counters never go back, even across
+# restarts (anti-replay window, IV uniqueness).
+activate() {
+    $CLI <<< "table_set_default p4ics_local set_local_sa $(spi) $1 $(( $(date +%s%N) - 1577836800000000000 ))" > /dev/null
 }
 
 case ${1:-} in
@@ -60,19 +94,22 @@ case ${1:-} in
         ensure_key
         case $(mode) in
             no-encryption|tls) $CLI <<< "table_clear ics_sec" > /dev/null ;;
-            *) load_key ;;
+            *) install_key "$(phase)" "$KEY" "$(mode)" ;;
         esac
-        # The packet counter starts at the nanoseconds since 2020-01-01: no
-        # switch sends a packet per nanosecond, so after a restart counters
-        # never repeat (anti-replay window, IV uniqueness).
-        $CLI <<< "register_write p4ics_tx_counter 0 $(( $(date +%s%N) - 1577836800000000000 ))" > /dev/null
+        activate "$(phase)"
         ;;
     key)
         ensure_key
-        load_key "${2:-}"
+        install_key "$(phase)" "$KEY" "${2:-$(mode)}"
+        ;;
+    install)
+        install_key "$2" "$3" "$(mode)"
+        ;;
+    activate)
+        activate "$2"
         ;;
     *)
-        echo "usage: $0 init | key [128|160|192|224|256]" >&2
+        echo "usage: $0 init | key [BITS] | install PHASE FILE | activate PHASE" >&2
         exit 2
         ;;
 esac

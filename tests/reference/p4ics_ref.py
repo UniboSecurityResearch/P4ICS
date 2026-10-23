@@ -469,6 +469,15 @@ def unprotect(frame, keys, window=None):
     return bytes(frame[:ETH_LEN]) + bytes(ip) + bytes(frame[p.l4:p.data_off]) + data
 
 
+def spi_field(sender, phase=0):
+    """The 32-bit SPI field: bit 31 = key phase, bits 7..0 = sender id (1..255)."""
+    return (phase << 31) | sender
+
+
+def key_phase(spi):
+    return spi >> 31
+
+
 class ReplayWindow:
     """Receiver anti-replay state, as kept in the switch registers.
 

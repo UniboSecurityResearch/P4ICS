@@ -6,7 +6,7 @@ EtherNet/IP and DNP3 over TCP.
 
 | Source | What it defines |
 |---|---|
-| `testbed/s1/industrial_aes.p4`: parser, actions `cipher`/`decipher` | headers, lengths, counter, anti-replay window |
+| `testbed/s1/industrial_aes.p4`: parser, actions `cipher`/`decipher`, SA tables | headers, lengths, counter, anti-replay window |
 | `testbed/s1/extern_lib/definition.cpp`: `p4ics_cipher`/`p4ics_decipher` | keys, IV, AES-CBC, MAC input |
 
 The executable version of this document is
@@ -17,7 +17,7 @@ two switches.
 
 ## 1. Which frames are protected
 
-The switch hands a frame to `ics_sec` when all of the following hold:
+The switch looks a frame up in `ics_sec` when all of the following hold:
 
 * the IPv4 IHL is **5** (plaintext) or **13** (protected). Any other IHL is
   forwarded untouched;
@@ -32,6 +32,10 @@ The protocol header is parsed into its own typed header and stays in clear:
 `modbus_tcp_t` (MBAP, 7 B), `mqtt_tcp_t` (2 B), `cip_tcp_t` (24 B),
 `dnp3_tcp_t` (10 B). It is covered by the tag (§4). Everything after it,
 up to the end of the IPv4 packet, is the protected data: L bytes.
+
+`ics_sec` matches the egress port and the IPv4 addresses (all ternary) and
+decides what happens to the frame: `cipher`, `decipher`, `no_cipher`, or
+`request_tunnel` (§7).
 
 ## 2. Layout
 
@@ -48,7 +52,7 @@ protected : Ethernet | IPv4 (IHL 13) | savedLen | SPI | counter | tag     | TCP 
 | `C` | `((L / 16) + 1) * 16`: always 1..16 bytes of zero padding |
 | IPv4 `ihl`, `totalLen` | 5 → 13; `totalLen − L + C + 32` |
 | `savedLen` | `L`; the receiver takes the plaintext length from here |
-| `SPI` | identifier of the sender (security association), 1..255 |
+| `SPI` | bit 31: key phase (§3); bits 7..0: sender id, 1..255; other bits 0 |
 | `counter` | per-sender packet counter, strictly increasing (§5) |
 | `tag` | HMAC-SHA256 truncated to 128 bits (§4) |
 | TCP header + options, protocol header | unchanged, including the TCP checksum (§6) |
@@ -65,10 +69,13 @@ protected : Ethernet | IPv4 (IHL 13) | savedLen | SPI | counter | tag     | TCP 
 
 ## 3. Keys
 
-The switch stores 8 × 32-bit words in the `keys` register. In the testbed
-they come from a random key generated at every lab start
-(`testbed/s1/p4ics_setup.sh`); `change_key.sh` truncates it to a key size. The key material **K** is the big-endian bytes of the
-words before the first zero word: Nk = 4..8 words, 128 to 256 bits. Two
+A key is 256 bits, read as 8 × 32-bit big-endian words. The switch holds
+two, one per **key phase**, in the table `p4ics_keys` (§7). A sender
+protects with its current phase and writes it in bit 31 of the SPI; the
+receiver picks the key by that bit. In the testbed the key is generated at
+random at every lab start (`testbed/s1/p4ics_setup.sh`); `change_key.sh`
+truncates it to a key size. The key material **K** is the big-endian bytes
+of the words before the first zero word: Nk = 4..8 words, 128 to 256 bits. Two
 independent keys are derived from all of K with HKDF-SHA256 (RFC 5869,
 salt `"P4ICS-v2"`):
 
@@ -79,6 +86,12 @@ mac_key = HKDF(K, info "P4ICS-v2 mac", 32 bytes)     HMAC-SHA256 key
 
 160 and 224 bits are not FIPS-197 AES: they use the FIPS key schedule
 generalised to Nk = 5 and 7.
+
+**Rotation without loss.** Install the new key in the idle phase on every
+endpoint, then switch the senders to that phase. Frames still in flight
+carry the old phase and keep verifying with the old key, which stays
+installed until the next rotation. `testbed/rotate_keys.sh` does this with
+simple_switch_CLI, `controller/` with P4Runtime.
 
 ## 4. Per-packet crypto: encrypt-then-MAC
 
@@ -103,11 +116,13 @@ tag  = HMAC-SHA256(mac_key, aad ‖ ct)[0:16]
 
 ## 5. Counter and anti-replay
 
-* **Sender.** `p4ics_tx_counter` is incremented for every protected packet.
-  The startup script sets it to the nanoseconds since 2020-01-01. No switch
-  sends one packet per nanosecond, so a restarted switch always continues
-  above its previous counters: the IV never repeats and its packets are not
-  taken as replays. The value stays below 2^63 (the CLI limit) until 2312.
+* **Sender.** `counter = epoch + n`, where `n` (`p4ics_tx_count`) counts
+  the packets protected since the switch started and `epoch` is the time in
+  nanoseconds since 2020-01-01 when the SA was last configured
+  (`p4ics_local`, §7). No switch sends one packet per nanosecond, so the
+  counter never goes back, also across restarts and reconfigurations: the IV
+  never repeats and packets are not taken as replays. `epoch` stays below
+  2^63 (the CLI limit) until 2312.
 * **Receiver.** For each sender (index `spi & 0xff`), `p4ics_rx_last` holds
   the highest counter accepted and `p4ics_rx_window` a 64-bit bitmap of the
   counters below it, as in the IPsec ESP anti-replay window (RFC 4303). A
@@ -118,7 +133,8 @@ tag  = HMAC-SHA256(mac_key, aad ‖ ct)[0:16]
   that restarts loses its windows, so the key must change with it, or frames
   captured before the restart would be accepted once more. The testbed does
   this by generating a new key at every lab start; after restarting a single
-  switch, run `testbed/rotate_keys.sh`.
+  switch, run `testbed/rotate_keys.sh`. The controller rotates by itself
+  when a switch reconnects.
 
 ## 6. Checksums
 
@@ -127,21 +143,41 @@ tag  = HMAC-SHA256(mac_key, aad ‖ ct)[0:16]
   original plaintext segment, which becomes valid again once the frame is
   unprotected.
 
-## 7. Switch behaviour and counters
+## 7. Switch configuration and behaviour
+
+The control plane configures a switch through three tables, written by
+`simple_switch_CLI` (`commands.txt` and `p4ics_setup.sh`) or by a P4Runtime
+controller (`controller/`). bmv2's P4Runtime server cannot read or write
+registers, so the registers hold data-plane state only.
+
+| Table | Content |
+|---|---|
+| `p4ics_local` (default action) | `set_local_sa(spi, tx_phase, epoch)`: sender id, phase to protect with, counter base (§5) |
+| `p4ics_keys` (key: phase) | `set_key(key)`: the 256-bit key of each phase (§3) |
+| `ics_sec` (egress port, IPv4 src, dst: ternary) | `cipher`, `decipher`, `no_cipher`, `request_tunnel` |
+
+Tunnels are activated *statically*, with one wildcard `ics_sec` entry per
+port, or *on demand*: with `request_tunnel` as the default action, a frame
+of a flow without an entry is dropped and reported to the controller in a
+`p4ics_tunnel_request_t` digest (addresses, ports, egress port, whether it
+is protected). The controller installs the entries for that endpoint pair,
+and TCP retransmits the dropped segment.
 
 * `cipher` forwards an already-protected frame (IHL 13) as is. It drops a
   frame it cannot protect: parser error, payload larger than the slice
-  stack, `totalLen` above 65535, or SPI not configured (0).
-* `decipher` drops a frame unless it is protected, its lengths are
-  consistent, its tag verifies and its counter is fresh.
+  stack, `totalLen` above 65535, no SPI or no key for the current phase.
+* `decipher` drops a frame unless it is protected, there is a key for its
+  phase, its lengths are consistent, its tag verifies and its counter is
+  fresh.
 * `p4ics_events` (`counter_read MyIngress.p4ics_events <i>`):
 
   | i | event |
   |---|---|
   | 0 | protected |
   | 1 | unprotected |
-  | 2 | rejected: tag, lengths, not protected |
+  | 2 | rejected: tag, lengths, not protected, no key |
   | 3 | rejected: replay |
+  | 4 | dropped: waiting for an on-demand tunnel |
 
 ## 8. Changes from previous versions
 
@@ -154,6 +190,7 @@ tag  = HMAC-SHA256(mac_key, aad ‖ ct)[0:16]
 | `decipher` did not act on the tag check | drops, checking the tag before decrypting |
 | IV derived from the TCP sequence number (repeats across flows) | IV from `(spi, counter)` |
 | replay protection: none beyond TCP | per-sender counter + 64-packet window |
+| key in a register, SPI in a register, `ics_sec` exact on the port | two key phases and the SA in tables (P4Runtime-writable), `ics_sec` ternary on port and addresses, on-demand tunnels |
 | IHL 14, 36 option bytes, checksum over 20 bytes | IHL 13, 32 option bytes, RFC 791 checksum |
 
 ## 9. Remaining limitations

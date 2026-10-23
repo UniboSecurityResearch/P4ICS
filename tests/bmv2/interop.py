@@ -38,14 +38,14 @@ SWITCH_SPI = 1            # what the switch puts in the frames it protects
 PEER_SPI = 7              # the "other end" whose frames the switch deciphers
 EVENTS = "MyIngress.p4ics_events"
 
+WILDCARD = "0.0.0.0&&&0.0.0.0 0.0.0.0&&&0.0.0.0"
 ROUTES = """\
 table_set_default ipv4_lpm drop
 table_add ipv4_lpm ipv4_forward 200.1.1.7/32 => 00:00:00:00:00:03 2
 table_add ipv4_lpm ipv4_forward 195.11.14.5/32 => 00:00:0a:00:01:01 1
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-register_write p4ics_spi 0 %d
-""" % SWITCH_SPI
+table_add ics_sec decipher 1&&&0x1ff %s => 1000
+table_add ics_sec cipher 2&&&0x1ff %s => 1000
+""" % (WILDCARD, WILDCARD)
 
 
 class Checker:
@@ -96,15 +96,17 @@ class Bench:
         self.tx_counter = 0
         self.peer = Peer(PEER_SPI, 1 << 40)
 
-    def reset_counter(self, value):
-        self.sw.cli("register_write p4ics_tx_counter 0 %d\n" % value)
-        self.tx_counter = value
+    def set_epoch(self, epoch, phase=0):
+        """Counters of the switch continue at epoch + packets protected so far."""
+        self.sw.set_local(SWITCH_SPI, phase, epoch)
+        self.tx_counter = epoch + self.sw.register_read("MyIngress.p4ics_tx_count", 0)
+        self.tx_phase = phase
 
     def round_trip(self, keys, name, plain_up, plain_down):
         """A: switch cipher == reference; B: switch decipher(reference) == plaintext."""
         out = through(self.p1, self.p2, plain_up)
         self.tx_counter += 1
-        expected = ref.protect(plain_up, keys, SWITCH_SPI, self.tx_counter)
+        expected = ref.protect(plain_up, keys, ref.spi_field(SWITCH_SPI, self.tx_phase), self.tx_counter)
         ok = out is not None and ref.normalize(out) == ref.normalize(expected)
         if ok:
             # exact length (no Ethernet trailer), RFC 791 checksum over the options
@@ -135,7 +137,7 @@ def main():
     sw.cli(ROUTES)
     check = Checker()
     bench = Bench(sw, p1, p2, check)
-    bench.reset_counter(5000 << 32)
+    bench.set_epoch(5000 << 32)
 
     def rand(n):
         return rnd.randbytes(n)
@@ -169,6 +171,8 @@ def main():
             print("%s: done" % proto)
 
         security_checks(sw, p1, p2, check, keys, bench, rand)
+        rekey_checks(sw, p1, p2, check, keys, bench, rand)
+        on_demand_checks(sw, p1, p2, check, keys, bench, rand)
     finally:
         sw.stop()
 
@@ -222,7 +226,7 @@ def security_checks(sw, p1, p2, check, keys, bench, rand):
           rejected_tag == len(tampered) + 2 and replays == 4)
 
     # Pass-through and fail-closed cases on the cipher side.
-    counter_before = sw.register_read("MyIngress.p4ics_tx_counter", 0)
+    counter_before = sw.register_read("MyIngress.p4ics_tx_count", 0)
     up = to_server("modbus", rand(20), 7, 40003)
     already = bench.peer.protect(up, keys)
     out = through(p1, p2, already)
@@ -234,10 +238,70 @@ def security_checks(sw, p1, p2, check, keys, bench, rand):
         check("cipher forwards %s segment" % name,
               out is not None and ref.normalize(out) == ref.normalize(frame))
     check("pass-through does not consume counters",
-          sw.register_read("MyIngress.p4ics_tx_counter", 0) == counter_before)
-    sw.cli("register_write p4ics_spi 0 0\n")
+          sw.register_read("MyIngress.p4ics_tx_count", 0) == counter_before)
+    sw.set_local(0, 0, 1 << 40)
     check("cipher drops when no SPI is configured", through(p1, p2, up, 1.0) is None)
-    sw.cli("register_write p4ics_spi 0 %d\n" % SWITCH_SPI)
+    bench.set_epoch(6000 << 32)
+
+
+def rekey_checks(sw, p1, p2, check, keys, bench, rand):
+    """Hitless rekey: both phases are accepted while senders switch over."""
+    new = ref.P4icsKeys([w ^ 0x5A5A5A5A for w in keys.words])
+    down = to_client("modbus", rand(30), 0xABCD, 40010)
+    peer = bench.peer
+    peer.counter += 2000          # past the counter jump of security_checks
+
+    def peer_frame(k, phase):
+        peer.counter += 1
+        return ref.protect(down, k, ref.spi_field(PEER_SPI, phase), peer.counter)
+
+    check("phase-1 frame dropped while only phase 0 has a key",
+          through(p2, p1, peer_frame(new, 1), 1.0) is None)
+    sw.install_key(1, new.words)
+    check("phase-1 frame accepted once the new key is installed",
+          through(p2, p1, peer_frame(new, 1)) is not None)
+    check("phase-0 frames (old key) still accepted during the switch-over",
+          through(p2, p1, peer_frame(keys, 0)) is not None)
+    check("a phase-1 frame under the old key is rejected",
+          through(p2, p1, peer_frame(keys, 1), 1.0) is None)
+
+    bench.set_epoch(7000 << 32, phase=1)
+    up = to_server("modbus", rand(25), 0x1234, 40011)
+    out = through(p1, p2, up)
+    bench.tx_counter += 1
+    expected = ref.protect(up, new, ref.spi_field(SWITCH_SPI, 1), bench.tx_counter)
+    check("after the switch-over the switch protects with phase 1 and the new key",
+          out is not None and ref.normalize(out) == ref.normalize(expected), out, expected)
+    sw.install_key(0, keys.words)
+    bench.set_epoch(8000 << 32, phase=0)
+
+
+def on_demand_checks(sw, p1, p2, check, keys, bench, rand):
+    """ics_sec default request_tunnel: drop + digest until an entry exists."""
+    events = lambda: sw.counter_read(EVENTS, 4)            # noqa: E731
+    sw.cli("table_clear ics_sec\ntable_set_default ics_sec request_tunnel\n")
+    up = to_server("modbus", rand(20), 0x4242, 40020)
+    before = events()
+    check("on demand: flow without a tunnel is dropped", through(p1, p2, up, 1.0) is None)
+    check("on demand: ... and reported (p4ics_events[4])", events() == before + 1)
+    sw.cli("table_add ics_sec cipher 2&&&0x1ff 195.11.14.5&&&255.255.255.255 "
+           "200.1.1.7&&&255.255.255.255 => 10\n")
+    out = through(p1, p2, up)
+    bench.tx_counter += 1
+    expected = ref.protect(up, keys, ref.spi_field(SWITCH_SPI, 0), bench.tx_counter)
+    check("on demand: protected once the endpoint-pair entry is installed",
+          out is not None and ref.normalize(out) == ref.normalize(expected), out, expected)
+    other = ref.build_ics_frame("modbus", rand(20), src="195.11.14.99", sport=40021)
+    before = events()
+    check("on demand: another source still waits for its own tunnel",
+          through(p1, p2, other, 1.0) is None and events() == before + 1)
+    sw.cli("table_clear ics_sec\ntable_set_default ics_sec no_cipher\n"
+           "table_add ics_sec decipher 1&&&0x1ff %s => 1000\n"
+           "table_add ics_sec cipher 2&&&0x1ff %s => 1000\n"
+           "table_add ics_sec no_cipher 2&&&0x1ff 195.11.14.5&&&255.255.255.255 "
+           "200.1.1.7&&&255.255.255.255 => 10\n" % (WILDCARD, WILDCARD))
+    check("a specific entry takes precedence over the per-port tunnel",
+          ref.normalize(through(p1, p2, up)) == ref.normalize(up))
 
 
 if __name__ == "__main__":

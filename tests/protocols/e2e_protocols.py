@@ -105,7 +105,7 @@ def setup():
         sw = Switch(d, ports, thrift_port=thrift, log=os.path.join(WORK, name + ".log"))
         sw.cli(open(os.path.join(REPO, "testbed", name, "commands.txt")).read())
         sw.set_keys(KEYS.words)
-        sw.cli("register_write p4ics_tx_counter 0 %d\n" % epoch)
+        sw.set_local(int(name[1:]), 0, epoch)
         switches.append(sw)
 
     servers = [

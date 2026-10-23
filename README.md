@@ -105,9 +105,9 @@ Make sure both Docker and Kathara are properly installed and configured before s
      cd /enip && ENIP_HOST=200.1.1.10 ENIP_READS=1000 python client.py
      ```
 
-**Keys.** No key is stored in the repository. When the lab starts, the first switch generates a random 256-bit key in `testbed/shared/p4ics_key` and both switches load it (`s1/p4ics_setup.sh`); `kathara lclean` deletes it, so every lab run uses a new key. `./rotate_keys.sh` (from `testbed/`, while the lab runs) replaces it on both switches, and `./change_key.sh <128|160|192|224|256>` inside a switch changes the key size. `auto_test.sh` selects the key size, or the plaintext/TLS baselines, through `testbed/shared/p4ics_mode`.
+**Keys.** No key is stored in the repository. When the lab starts, the first switch generates a random 256-bit key in `testbed/shared/p4ics_key` and both switches load it (`s1/p4ics_setup.sh`); `kathara lclean` deletes it, so every lab run uses a new key. `./rotate_keys.sh` (from `testbed/`, while the lab runs) replaces it on both switches without dropping traffic: each switch holds two keys, and the new one is installed in the idle slot before the switches start using it. `./change_key.sh <128|160|192|224|256>` inside a switch changes the key size. `auto_test.sh` selects the key size, or the plaintext/TLS baselines, through `testbed/shared/p4ics_mode`.
 
-Each switch has its own sender identifier (`register_write p4ics_spi 0 <1..255>` in `commands.txt`), and its packet counter starts from the current time, so counters never repeat across restarts. `counter_read MyIngress.p4ics_events <0..3>` reports protected, unprotected, rejected (tag) and rejected (replay) packets. s1 and s2 run the same P4 program and extern: edit them in `s1/` and copy them with `./sync_switches.sh`.
+Each switch has its own sender identifier (`table_set_default p4ics_local set_local_sa <1..255> ...` in `commands.txt`), and its packet counter starts from the current time, so counters never repeat across restarts. `counter_read MyIngress.p4ics_events <0..4>` reports protected, unprotected, rejected (tag) and rejected (replay) packets, and packets waiting for an on-demand tunnel. s1 and s2 run the same P4 program and extern: edit them in `s1/` and copy them with `./sync_switches.sh`.
 
 ---
 

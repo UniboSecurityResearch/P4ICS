@@ -1,4 +1,4 @@
 # The lab key lives as long as the lab: the next start generates a new one,
 # so a restarted switch never keeps anti-replay state for an old key.
-rm -f /shared/p4ics_key
+rm -f /shared/p4ics_key /shared/p4ics_key.next /shared/p4ics_phase
 rm -rf /shared/.p4ics_key.lock
