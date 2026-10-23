@@ -1,12 +1,15 @@
+import os
 import time
 from cpppo.server.enip import client
 
-HOST = "192.168.100.102"   # IP del server EtherNet/IP
+HOST = os.environ.get("ENIP_HOST", "192.168.100.102")   # IP del server EtherNet/IP
 TAG_NAME = "Sensor"        # Nome del tag da leggere (tipo INT)
+READS = int(os.environ.get("ENIP_READS", "100000"))
+TIMES_FILE = os.environ.get("ENIP_TIMES_FILE", "times.txt")
 
 with client.connector(host=HOST) as conn:              # Connessione al server CIP (porta 44818 di default)
-    with open("times.txt", "w") as f:                  # File di output per i tempi
-        for i in range(100000):
+    with open(TIMES_FILE, "w") as f:                   # File di output per i tempi
+        for i in range(READS):
             # Prepara l'operazione di lettura del tag (parsing del nome tag in un comando CIP)
             operations = client.parse_operations([TAG_NAME])
 

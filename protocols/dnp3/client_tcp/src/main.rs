@@ -20,8 +20,17 @@ impl AssociationHandler for AH {}
 struct AI;  // AssociationInformation no-op
 impl AssociationInformation for AI {}
 
+// Override with DNP3_ENDPOINT, DNP3_READS, DNP3_TIMES_FILE (e.g. in the Kathara lab).
+fn env_or(name: &str, default: &str) -> String {
+    std::env::var(name).unwrap_or_else(|_| default.to_string())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let endpoint = env_or("DNP3_ENDPOINT", "192.168.100.102:20000");
+    let reads: usize = env_or("DNP3_READS", "100000").parse()?;
+    let times_file = env_or("DNP3_TIMES_FILE", "tempi_richieste.txt");
+
     // Indirizzi DNP3: master=1, outstation=102
     let master_addr = EndpointAddress::try_new(1)?;
     let outstation_addr = EndpointAddress::try_new(102)?;
@@ -30,7 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut channel = spawn_master_tcp_client(
         LinkErrorMode::Close,
         MasterChannelConfig::new(master_addr),
-        EndpointList::new("192.168.100.102:20000".to_string(), &[]),
+        EndpointList::new(endpoint, &[]),
         ConnectStrategy::default(),
         NullListener::create(),
     );
@@ -53,10 +62,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     channel.enable().await?;
 
     // File output: un tempo in microsecondi per riga
-    let file = File::create("tempi_richieste.txt")?;
+    let file = File::create(&times_file)?;
     let mut writer = BufWriter::new(file);
 
-    for _ in 0..100_000 {
+    for _ in 0..reads {
         let t0 = Instant::now();
         association
             .read(ReadRequest::class_scan(Classes::class0()))
@@ -66,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     writer.flush()?;
-    println!("OK: 100000 letture completate -> tempi_richieste.txt");
+    println!("OK: {} letture completate -> {}", reads, times_file);
     Ok(())
 }
 

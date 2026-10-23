@@ -10,7 +10,7 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
 ## 📂 Repository Structure
 
 - **Dockerfile/**
-  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed.
+  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (including `dnp3.Dockerfile` and `enip.Dockerfile` for DNP3 and EtherNet/IP).
 
 - **docs/**
   Specification of the P4ICS protected packet format.
@@ -37,7 +37,7 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
 - **testbed/**
   A Kathara-based virtual lab to reproduce the P4ICS pipeline outside the physical testbed.
   Includes:
-  - Modbus and MQTT support
+  - Modbus, MQTT, DNP3 and EtherNet/IP support
   - P4 source files (folders `s1/` and `s2/`): payloads are parsed into a header stack of 256-byte slices plus a `varbit` tail, and handed to a single extern per direction
   - Network topology for Kathara
 
@@ -88,6 +88,21 @@ Make sure both Docker and Kathara are properly installed and configured before s
    - Or connect over TLS:
      ```bash
      python3 mqtt_client_tls.py
+     ```
+
+5. **DNP3 and EtherNet/IP**
+   - Build the images from the repository root, then uncomment the `dnp3*` and `enip*` devices in `testbed/lab.conf`:
+     ```bash
+     docker build -f Dockerfile/dnp3.Dockerfile -t loriringhio97/dnp3 .
+     docker build -f Dockerfile/enip.Dockerfile -t loriringhio97/enip .
+     ```
+   - Inside the `dnp3client` terminal (outstation on `dnp3server`, 200.1.1.9):
+     ```bash
+     DNP3_ENDPOINT=200.1.1.9:20000 DNP3_READS=1000 dnp3_client
+     ```
+   - Inside the `enipclient` terminal (CIP server on `enipserver`, 200.1.1.10):
+     ```bash
+     cd /enip && ENIP_HOST=200.1.1.10 ENIP_READS=1000 python client.py
      ```
 
 Each switch has its own sender identifier (`register_write p4ics_spi 0 <1..255>` in `commands.txt`), and its startup script initialises the packet counter from the current time, so counters never repeat across restarts. After restarting a switch that decrypts, rotate the key (`change_key.sh`): its anti-replay state starts empty. `counter_read MyIngress.p4ics_events <0..3>` reports protected, unprotected, rejected (tag) and rejected (replay) packets.

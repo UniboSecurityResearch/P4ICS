@@ -1,0 +1,6 @@
+ip link set eth0 address 00:00:0a:00:04:01
+ip addr add 195.11.14.10/24 dev eth0
+route add default gw 195.11.14.1 dev eth0
+arp -s 195.11.14.1 00:00:00:00:00:01
+# Run: cd /enip && ENIP_HOST=200.1.1.10 ENIP_READS=1000 python client.py
+echo "enipclient " >> /shared/startup.temp
