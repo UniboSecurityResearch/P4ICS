@@ -8,7 +8,7 @@
  * payload size, instead of one primitive per number of slices.
  *
  * P4ICS v2 (all integers big endian, L plaintext bytes):
- *   K       = k1 .. kNk, the register words before the first zero word (Nk = 4..8)
+ *   K       = k1 .. kNk, the key words (p4ics_keys) before the first zero word (Nk = 4..8)
  *   enc_key = HKDF-SHA256(K, salt "P4ICS-v2", info "P4ICS-v2 enc", 4 * Nk)
  *   mac_key = HKDF-SHA256(K, salt "P4ICS-v2", info "P4ICS-v2 mac", 32)
  *   IV      = AES(enc_key, spi || 0^4 || counter)

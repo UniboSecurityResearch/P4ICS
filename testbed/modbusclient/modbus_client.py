@@ -34,8 +34,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--connect-times",
-    help="Thrift server port for table updates",
+    help="With --connect: how many connections to time",
     action="store",
+    type=int,
     default=1,
 )
 parser.add_argument(

@@ -27,7 +27,7 @@ cp -r "$ROOT/testbed" "$out"
 rm -rf "$out/shared" "$out"/s?/extern_lib/*.so
 mkdir "$out/shared"
 # simple_switch_CLI tooling: the controller does this (p4ics-api POST /rekey).
-rm -f "$out"/auto_test.sh "$out"/rotate_keys.sh "$out"/sync_switches.sh "$out"/s?.shutdown \
+rm -f "$out"/rotate_keys.sh "$out"/sync_switches.sh "$out"/s?.shutdown \
       "$out"/s?/change_key.sh "$out"/s?/p4ics_setup.sh "$out"/s?/startup.sh "$out"/s?/retrieve_info.sh
 cp "$HERE/s1.startup" "$HERE/s2.startup" "$HERE/c1.startup" "$HERE/c1.shutdown" "$out/"
 mkdir "$out/c1"

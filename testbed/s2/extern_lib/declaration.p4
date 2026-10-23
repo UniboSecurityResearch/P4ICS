@@ -6,7 +6,8 @@
  * size, and the result is written back with its exact length (re-packed into
  * slices + tail). Algorithms: see the header of definition.cpp.
  *
- * key: the 8 words of the `keys` register, k1 first (k1 ++ ... ++ k8).
+ * key: the 256-bit key of the frame's key phase (table p4ics_keys); the
+ *      switch uses the 32-bit words before the first zero word.
  * opts: the P4ICS IPv4 options (savedLen, spi, counter, tag). The tag also
  * covers the addresses (ipv4), ports and sequence number (tcp) and the
  * industrial header, whichever of modbus/mqtt/cip/dnp3 is valid.

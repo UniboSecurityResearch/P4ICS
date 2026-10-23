@@ -1,4 +1,4 @@
-import socket, ssl, threading
+import socket, ssl, threading, time
 from cpppo.server.enip import client
 
 SERVER_IP = "192.168.100.102"
@@ -57,8 +57,8 @@ with client.connector(host="127.0.0.1", port=LOCAL_PORT) as conn:
     with open("times_tls.txt", "w") as f:
         for i in range(100000):
             operations = client.parse_operations([TAG_NAME])
-            t0 = ssl.clock() if hasattr(ssl, "clock") else ssl.time()  # or time.perf_counter()
+            t0 = time.perf_counter()
             for idx, descr, op, reply, status, value in conn.synchronous(operations=operations):
                 pass  # ottiene il valore (non utilizzato qui)
-            t1 = ssl.clock() if hasattr(ssl, "clock") else ssl.time()
+            t1 = time.perf_counter()
             f.write(f"{t1 - t0:.6f}\n")

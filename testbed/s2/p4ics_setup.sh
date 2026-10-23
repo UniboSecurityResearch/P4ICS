@@ -12,8 +12,9 @@
 # words), created by the first switch that starts and removed at lclean by
 # s1.shutdown/s2.shutdown. rotate_keys.sh replaces it without dropping
 # traffic: install in the idle phase everywhere, then activate it.
-# Mode: /shared/p4ics_mode, written by auto_test.sh: 128|160|192|224|256 (key
-# size) or no-encryption|tls (ics_sec emptied: plaintext and TLS baselines).
+# Mode: /shared/p4ics_mode, optional, written before kathara lstart:
+# 128|160|192|224|256 (key size) or no-encryption|tls (ics_sec emptied:
+# plaintext and TLS baselines).
 set -eu
 
 SHARED=${P4ICS_SHARED:-/shared}
