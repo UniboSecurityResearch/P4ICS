@@ -1,0 +1,7 @@
+# bmv2 + the real industrial stacks of the testbed, to run them through two
+# P4ICS switches in one container (tests/protocols/run_protocols.sh).
+FROM loriringhio97/dnp3:latest AS dnp3
+
+FROM loriringhio97/p4:latest
+COPY --from=dnp3 /usr/local/bin/dnp3_server /usr/local/bin/dnp3_client /usr/local/bin/
+RUN pip install --no-cache-dir --break-system-packages pymodbus==3.6.9 cpppo==5.2.5
