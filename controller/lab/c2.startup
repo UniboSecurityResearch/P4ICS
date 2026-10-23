@@ -1,0 +1,4 @@
+ip address add 100.0.1.12/24 dev eth0
+until [ -s /shared/p4ics/pki/ca.pem ]; do sleep 1; done
+p4ics-controller -config /c2.yml > /shared/c2.log 2>&1 &
+echo "c2 " >> /shared/startup.temp

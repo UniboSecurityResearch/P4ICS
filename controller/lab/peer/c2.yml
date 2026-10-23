@@ -1,0 +1,24 @@
+# Two controllers, c1 for s1 and c2 for s2, agreeing on every key with a
+# Diffie-Hellman exchange. c1 (first name) leads the rotations.
+name: c2
+tls:
+  ca: /shared/p4ics/pki/ca.pem
+  cert: /shared/p4ics/pki/c2.pem
+  key: /shared/p4ics/pki/c2-key.pem
+api:
+  listen: 100.0.1.12:3333
+keys:
+  bits: 256
+  rotate: 10m
+tunnels:
+  mode: static
+peer:
+  name: c1
+  url: https://100.0.1.11:3333
+switches:
+  - name: s2
+    address: 100.0.1.2:50051
+    device_id: 2
+    json: /shared/p4ics/pipeline/s2.json
+    p4info: /shared/p4ics/pipeline/s2.p4info.txtpb
+    commands: /shared/p4ics/pipeline/s2.commands.txt

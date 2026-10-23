@@ -29,11 +29,13 @@ def sh(cmd, **kw):
 
 
 def build_switch(p4_dir, work_dir):
-    """Compile a P4ICS switch directory (industrial_aes.p4 + extern_lib)."""
+    """Compile a P4ICS switch directory (industrial_aes.p4 + extern_lib).
+    Also writes the P4Info a P4Runtime controller needs."""
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     shutil.copytree(p4_dir, work_dir)
-    sh("p4c-bm2-ss --emit-externs -o industrial_aes.json industrial_aes.p4", cwd=work_dir)
+    sh("p4c-bm2-ss --emit-externs --p4runtime-files industrial_aes.p4info.txtpb "
+       "-o industrial_aes.json industrial_aes.p4", cwd=work_dir)
     sh("make -s", cwd=os.path.join(work_dir, "extern_lib"))
     return work_dir
 

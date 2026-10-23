@@ -1,0 +1,21 @@
+ip link set eth0 address 00:00:00:00:00:03
+ip link set eth1 address 00:00:00:00:00:04
+# Management LAN: P4Runtime with mutual TLS to the controller.
+ip address add 100.0.1.2/24 dev eth2
+
+p4c-bm2-ss --emit-externs --p4runtime-files industrial_aes.p4info.txtpb -o industrial_aes.json industrial_aes.p4
+cd extern_lib && make
+cd ..
+# What the controller installs: program, P4Info and the tables of commands.txt.
+mkdir -p /shared/p4ics/pipeline
+for f in industrial_aes.json:s2.json industrial_aes.p4info.txtpb:s2.p4info.txtpb commands.txt:s2.commands.txt; do
+    cp "${f%%:*}" "/shared/p4ics/pipeline/${f#*:}.tmp"
+    mv "/shared/p4ics/pipeline/${f#*:}.tmp" "/shared/p4ics/pipeline/${f#*:}"
+done
+# Certificates of this lab run, created by c1.startup.
+until [ -s /shared/p4ics/pki/ca.pem ]; do sleep 1; done
+simple_switch_grpc -i 1@eth0 -i 2@eth1 --device-id 2 --no-p4 -- --load-modules=extern_lib/definition.so \
+    --grpc-server-addr 100.0.1.2:50051 --grpc-server-ssl --grpc-server-cacert /shared/p4ics/pki/ca.pem \
+    --grpc-server-cert /shared/p4ics/pki/s2.pem --grpc-server-key /shared/p4ics/pki/s2-key.pem \
+    --grpc-server-with-client-auth > /shared/s2.log 2>&1 &
+echo "s2 " >> /shared/startup.temp

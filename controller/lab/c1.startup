@@ -1,0 +1,9 @@
+ip address add 100.0.1.11/24 dev eth0
+# One CA per lab run (removed by c1.shutdown): switches, controllers, admin.
+if [ ! -s /shared/p4ics/pki/ca.pem ]; then
+    rm -rf /shared/p4ics/pki.tmp
+    p4ics-pki /shared/p4ics/pki.tmp s1=100.0.1.1 s2=100.0.1.2 c1=100.0.1.11 c2=100.0.1.12 admin
+    mv /shared/p4ics/pki.tmp /shared/p4ics/pki
+fi
+p4ics-controller -config /c1.yml > /shared/c1.log 2>&1 &
+echo "c1 " >> /shared/startup.temp

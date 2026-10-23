@@ -1,0 +1,29 @@
+# One controller for both switches. Reference: controller/README.md.
+name: c1
+tls:
+  ca: /shared/p4ics/pki/ca.pem
+  cert: /shared/p4ics/pki/c1.pem
+  key: /shared/p4ics/pki/c1-key.pem
+api:
+  listen: 100.0.1.11:3333       # p4ics-api inside c1
+keys:
+  bits: 256
+  rotate: 10m
+tunnels:
+  mode: static                  # the ics_sec entries of commands.txt
+  # mode: on-demand             # a tunnel per endpoint pair, when traffic shows up
+  # allow:
+  #   - {a: 195.11.14.0/24, b: 200.1.1.0/24}
+switches:
+  - name: s1
+    address: 100.0.1.1:50051
+    device_id: 1
+    json: /shared/p4ics/pipeline/s1.json
+    p4info: /shared/p4ics/pipeline/s1.p4info.txtpb
+    commands: /shared/p4ics/pipeline/s1.commands.txt
+  - name: s2
+    address: 100.0.1.2:50051
+    device_id: 2
+    json: /shared/p4ics/pipeline/s2.json
+    p4info: /shared/p4ics/pipeline/s2.p4info.txtpb
+    commands: /shared/p4ics/pipeline/s2.commands.txt

@@ -1,0 +1,2 @@
+# Certificates and pipelines live as long as the lab.
+rm -rf /shared/p4ics

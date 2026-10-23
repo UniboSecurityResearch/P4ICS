@@ -1,0 +1,402 @@
+# proto-file: p4/config/v1/p4info.proto
+# proto-message: p4.config.v1.P4Info
+
+pkg_info {
+  arch: "v1model"
+}
+tables {
+  preamble {
+    id: 37375156
+    name: "MyIngress.ipv4_lpm"
+    alias: "ipv4_lpm"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 28792405
+  }
+  action_refs {
+    id: 25652968
+  }
+  action_refs {
+    id: 21257015
+  }
+  initial_default_action {
+    action_id: 25652968
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 40002754
+    name: "MyIngress.p4ics_local"
+    alias: "p4ics_local"
+  }
+  action_refs {
+    id: 29165121
+  }
+  action_refs {
+    id: 21257015
+  }
+  initial_default_action {
+    action_id: 21257015
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 34520349
+    name: "MyIngress.p4ics_keys"
+    alias: "p4ics_keys"
+  }
+  match_fields {
+    id: 1
+    name: "meta.p4ics.key_phase"
+    bitwidth: 1
+    match_type: EXACT
+  }
+  action_refs {
+    id: 18394063
+  }
+  action_refs {
+    id: 21257015
+  }
+  initial_default_action {
+    action_id: 21257015
+  }
+  size: 2
+}
+tables {
+  preamble {
+    id: 37609420
+    name: "MyIngress.ics_sec"
+    alias: "ics_sec"
+  }
+  match_fields {
+    id: 1
+    name: "standard_metadata.egress_spec"
+    bitwidth: 9
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 2
+    name: "hdr.ipv4.srcAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 3
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  action_refs {
+    id: 31076742
+  }
+  action_refs {
+    id: 25431598
+  }
+  action_refs {
+    id: 31761996
+  }
+  action_refs {
+    id: 17807670
+  }
+  initial_default_action {
+    action_id: 31076742
+  }
+  size: 1024
+}
+actions {
+  preamble {
+    id: 21257015
+    name: "NoAction"
+    alias: "NoAction"
+    annotations: "@noWarn(\"unused\")"
+  }
+}
+actions {
+  preamble {
+    id: 25652968
+    name: "MyIngress.drop"
+    alias: "drop"
+  }
+}
+actions {
+  preamble {
+    id: 28792405
+    name: "MyIngress.ipv4_forward"
+    alias: "ipv4_forward"
+  }
+  params {
+    id: 1
+    name: "dstAddr"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "port"
+    bitwidth: 9
+  }
+}
+actions {
+  preamble {
+    id: 29165121
+    name: "MyIngress.set_local_sa"
+    alias: "set_local_sa"
+  }
+  params {
+    id: 1
+    name: "spi"
+    bitwidth: 32
+  }
+  params {
+    id: 2
+    name: "tx_phase"
+    bitwidth: 1
+  }
+  params {
+    id: 3
+    name: "epoch"
+    bitwidth: 64
+  }
+}
+actions {
+  preamble {
+    id: 18394063
+    name: "MyIngress.set_key"
+    alias: "set_key"
+  }
+  params {
+    id: 1
+    name: "key"
+    bitwidth: 256
+  }
+}
+actions {
+  preamble {
+    id: 31076742
+    name: "MyIngress.no_cipher"
+    alias: "no_cipher"
+  }
+}
+actions {
+  preamble {
+    id: 17807670
+    name: "MyIngress.request_tunnel"
+    alias: "request_tunnel"
+  }
+}
+actions {
+  preamble {
+    id: 25431598
+    name: "MyIngress.cipher"
+    alias: "cipher"
+  }
+}
+actions {
+  preamble {
+    id: 31761996
+    name: "MyIngress.decipher"
+    alias: "decipher"
+  }
+}
+counters {
+  preamble {
+    id: 306207292
+    name: "MyIngress.p4ics_events"
+    alias: "p4ics_events"
+  }
+  spec {
+    unit: PACKETS
+  }
+  size: 5
+}
+registers {
+  preamble {
+    id: 370910838
+    name: "MyIngress.p4ics_tx_count"
+    alias: "p4ics_tx_count"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 64
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 374106299
+    name: "MyIngress.p4ics_rx_last"
+    alias: "p4ics_rx_last"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 64
+      }
+    }
+  }
+  size: 256
+}
+registers {
+  preamble {
+    id: 370166469
+    name: "MyIngress.p4ics_rx_window"
+    alias: "p4ics_rx_window"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 64
+      }
+    }
+  }
+  size: 256
+}
+registers {
+  preamble {
+    id: 376348145
+    name: "MyEgress.packet_processing_time_array"
+    alias: "packet_processing_time_array"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 100000
+}
+registers {
+  preamble {
+    id: 383801837
+    name: "MyEgress.packet_dequeuing_timedelta_array"
+    alias: "packet_dequeuing_timedelta_array"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 100000
+}
+registers {
+  preamble {
+    id: 381507548
+    name: "MyEgress.timestamp_last_seen_packet"
+    alias: "timestamp_last_seen_packet"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 48
+      }
+    }
+  }
+  size: 1
+}
+registers {
+  preamble {
+    id: 380239588
+    name: "MyEgress.last_saved_index"
+    alias: "last_saved_index"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 1
+}
+digests {
+  preamble {
+    id: 396176396
+    name: "p4ics_tunnel_request_t"
+    alias: "p4ics_tunnel_request_t"
+  }
+  type_spec {
+    struct {
+      name: "p4ics_tunnel_request_t"
+    }
+  }
+}
+type_info {
+  structs {
+    key: "p4ics_tunnel_request_t"
+    value {
+      members {
+        name: "srcAddr"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "dstAddr"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 32
+            }
+          }
+        }
+      }
+      members {
+        name: "srcPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "dstPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 16
+            }
+          }
+        }
+      }
+      members {
+        name: "egressPort"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 9
+            }
+          }
+        }
+      }
+      members {
+        name: "isProtected"
+        type_spec {
+          bitstring {
+            bit {
+              bitwidth: 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

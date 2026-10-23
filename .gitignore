@@ -167,3 +167,5 @@ shared/*
 
 # .codex file
 .codex
+# controller binary built in place
+/controller/p4ics-controller

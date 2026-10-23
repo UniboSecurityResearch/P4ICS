@@ -1,6 +1,7 @@
 # Checks of the P4ICS switch: the wire-format reference, the testbed scripts,
-# the switch (bmv2 + extern) against the reference, and the real Modbus, DNP3
-# and EtherNet/IP stacks through two switches.
+# the switch (bmv2 + extern) against the reference, the real Modbus, DNP3
+# and EtherNet/IP stacks through two switches, and the optional P4Runtime
+# controller.
 name: tests
 
 on:
@@ -24,7 +25,11 @@ jobs:
       - name: s1 and s2 run the same program
         run: testbed/sync_switches.sh --check
       - name: shell scripts parse
-        run: for f in testbed/*.sh testbed/*.startup testbed/*.shutdown testbed/s*/*.sh tests/*/*.sh; do bash -n "$f"; done
+        run: |
+          for f in testbed/*.sh testbed/*.startup testbed/*.shutdown testbed/s*/*.sh tests/*/*.sh \
+                   controller/*.sh controller/lab/*.sh controller/lab/*.startup controller/lab/*.shutdown; do
+            bash -n "$f"
+          done
 
   testbed:
     runs-on: ubuntu-24.04
@@ -47,3 +52,28 @@ jobs:
       - run: docker build -f Dockerfile/dnp3.Dockerfile -t loriringhio97/dnp3 .
       - name: pymodbus, DNP3 and cpppo through two switches
         run: tests/protocols/run_protocols.sh
+
+  controller:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: controller/go.sum
+      - name: gofmt, vet, unit tests
+        working-directory: controller
+        run: |
+          test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+          go vet ./...
+          go test -race ./...
+      - name: P4Info of the unit tests matches testbed/s1
+        run: |
+          mkdir -p /tmp/p4info
+          docker run --rm -v "$PWD:/p4ics:ro" -v /tmp/p4info:/out -w /out --entrypoint p4c-bm2-ss "$P4_IMAGE" \
+            --emit-externs --p4runtime-files /out/p4info.txtpb -o /out/x.json /p4ics/testbed/s1/industrial_aes.p4
+          cmp /tmp/p4info/p4info.txtpb controller/internal/p4rt/testdata/industrial_aes.p4info.txtpb
+      - name: two simple_switch_grpc with mutual TLS; rekeying under traffic, restarts, on demand, two controllers
+        run: tests/controller/run_controller.sh
+      - name: controller image
+        run: docker build -f Dockerfile/controller.Dockerfile -t loriringhio97/p4ics-controller .
