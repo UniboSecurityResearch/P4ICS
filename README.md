@@ -1,5 +1,9 @@
 # P4ICS: P4 In-Network Security for Industrial Control Systems
 
+[![Tests](https://github.com/UniboSecurityResearch/P4ICS/actions/workflows/tests.yml/badge.svg)](https://github.com/UniboSecurityResearch/P4ICS/actions/workflows/tests.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
+[![DOI](https://zenodo.org/badge/763412444.svg)](https://doi.org/10.5281/zenodo.17190336)
+
 This repository contains the source files, testbed configurations, and evaluation results for the paper:
 **P4ICS: P4 In-Network Security for Industrial Control Systems Networks**.
 
@@ -190,8 +194,6 @@ If you use this repository, please cite our paper:
   url     = {https://doi.org/10.1016/j.comnet.2026.112560}
 }
 ```
-
-[![DOI](https://zenodo.org/badge/763412444.svg)](https://doi.org/10.5281/zenodo.17190336)
 
 ---
 
