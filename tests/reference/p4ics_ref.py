@@ -234,13 +234,13 @@ class P4icsKeys:
         return hmac.new(self.mac_key, aad + ciphertext, hashlib.sha256).digest()[:TAG_LEN]
 
 
-# Default key of testbed/s{1,2}/commands.txt (256-bit mode).
+# Fixed key used by the tests (the testbed generates a random one per run).
 TESTBED_WORDS = (729683222, 682545830, 2885096840, 164581180,
                  102358694, 259174683, 243695780, 96548217)
 
 
 def testbed_words(bits=256):
-    """Key words produced by testbed/s1/change_key.sh for a given key size."""
+    """TESTBED_WORDS truncated to a key size, as change_key.sh does."""
     nk = bits // 32
     if bits % 32 or not 4 <= nk <= 8:
         raise ValueError("bits must be one of 128, 160, 192, 224, 256")

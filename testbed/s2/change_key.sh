@@ -1,5 +1,7 @@
-# This script changes the value of the registers in which the words of the key
-# are stored, so there is no need to restart the switch or apply the modifications
+# shellcheck disable=SC2148
+# This script changes the key size of the switch without restarting it: the
+# words of the lab key (/shared/p4ics_key) are loaded into the `keys`
+# register truncated to the given size (see p4ics_setup.sh).
 
 # Here we select the different key sizes
 if [[ $# -ne 1 ]]; then
@@ -7,56 +9,9 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-# delete any line that starts with "register_write keys 4|5|6|7"
-    sed -i -E '/^register_write keys (4|5|6|7)/d' commands.txt
-
 case $1 in
-    128)
-        # set the register from 4 up to 7 to 0
-        sed -i '/^register_write keys 3/ a\
-register_write keys 4 0\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' commands.txt
-    ;;
-
-    160)
-        # set the register from 5 up to 7 to 0
-        sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 0\
-register_write keys 6 0\
-register_write keys 7 0' commands.txt
-
-    ;;
-
-    192)
-        # set the register from 5 up to 7 to 0
-        sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 0\
-register_write keys 7 0' commands.txt
-
-    ;;
-
-    224)
-        # set the register from 5 up to 7 to 0
-        sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 243695780\
-register_write keys 7 0' commands.txt
-
-    ;;
-
-    256)
-        # set the register from 5 up to 7 to 0
-        sed -i '/^register_write keys 3/ a\
-register_write keys 4 102358694\
-register_write keys 5 259174683\
-register_write keys 6 243695780\
-register_write keys 7 096548217' commands.txt
+    128|160|192|224|256)
+        bash ./p4ics_setup.sh key "$1"
     ;;
 
     *)
@@ -64,5 +19,3 @@ register_write keys 7 096548217' commands.txt
         echo 'Expected "128", "160", "192", "224" or "256"' >&2
         exit 1
 esac
-
-simple_switch_CLI <<< $(cat commands.txt)

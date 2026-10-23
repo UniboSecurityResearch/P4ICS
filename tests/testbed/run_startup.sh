@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Run the Kathara startup/shutdown scripts of s1 and s2 in two containers that
+# share /shared, the way Kathara does (device directory copied to /), and
+# check what they configure: shared lab key, mode, SPI, ics_sec, counter.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+IMAGE="${P4_IMAGE:-loriringhio97/p4@sha256:4ecf4ad5c433ff214f076ad06d051c2c9b5b9394bb6dfc0bb81a102b53fff5f2}"
+SHARED="$(mktemp -d)"
+NAMES="p4ics-startup-s1 p4ics-startup-s2"
+trap 'docker rm -f $NAMES >/dev/null 2>&1 || true; docker run --rm -v "$SHARED:/shared" --entrypoint rm "$IMAGE" -rf /shared/* /shared/.p4ics_key.lock >/dev/null 2>&1 || true; rmdir "$SHARED" 2>/dev/null || true' EXIT
+
+fail=0
+check() { if eval "$2"; then echo "PASS $1"; else echo "FAIL $1"; fail=1; fi; }
+cli() { docker exec -i "p4ics-startup-$1" simple_switch_CLI <<< "$2" 2>/dev/null; }
+reg() { cli "$1" "register_read $2" | sed -n 's/.*\]= *//p' | head -1; }
+
+boot() {   # boot <s1|s2>: start a device and run its startup script
+    docker run -d --name "p4ics-startup-$1" --cap-add NET_ADMIN --network none \
+        -v "$ROOT/testbed:/testbed:ro" -v "$SHARED:/shared" --entrypoint sleep "$IMAGE" infinity >/dev/null
+    docker exec "p4ics-startup-$1" sh -c "ip link add eth0 type veth peer name eth1 && ip link set eth0 up && ip link set eth1 up && cp -r /testbed/$1/. / && cp /testbed/$1.startup /testbed/$1.shutdown /"
+    docker exec -d "p4ics-startup-$1" bash -c "cd / && bash $1.startup > /startup.log 2>&1"
+}
+
+boot s1
+boot s2
+for _ in $(seq 120); do
+    grep -q s1 "$SHARED/startup.temp" 2>/dev/null && grep -q s2 "$SHARED/startup.temp" 2>/dev/null && break
+    sleep 1
+done
+check "both switches finished their startup" "grep -q s2 '$SHARED/startup.temp' && grep -q s1 '$SHARED/startup.temp'"
+
+key=$(cat "$SHARED/p4ics_key" 2>/dev/null || true)
+IFS=, read -r -a words <<< "$key"
+check "a 256-bit lab key was generated in shared/" "[ \${#words[@]} -eq 8 ]"
+for sw in s1 s2; do
+    check "$sw loaded the lab key (all 8 words)" \
+        "[ \"\$(reg $sw 'keys 0')\" = '${words[0]}' ] && [ \"\$(reg $sw 'keys 7')\" = '${words[7]}' ]"
+    check "$sw has its SPI" "[ \"\$(reg $sw 'p4ics_spi 0')\" = '${sw#s}' ]"
+    check "$sw counter starts at ns since 2020" "[ \"\$(reg $sw 'p4ics_tx_counter 0')\" -gt 200000000000000000 ]"
+    check "$sw ics_sec has cipher and decipher" \
+        "[ \"\$(cli $sw 'table_dump ics_sec' | grep -Ec 'Action entry: MyIngress[.](de)?cipher ')\" = 2 ]"
+done
+
+docker exec p4ics-startup-s1 bash -c "cd / && bash change_key.sh 128" >/dev/null
+check "change_key.sh 128 truncates the key" \
+    "[ \"\$(reg s1 'keys 3')\" = '${words[3]}' ] && [ \"\$(reg s1 'keys 4')\" = '0' ]"
+
+echo no-encryption > "$SHARED/p4ics_mode"
+docker exec p4ics-startup-s2 bash -c "cd / && bash p4ics_setup.sh init" >/dev/null
+check "no-encryption mode empties ics_sec" "! cli s2 'table_dump ics_sec' | grep -Eq 'Action entry: MyIngress[.](de)?cipher '"
+rm -f "$SHARED/p4ics_mode"
+
+docker exec p4ics-startup-s1 bash -c "cd / && bash s1.shutdown"
+check "shutdown removes the lab key" "[ ! -e '$SHARED/p4ics_key' ]"
+docker exec p4ics-startup-s1 bash -c "cd / && bash p4ics_setup.sh key" >/dev/null
+check "next start generates a different key" "[ -s '$SHARED/p4ics_key' ] && [ \"\$(cat '$SHARED/p4ics_key')\" != '$key' ]"
+
+[ $fail -eq 0 ] && echo "startup checks passed" || { echo "startup checks FAILED"; docker exec p4ics-startup-s1 cat /startup.log | tail -5; }
+exit $fail

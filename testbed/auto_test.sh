@@ -39,7 +39,7 @@ cleanup() {
     echo "Performing cleanup..."
     # Add your cleanup tasks here
     kathara lclean
-    rm -f shared/startup.temp
+    rm -f shared/startup.temp shared/p4ics_mode shared/p4ics_key
     exit
 }
 
@@ -408,158 +408,13 @@ run_configuration() { #@note run_configuration
 
     echo "Starting Kathara for $CUR_MODE configuration..."
 
-    # create commands files with basic commands
-    echo "" > s1/commands.txt
-    echo "" > s2/commands.txt
-    echo "table_set_default ipv4_lpm drop
-table_add ipv4_lpm ipv4_forward 200.1.1.7/32 => 00:00:00:00:00:03 2
-table_add ipv4_lpm ipv4_forward 200.1.1.8/32 => 00:00:00:00:00:03 2
-table_add ipv4_lpm ipv4_forward 200.1.1.9/32 => 00:00:00:00:00:03 2
-table_add ipv4_lpm ipv4_forward 195.11.14.5/32 =>  00:00:0a:00:01:01 1
-table_add ipv4_lpm ipv4_forward 195.11.14.6/32 =>  00:00:0a:00:02:01 1
-table_add ipv4_lpm ipv4_forward 195.11.14.7/32 =>  00:00:0a:00:02:01 1" >> s1/commands.txt
-    echo "table_set_default ipv4_lpm drop
-table_add ipv4_lpm ipv4_forward 195.11.14.5/32 =>  00:00:00:00:00:02 2
-table_add ipv4_lpm ipv4_forward 195.11.14.6/32 =>  00:00:00:00:00:02 2
-table_add ipv4_lpm ipv4_forward 195.11.14.7/32 =>  00:00:00:00:00:02 2
-table_add ipv4_lpm ipv4_forward 200.1.1.7/32 =>  00:00:0a:00:01:02 1
-table_add ipv4_lpm ipv4_forward 200.1.1.8/32 =>  00:00:0a:00:02:02 1
-table_add ipv4_lpm ipv4_forward 200.1.1.9/32 =>  00:00:0a:00:02:02 1" >> s2/commands.txt
-
-    # append rule in commands.txt in s1 and s2 according to the current mode
+    # The switches read the mode at startup (s1/p4ics_setup.sh): the key size,
+    # or an empty ics_sec table for the plaintext and TLS baselines. Every run
+    # gets a fresh key; the tracked commands.txt files are left untouched.
     case $MODE in
-        no-encryption|tls)
-            # do nothing
-        ;;
-
-        128)
-            # set the register from 4 up to 7 to 0 in commands.txt in s1
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 0
-register_write keys 5 0
-register_write keys 6 0
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s1/commands.txt
-
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 0
-register_write keys 5 0
-register_write keys 6 0
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s2/commands.txt
-        ;;
-
-        160)
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 0
-register_write keys 6 0
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s1/commands.txt
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 0
-register_write keys 6 0
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s2/commands.txt
-        ;;
-
-        192)
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 259174683
-register_write keys 6 0
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s1/commands.txt
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 259174683
-register_write keys 6 0
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s2/commands.txt
-
-
-        ;;
-
-        224)
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 259174683
-register_write keys 6 243695780
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s1/commands.txt
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 259174683
-register_write keys 6 243695780
-register_write keys 7 0
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s2/commands.txt
-        ;;
-
-        256)
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 259174683
-register_write keys 6 243695780
-register_write keys 7 096548217
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s1/commands.txt
-            echo "register_write keys 0 729683222
-register_write keys 1 682545830
-register_write keys 2 2885096840
-register_write keys 3 164581180
-register_write keys 4 102358694
-register_write keys 5 259174683
-register_write keys 6 243695780
-register_write keys 7 096548217
-table_add ics_sec decipher 1 =>
-table_add ics_sec cipher 2 =>
-EOF" >> s2/commands.txt
-
+        no-encryption|tls|128|160|192|224|256)
+            echo "$MODE" > shared/p4ics_mode
+            rm -f shared/p4ics_key
         ;;
 
         *)
@@ -582,8 +437,8 @@ EOF" >> s2/commands.txt
 # Set up trap for both SIGINT and EXIT
 #trap cleanup SIGINT EXIT
 
-# Run kathara wipe just to be sure all machines are brand new
-kathara wipe -f
+# Clean this lab only (kathara wipe would also remove every other lab on the host)
+kathara lclean
 
 # Process each selected configuration
 if [ $NO_ENCRYPTION -eq 1 ]; then
@@ -613,6 +468,9 @@ fi
 if [ $BIT_256 -eq 1 ]; then
     run_configuration "256"
 fi
+
+# back to the default mode (256-bit key) for manual runs
+rm -f shared/p4ics_mode shared/p4ics_key
 
 # move the results to the appropriate folders
 [[ $TLS -eq 1 ]] && mv -f shared/*tls* results/mul_key/modbus_tls

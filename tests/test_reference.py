@@ -85,8 +85,12 @@ class Keys(unittest.TestCase):
             ref.P4icsKeys([1, 2, 3, 0, 5, 6, 7, 8])
 
     def test_parse_commands(self):
-        path = os.path.join(HERE, "..", "testbed", "s1", "commands.txt")
-        self.assertEqual(tuple(ref.parse_commands(path)), ref.TESTBED_WORDS)
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".txt") as fh:
+            fh.write("table_set_default ipv4_lpm drop\n")
+            fh.writelines("register_write keys %d %d\n" % (i, w) for i, w in enumerate(ref.TESTBED_WORDS))
+            fh.flush()
+            self.assertEqual(tuple(ref.parse_commands(fh.name)), ref.TESTBED_WORDS)
 
 
 class WireFormat(unittest.TestCase):

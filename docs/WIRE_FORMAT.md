@@ -65,8 +65,9 @@ protected : Ethernet | IPv4 (IHL 13) | savedLen | SPI | counter | tag     | TCP 
 
 ## 3. Keys
 
-The switch stores 8 × 32-bit words in the `keys` register (`commands.txt`,
-`change_key.sh`). The key material **K** is the big-endian bytes of the
+The switch stores 8 × 32-bit words in the `keys` register. In the testbed
+they come from a random key generated at every lab start
+(`testbed/s1/p4ics_setup.sh`); `change_key.sh` truncates it to a key size. The key material **K** is the big-endian bytes of the
 words before the first zero word: Nk = 4..8 words, 128 to 256 bits. Two
 independent keys are derived from all of K with HKDF-SHA256 (RFC 5869,
 salt `"P4ICS-v2"`):
@@ -114,8 +115,10 @@ tag  = HMAC-SHA256(mac_key, aad ‖ ct)[0:16]
   `p4ics_rx_last` or within 64 below it and not seen yet. The window is
   updated only after the tag verified, so forged frames cannot move it.
 * **Restarts and keys.** Key rotation needs no counter reset. A *receiver*
-  that restarts loses its windows: rotate the key at that point, or replays
-  of frames captured before the restart would be accepted once.
+  that restarts loses its windows, so the key must change with it, or frames
+  captured before the restart would be accepted once more. The testbed does
+  this by generating a new key at every lab start; after restarting a single
+  switch, run `testbed/rotate_keys.sh`.
 
 ## 6. Checksums
 

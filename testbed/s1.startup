@@ -3,6 +3,7 @@ ip link set eth1 address 00:00:00:00:00:02
 chmod u+x ./retrieve_info.sh
 chmod u+x ./startup.sh
 chmod u+x ./change_key.sh
+chmod u+x ./p4ics_setup.sh
 p4c-bm2-ss --emit-externs -o industrial_aes.json industrial_aes.p4
 cd extern_lib && make
 cd ..
@@ -13,8 +14,6 @@ while [[ $(pgrep simple_switch) -eq 0 ]]; do sleep 1; done
 until simple_switch_CLI <<< "help"; do sleep 1; done
 
 simple_switch_CLI <<< $(cat commands.txt)
-# P4ICS packet counter starts at the nanoseconds since 2020-01-01: no switch
-# sends a packet per nanosecond, so after a restart counters never repeat
-# (anti-replay window, IV uniqueness).
-simple_switch_CLI <<< "register_write p4ics_tx_counter 0 $(( $(date +%s%N) - 1577836800000000000 ))"
+# Lab key, mode (key size / plaintext baselines) and packet counter.
+bash ./p4ics_setup.sh init
 echo "s1 " >> /shared/startup.temp

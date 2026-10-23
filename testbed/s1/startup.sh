@@ -3,7 +3,5 @@ while [[ $(pgrep simple_switch) -eq 0 ]]; do sleep 1; done
 until simple_switch_CLI <<< "help"; do sleep 1; done
 
 simple_switch_CLI <<< $(cat commands.txt)
-# P4ICS packet counter starts at the nanoseconds since 2020-01-01: no switch
-# sends a packet per nanosecond, so after a restart counters never repeat
-# (anti-replay window, IV uniqueness).
-simple_switch_CLI <<< "register_write p4ics_tx_counter 0 $(( $(date +%s%N) - 1577836800000000000 ))"
+# Lab key, mode (key size / plaintext baselines) and packet counter.
+bash ./p4ics_setup.sh init

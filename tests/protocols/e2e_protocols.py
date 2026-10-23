@@ -27,7 +27,7 @@ from switch_harness import Switch, build_switch, sh  # noqa: E402
 
 WORK = "/tmp/p4ics-protocols"
 EVENTS = "MyIngress.p4ics_events"
-KEYS = ref.P4icsKeys(ref.parse_commands(os.path.join(REPO, "testbed", "s1", "commands.txt")))
+KEYS = ref.P4icsKeys(ref.TESTBED_WORDS)       # in the lab: shared/p4ics_key, one per run
 PORTS = {502: "modbus", 20000: "dnp3", 44818: "enip"}
 SERVER = "200.1.1.7"
 results = []
@@ -104,6 +104,7 @@ def setup():
                                    ("s2", s2_dir, [(1, "sv0s"), (2, "b2")], 9091)):
         sw = Switch(d, ports, thrift_port=thrift, log=os.path.join(WORK, name + ".log"))
         sw.cli(open(os.path.join(REPO, "testbed", name, "commands.txt")).read())
+        sw.set_keys(KEYS.words)
         sw.cli("register_write p4ics_tx_counter 0 %d\n" % epoch)
         switches.append(sw)
 
