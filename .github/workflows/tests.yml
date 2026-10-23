@@ -27,7 +27,7 @@ jobs:
       - name: shell scripts parse
         run: |
           for f in testbed/*.sh testbed/*.startup testbed/*.shutdown testbed/s*/*.sh tests/*/*.sh \
-                   controller/*.sh controller/lab/*.sh controller/lab/*.startup controller/lab/*.shutdown; do
+                   Dockerfile/*.sh controller/*.sh controller/lab/*.sh controller/lab/*.startup controller/lab/*.shutdown; do
             bash -n "$f"
           done
 

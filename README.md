@@ -17,7 +17,7 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
   Optional P4Runtime controller (Go, based on [p4runtime-go-client](https://github.com/UniboSecurityResearch/p4runtime-go-client)): mutual TLS to the switches, hitless key rotation, static or on-demand tunnels, Diffie–Hellman key agreement between two controllers. Without it the testbed works as before, with `simple_switch_CLI`. See [`controller/README.md`](controller/README.md).
 
 - **Dockerfile/**
-  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (`modbus`, `dnp3`, `enip`, MQTT), and the controller image. Pushing a `v*` tag publishes the Modbus, DNP3, EtherNet/IP and controller images with that tag (`.github/workflows/images.yml`).
+  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (`modbus`, `dnp3`, `enip`, MQTT), and the controller image. `Dockerfile/publish.sh <tag>` builds the DNP3, EtherNet/IP, Modbus and controller images for amd64 and arm64 and pushes them to Docker Hub.
 
 - **docs/**
   Specification of the P4ICS protected packet format.
