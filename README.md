@@ -13,8 +13,11 @@ P4ICS is a framework that shifts security functions for Industrial Control Syste
 
 ## 📂 Repository Structure
 
+- **controller/**
+  Optional P4Runtime controller (Go, based on [p4runtime-go-client](https://github.com/UniboSecurityResearch/p4runtime-go-client)): mutual TLS to the switches, hitless key rotation, static or on-demand tunnels, Diffie–Hellman key agreement between two controllers. Without it the testbed works as before, with `simple_switch_CLI`. See [`controller/README.md`](controller/README.md).
+
 - **Dockerfile/**
-  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (`modbus`, `dnp3`, `enip`, MQTT). Pushing a `v*` tag publishes the Modbus, DNP3 and EtherNet/IP images with that tag (`.github/workflows/images.yml`).
+  Contains container definitions for running industrial protocol clients and servers on the Kathara testbed (`modbus`, `dnp3`, `enip`, MQTT), and the controller image. Pushing a `v*` tag publishes the Modbus, DNP3, EtherNet/IP and controller images with that tag (`.github/workflows/images.yml`).
 
 - **docs/**
   Specification of the P4ICS protected packet format.
@@ -112,6 +115,8 @@ Make sure both Docker and Kathara are properly installed and configured before s
 **Keys.** No key is stored in the repository. When the lab starts, the first switch generates a random 256-bit key in `testbed/shared/p4ics_key` and both switches load it (`s1/p4ics_setup.sh`); `kathara lclean` deletes it, so every lab run uses a new key. `./rotate_keys.sh` (from `testbed/`, while the lab runs) replaces it on both switches without dropping traffic: each switch holds two keys, and the new one is installed in the idle slot before the switches start using it. `./change_key.sh <128|160|192|224|256>` inside a switch changes the key size. `auto_test.sh` selects the key size, or the plaintext/TLS baselines, through `testbed/shared/p4ics_mode`.
 
 Each switch has its own sender identifier (`table_set_default p4ics_local set_local_sa <1..255> ...` in `commands.txt`), and its packet counter starts from the current time, so counters never repeat across restarts. `counter_read MyIngress.p4ics_events <0..4>` reports protected, unprotected, rejected (tag) and rejected (replay) packets, and packets waiting for an on-demand tunnel. s1 and s2 run the same P4 program and extern: edit them in `s1/` and copy them with `./sync_switches.sh`.
+
+**With the P4Runtime controller (optional).** `controller/lab/make_lab.sh <dir>` builds a variant of this lab in which s1 and s2 run `simple_switch_grpc` and the controller configures them from the same `commands.txt`; `--peer` uses two controllers, one per switch. Build the image first (`docker build -f Dockerfile/controller.Dockerfile -t loriringhio97/p4ics-controller .`), then `kathara lstart` in `<dir>` and `kathara exec c1 -- p4ics-api /status`. Details in [`controller/README.md`](controller/README.md).
 
 ---
 
