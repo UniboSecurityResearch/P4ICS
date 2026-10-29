@@ -74,8 +74,8 @@ locally with Docker. The commands come from the repository root:
 | `tests/testbed/run_startup.sh` | switch start-up and shutdown scripts: keys, modes, rotation |
 | `tests/bmv2/run_interop.sh` | the switch against the reference: all protocols and lengths, tampering, replays, key phases, on-demand entries |
 | `tests/protocols/run_protocols.sh` | pymodbus, DNP3 and cpppo through two switches (build `loriringhio97/dnp3` first) |
-| `cd controller && go test ./...` | controller units |
-| `tests/controller/run_controller.sh` | the controller with two `simple_switch_grpc`: traffic, rekeying, restarts, on-demand tunnels, two controllers |
+| `cd controller && go test ./...` | controller units, and the GUI against an in-memory P4Runtime switch |
+| `tests/controller/run_controller.sh` | the controller with two `simple_switch_grpc`: traffic, rekeying, restarts, on-demand tunnels, two controllers, web GUI |
 
 The bmv2 image of the tests is pinned by digest in the workflow (`P4_IMAGE`);
 the scripts take the same variable.

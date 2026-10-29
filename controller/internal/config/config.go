@@ -20,6 +20,7 @@ type Config struct {
 	Name     string   `yaml:"name"`
 	TLS      TLS      `yaml:"tls"`
 	API      API      `yaml:"api"`
+	GUI      GUI      `yaml:"gui"`
 	Keys     Keys     `yaml:"keys"`
 	Tunnels  Tunnels  `yaml:"tunnels"`
 	Switches []Switch `yaml:"switches"`
@@ -43,6 +44,22 @@ type API struct {
 	Listen string `yaml:"listen"`
 	// Common names of the client certificates allowed to use it.
 	Admins []string `yaml:"admins"`
+}
+
+// GUI: the web GUI of the p4runtime-go-client controller (KatharaP4AAS),
+// over plain HTTP.
+type GUI struct {
+	// host:port of the GUI; empty: no GUI.
+	Listen string `yaml:"listen"`
+	// HTTP basic authentication; no user: no authentication.
+	User         string `yaml:"user"`
+	Password     string `yaml:"password"`
+	PasswordFile string `yaml:"password_file"` // read at startup when password is empty
+	// Topology shown by /topology, in the format of the P4AAS GUI (hosts,
+	// switches, links). Optional.
+	Topology string `yaml:"topology"`
+	// No changes from the GUI: no entries, rotations or tunnels.
+	ReadOnly bool `yaml:"read_only"`
 }
 
 type Keys struct {
@@ -129,6 +146,12 @@ func (c *Config) check() error {
 	}
 	if c.TLS.CA == "" || c.TLS.Cert == "" || c.TLS.Key == "" {
 		fail("tls: ca, cert and key are required (mutual TLS with the switches)")
+	}
+	if c.GUI.Listen != "" && c.GUI.User != "" && c.GUI.Password == "" && c.GUI.PasswordFile == "" {
+		fail("gui: user %s without password or password_file", c.GUI.User)
+	}
+	if c.GUI.Listen != "" && c.GUI.Listen == c.API.Listen {
+		fail("gui.listen: same address as api.listen")
 	}
 	if !sa.ValidBits(c.Keys.Bits) {
 		fail("keys.bits: %d: must be 128, 160, 192, 224 or 256", c.Keys.Bits)

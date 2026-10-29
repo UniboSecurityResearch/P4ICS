@@ -1,0 +1,71 @@
+{{template "header" .}}
+{{ $csrf := .CSRF }}{{ $ro := .ReadOnly }}{{ $st := .Status }}
+<div class='col-12 col-xl-10 mt-4'>
+    <h2>Keys</h2>
+    <p class='small text-muted'>Every switch holds a key per phase. A rotation installs the new key in the idle phase
+        of every switch, then the senders move to that phase: frames in flight still verify. Keys never leave the
+        controller and the switches; they are shown by id (a hash prefix).</p>
+    <table class='table table-sm small'>
+        <tr><th>Controller</th><td>{{$st.Name}} ({{$st.Role}}{{with $st.Peer}}, peer {{.}}{{end}})</td>
+            <th>Key size</th><td>{{$st.KeyBits}} bit</td></tr>
+        <tr><th>Rotation</th><td>{{$st.Rotation}}, at {{tm $st.RotatedAt}}</td>
+            <th>Periodic rotation</th><td>{{with .Config.Keys.Rotate}}every {{.}}{{if $st.Peer}} (the leader's value applies){{end}}{{else}}none: on request and when a switch (re)connects{{end}}</td></tr>
+    </table>
+    <table class='table table-sm small text-center' style='max-width: 32rem'>
+        <thead><tr><th>Phase</th><th>Key id</th><th></th></tr></thead>
+        <tbody>
+        {{range $i, $k := $st.Keys}}
+        <tr><td>{{$i}}</td><td>{{with $k}}<code>{{.}}</code>{{else}}-{{end}}</td>
+            <td>{{if eq $i (int $st.Phase)}}<span class='badge bg-success'>senders protect with it</span>{{else if $k}}<span class='badge bg-secondary'>still accepted</span>{{end}}</td></tr>
+        {{end}}
+        </tbody>
+    </table>
+    {{if not $ro}}
+    <form method='post' action='/rekey'>
+        <input type='hidden' name='csrf' value='{{$csrf}}'>
+        <button class='btn btn-primary btn-sm rounded-pill' type='submit'>Rotate the key now</button>
+        {{if eq $st.Role "follower"}}<span class='small text-muted'>&nbsp;asks the leader, {{$st.Peer}}</span>{{end}}
+    </form>
+    {{end}}
+
+    <h2 class='mt-4'>Tunnels</h2>
+    {{if eq .Config.Tunnels.Mode "on-demand"}}
+    <p class='small text-muted'>On demand: a switch reports the first segment of a flow without a tunnel, and the
+        controller installs the <code>ics_sec</code> entries of the pair on every switch{{if $st.Peer}} (and on those of {{$st.Peer}}){{end}}
+        if <code>tunnels.allow</code> permits it. Other pairs stay blocked. Tunnels added here bypass
+        <code>tunnels.allow</code>.</p>
+    <table class='table table-sm small' style='max-width: 32rem'>
+        <thead><tr><th colspan='2'>tunnels.allow</th></tr></thead>
+        <tbody>{{range .Config.Tunnels.Allow}}<tr><td>{{.A}}</td><td>&harr; {{.B}}</td></tr>{{end}}</tbody>
+    </table>
+    <table class='table table-sm small text-center' style='max-width: 32rem'>
+        <thead><tr><th>Endpoint pair</th><th></th></tr></thead>
+        <tbody>
+        {{range $st.Tunnels}}
+        <tr class='align-middle'><td>{{.}}</td>
+            <td>{{if not $ro}}
+                <form method='post' action='/tunnels/delete'>
+                    <input type='hidden' name='csrf' value='{{$csrf}}'>
+                    {{$ab := split .}}<input type='hidden' name='a' value='{{index $ab 0}}'><input type='hidden' name='b' value='{{index $ab 1}}'>
+                    <button class='badge bg-danger rounded-pill border-0' type='submit' title='delete'>delete</button>
+                </form>{{end}}</td></tr>
+        {{else}}
+        <tr><td colspan='2' class='text-muted'>No tunnel yet.</td></tr>
+        {{end}}
+        </tbody>
+    </table>
+    {{if not $ro}}
+    <form method='post' action='/tunnels/add' class='row g-2 small' style='max-width: 40rem'>
+        <input type='hidden' name='csrf' value='{{$csrf}}'>
+        <div class='col-md-5'><input class='form-control form-control-sm' name='a' placeholder='IPv4 address (e.g. 195.11.14.5)'></div>
+        <div class='col-md-5'><input class='form-control form-control-sm' name='b' placeholder='IPv4 address (e.g. 200.1.1.7)'></div>
+        <div class='col-md-2'><button class='btn btn-primary btn-sm rounded-pill' type='submit'>Add</button></div>
+    </form>
+    {{end}}
+    {{else}}
+    <p class='small text-muted'>Static: the per-port <code>ics_sec</code> entries of each switch's commands.txt protect
+        all the traffic between the two sides (Switches page, table <code>ics_sec</code>).
+        Set <code>tunnels.mode: on-demand</code> for a tunnel per endpoint pair.</p>
+    {{end}}
+</div>
+{{template "footer" .}}

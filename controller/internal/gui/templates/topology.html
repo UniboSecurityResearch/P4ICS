@@ -1,0 +1,47 @@
+{{template "header" .}}
+<script src="/web/js/vis-network.min.js"></script>
+<script src="/web/js/jquery-3.6.0.min.js"></script>
+<div class='col-12 row justify-content-center mt-4'>
+    <div class='col-12 col-sm-6 col-lg-4 col-xl-3 mb-3 mt-lg-0 align-items-center'>
+        <h2 class='mb-3'>Network topology</h2>
+        Switches the controller cannot reach are shown as unavailable{{with .Config.Peer}}, those of {{.Name}} in gray{{end}}.
+    </div>
+    <div class='col-12 col-sm-6 col-lg-4 col-xl-4 mb-3 mt-lg-0 align-items-center text-center form-check-inline form-switch'>
+        <input class="form-check-input" type="checkbox" role="switch" id="checkAutomaticUpdate" checked>
+        <label class="h5 form-check-label" for="checkAutomaticUpdate">Enable automatic update every <output id="numSec">10</output> seconds</label>
+        <input type="range" min="1" max="19" step="1" value="10" class="form-range" id="secondsRange" oninput="$('#numSec').text(this.value)">
+    </div>
+</div>
+<div id="mynetwork" class="row mt-2" style="width: 100%; height: 500px;"></div>
+<script>
+    var timerID
+    $("#checkAutomaticUpdate").on("input", function () {
+        if ($(this).is(":checked"))
+            handleTimer()
+        else
+            clearTimeout(timerID)
+    });
+    $("#checkAutomaticUpdate").prop("checked", true);
+    $("#secondsRange").val(10)
+    function handleTimer() {
+        $.ajax({ url: "/getTopologyData", type: "GET", dataType: "json" })
+            .done(function (json) { displayTopology(json.nodes, json.edges) })
+            .fail(function (xhr, status, errorThrown) { console.log("Error: " + errorThrown + " " + status) })
+            .always(function () { timerID = setTimeout(handleTimer, $("#secondsRange").val() * 1000) });
+    }
+    function displayTopology(nodesData, edgesData) {
+        var data = { nodes: new vis.DataSet(nodesData || []), edges: new vis.DataSet(edgesData || []) };
+        var options = {
+            groups: {
+                hosts: { shape: "image", image: "/web/img/computer.png", font: { size: 14, color: "black", face: "sans", background: "white" } },
+                switches: { shape: "image", image: "/web/img/router.png", font: { size: 14, color: "black", face: "sans", background: "white" } },
+                switchesUnavailable: { shape: "image", image: "/web/img/router_unavailable.png", font: { size: 14, color: "red", face: "sans", background: "white" } },
+                switchesOther: { shape: "image", image: "/web/img/router.png", opacity: 0.4, font: { size: 14, color: "gray", face: "sans", background: "white" } }
+            },
+            physics: { stabilization: true }
+        };
+        new vis.Network(document.getElementById('mynetwork'), data, options);
+    }
+    handleTimer()
+</script>
+{{template "footer" .}}

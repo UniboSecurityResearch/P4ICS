@@ -1,6 +1,6 @@
-// p4ics-controller: optional P4Runtime controller of P4ICS switches. See
-// controller/README.md. Without it, the switches run with simple_switch and
-// are configured by simple_switch_CLI (testbed/).
+// p4ics-controller: optional P4Runtime controller of P4ICS switches, with a
+// web GUI. See controller/README.md. Without it, the switches run with
+// simple_switch and are configured by simple_switch_CLI (testbed/).
 package main
 
 import (
@@ -14,6 +14,7 @@ import (
 
 	"github.com/UniboSecurityResearch/P4ICS/controller/internal/config"
 	"github.com/UniboSecurityResearch/P4ICS/controller/internal/ctl"
+	"github.com/UniboSecurityResearch/P4ICS/controller/internal/gui"
 )
 
 func main() {
@@ -38,12 +39,27 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", *path, err)
 		os.Exit(2)
 	}
+	var g *gui.Server
+	if cfg.GUI.Listen != "" {
+		if g, err = gui.New(cfg, c, log); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", *path, err)
+			os.Exit(2)
+		}
+	}
 	if *check {
 		fmt.Println("configuration OK")
 		return
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if g != nil {
+		go func() {
+			if err := g.Serve(ctx); err != nil {
+				log.Error("gui", "err", err)
+				stop()
+			}
+		}()
+	}
 	if err := c.Run(ctx); err != nil {
 		log.Error("stopped", "err", err)
 		os.Exit(1)

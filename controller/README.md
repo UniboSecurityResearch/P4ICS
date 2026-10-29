@@ -19,7 +19,9 @@ The controller:
   `commands.txt`) or **on demand**, per endpoint pair, when the switch reports
   traffic that has no tunnel yet;
 * with a second controller managing other switches, agrees on every key with
-  an ephemeral **Diffie–Hellman** exchange (X25519 + HKDF-SHA256).
+  an ephemeral **Diffie–Hellman** exchange (X25519 + HKDF-SHA256);
+* serves a **web GUI**: switches and their tables, key rotations, tunnels and
+  topology (see [Web GUI](#web-gui)).
 
 It is written in Go on top of
 [UniboSecurityResearch/p4runtime-go-client](https://github.com/UniboSecurityResearch/p4runtime-go-client)
@@ -33,6 +35,11 @@ go build -o p4ics-controller ./cmd/p4ics-controller   # Go >= 1.24
 # or the image used by the Kathara lab, from the repository root:
 docker build -f Dockerfile/controller.Dockerfile -t loriringhio97/p4ics-controller .
 ```
+
+The image is also on Docker Hub (amd64 and arm64):
+`docker pull loriringhio97/p4ics-controller`. The web GUI needs v2.1.0 or
+later (`latest`): older images ignore the `gui` section of the
+configuration.
 
 ## Run
 
@@ -71,11 +78,18 @@ kathara exec c1 -- p4ics-api POST '/rekey?wait=1'
 kathara exec modbusclient -- python3 /modbus_client.py --rw
 ```
 
-c1 creates the certificates of each lab run in `shared/p4ics/pki` (removed
-at `kathara lclean`). Each switch publishes its program, P4Info and
-`commands.txt` in `shared/p4ics/pipeline`. The logs are in `shared/c1.log`
-and `shared/sN.log`. The lab configurations are in `lab/single/` and
-`lab/peer/`.
+The GUI of c1 is published on the host at `http://localhost:8080` (with
+`--peer`, c2's at `http://localhost:8081`). The user is `admin` and c1
+writes the password of each lab run to `shared/p4ics/gui-password`. On a
+remote server, use `ssh -L 8080:localhost:8080 ...`. The GUI is plain HTTP:
+do not publish it beyond the host.
+
+c1 creates the certificates and the GUI password of each lab run in
+`shared/p4ics` (removed at `kathara lclean`). Each switch publishes its
+program, P4Info and `commands.txt` in `shared/p4ics/pipeline`. The logs are
+in `shared/c1.log` and `shared/sN.log`. The lab configurations are in
+`lab/single/` and `lab/peer/`, the topology of the GUI in
+`lab/topology.json`.
 
 ## Configuration
 
@@ -88,6 +102,12 @@ tls:                           # mutual TLS with switches, peer and API clients
 api:
   listen: 100.0.1.11:3333      # HTTPS API; omit to disable (required with a peer)
   admins: [admin]              # common names allowed to use it (default: admin)
+gui:                           # web GUI (plain HTTP); omit to disable
+  listen: 0.0.0.0:8080
+  user: admin                  # basic authentication; no user: none
+  password_file: /shared/p4ics/gui-password   # or password: ...
+  topology: topology.json      # optional: hosts, switches, links (lab/topology.json)
+  read_only: false             # true: no changes from the GUI
 keys:
   bits: 256                    # 128, 160, 192, 224 or 256 (default 256)
   rotate: 10m                  # periodic rotation; 0 or omitted: none
@@ -163,6 +183,39 @@ HTTPS with client certificates of the CA. `admins` may use everything except
 
 `lab/api.sh` (`p4ics-api` in the image) wraps `curl` with the lab's admin
 certificate.
+
+## Web GUI
+
+The GUI of the
+[UniboSecurityResearch p4runtime-go-client](https://github.com/UniboSecurityResearch/p4runtime-go-client)
+controller (KatharaP4AAS version), with its pages, style and assets,
+extended to several switches and to the P4ICS keys and tunnels. The Pk-IOTA
+controller serves the same GUI. The assets are embedded in the binary.
+
+| Page | |
+|---|---|
+| `/` | every switch: state, sender id, `p4ics_events`, and each table with its entries, read back from the switch; add and delete entries |
+| `/p4ics` | keys (rotation, phase, key id per phase) with a button to rotate now; tunnels: the on-demand pairs, `tunnels.allow`, add and delete |
+| `/topology` | the hosts and switches of `gui.topology`, and the state of the switches (vis-network) |
+
+The JSON endpoints of the original GUI are kept: `/getRules?switch=s1` (the
+tables), `/getCounters?switch=s1` (`p4ics_events`) and `/getTopologyData`.
+`/api/status` is the `GET /status` of the API.
+
+* The controller's own tables cannot be changed from the GUI:
+  `p4ics_local`, `p4ics_keys`, and `ics_sec` in on-demand mode (use the
+  tunnels of `/p4ics`).
+* Keys are never shown. The entries of `p4ics_keys` show the key id, like
+  the API.
+* Entries use the `simple_switch_CLI` syntax and priorities (lower wins).
+  Like CLI changes in the testbed, they last until the switch is configured
+  again (restart of the switch or of the controller): `commands.txt` stays
+  the reference. Tunnels on demand follow the routes of `commands.txt`, not
+  the ones added by hand.
+* Basic authentication protects every page, and a form token every
+  change. `read_only: true` disables the changes.
+* The GUI is plain HTTP, unlike the API. Keep it on the host or on a
+  management network, or reach it through an SSH tunnel.
 
 ## Limitations
 

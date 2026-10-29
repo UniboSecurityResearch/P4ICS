@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // testdata/industrial_aes.p4info.txtpb is generated from testbed/s1 (CI
@@ -163,5 +165,36 @@ func TestNames(t *testing.T) {
 	d, err := info.Digest("p4ics_tunnel_request_t")
 	if err != nil || len(d.GetTypeSpec().GetStruct().GetName()) == 0 {
 		t.Fatalf("digest: %v", err)
+	}
+}
+
+func TestDescribe(t *testing.T) {
+	info := loadInfo(t)
+	entries, err := info.ParseCommands([]byte(
+		"table_add ipv4_lpm ipv4_forward 200.1.1.0/24 => 00:00:0a:00:01:02 1\n" +
+			"table_add ics_sec cipher 2&&&0x1ff 0.0.0.0&&&0.0.0.0 200.1.1.7&&&255.255.255.255 => 10\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := info.Describe(entries[0].TableEntry())
+	if d.Table != "ipv4_lpm" || d.Action != "ipv4_forward" || strings.Join(d.Match, " ") != "200.1.1.0/24" ||
+		strings.Join(d.Params, " ") != "00:00:0a:00:01:02 0x1" {
+		t.Fatalf("ipv4_lpm entry %+v", d)
+	}
+	// don't-care fields are omitted on the wire and shown as *
+	d = info.Describe(entries[1].TableEntry())
+	if strings.Join(d.Match, " ") != "0x2&&&0x1ff * 200.1.1.7&&&255.255.255.255" || len(d.Params) != 0 {
+		t.Fatalf("ics_sec entry %+v", d)
+	}
+	// what Describe writes, Build reads back
+	d = info.Describe(entries[0].TableEntry())
+	e, err := info.Build(d.Table, d.Action, d.Match, d.Params, 0)
+	if err != nil || !proto.Equal(e.TableEntry(), entries[0].TableEntry()) {
+		t.Fatalf("round trip: %v", err)
+	}
+	// a 32-bit parameter that is not an address stays a number
+	sa, _ := info.BuildDefault("p4ics_local", "set_local_sa", []string{"7", "1", "0x10"})
+	if d := info.Describe(sa.TableEntry()); strings.Join(d.Params, " ") != "0x7 0x1 0x10" || !d.Default {
+		t.Fatalf("p4ics_local default %+v", d)
 	}
 }

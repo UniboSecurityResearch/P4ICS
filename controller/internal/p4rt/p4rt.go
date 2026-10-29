@@ -388,3 +388,83 @@ func (i *Info) command(f []string) (*Entry, error) {
 		return nil, fmt.Errorf("unsupported command %q", f[0])
 	}
 }
+
+// Description is a table entry read back from a switch, in CLI notation:
+// ternary fields are value&&&mask and LPM fields value/prefix length.
+// Addresses (32- and 48-bit fields and parameters whose name ends in Addr)
+// are IPv4 or MAC addresses, other values hexadecimal (0x...).
+type Description struct {
+	Table   string   `json:"table"`
+	Action  string   `json:"action"`
+	Match   []string `json:"match"`
+	Params  []string `json:"params"`
+	Default bool     `json:"default,omitempty"`
+}
+
+// Describe translates an entry read from the switch.
+func (i *Info) Describe(te *p4v1.TableEntry) Description {
+	d := Description{Default: te.GetIsDefaultAction()}
+	var table *p4cfg.Table
+	for _, t := range i.P.GetTables() {
+		if t.GetPreamble().GetId() == te.GetTableId() {
+			table = t
+			d.Table = short(t.GetPreamble())
+		}
+	}
+	if table != nil {
+		for _, f := range table.GetMatchFields() {
+			tok := "*"
+			for _, m := range te.GetMatch() {
+				if m.GetFieldId() != f.GetId() {
+					continue
+				}
+				str := func(v []byte) string { return format(v, f.GetBitwidth(), f.GetName()) }
+				switch {
+				case m.GetExact() != nil:
+					tok = str(m.GetExact().GetValue())
+				case m.GetLpm() != nil:
+					tok = fmt.Sprintf("%s/%d", str(m.GetLpm().GetValue()), m.GetLpm().GetPrefixLen())
+				case m.GetTernary() != nil:
+					tok = str(m.GetTernary().GetValue()) + "&&&" + str(m.GetTernary().GetMask())
+				case m.GetOptional() != nil:
+					tok = str(m.GetOptional().GetValue())
+				}
+			}
+			d.Match = append(d.Match, tok)
+		}
+	}
+	if a := te.GetAction().GetAction(); a != nil {
+		var action *p4cfg.Action
+		for _, act := range i.P.GetActions() {
+			if act.GetPreamble().GetId() == a.GetActionId() {
+				action = act
+				d.Action = short(act.GetPreamble())
+			}
+		}
+		for _, p := range a.GetParams() {
+			var bw int32
+			var name string
+			for _, ap := range action.GetParams() {
+				if ap.GetId() == p.GetParamId() {
+					bw, name = ap.GetBitwidth(), ap.GetName()
+				}
+			}
+			d.Params = append(d.Params, format(p.GetValue(), bw, name))
+		}
+	}
+	return d
+}
+
+// format writes a value read from the switch as a simple_switch_CLI token.
+func format(b []byte, bitwidth int32, name string) string {
+	v := new(big.Int).SetBytes(b)
+	if strings.HasSuffix(strings.ToLower(name), "addr") && v.BitLen() <= int(bitwidth) {
+		switch bitwidth {
+		case 32:
+			return net.IP(v.FillBytes(make([]byte, 4))).String()
+		case 48:
+			return net.HardwareAddr(v.FillBytes(make([]byte, 6))).String()
+		}
+	}
+	return "0x" + v.Text(16)
+}

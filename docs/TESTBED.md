@@ -200,7 +200,8 @@ since the switch started.
 
 `controller/lab/make_lab.sh <dir>` builds a copy of this lab in which s1 and
 s2 run `simple_switch_grpc`, configured by the P4ICS controller over mutual
-TLS instead of `simple_switch_CLI`. See
+TLS instead of `simple_switch_CLI`. The controller's web GUI is published
+on the host at `http://localhost:8080`. See
 [controller/README.md](../controller/README.md#kathara-lab).
 
 ## Images
@@ -212,7 +213,7 @@ TLS instead of `simple_switch_CLI`. See
 | `loriringhio97/dnp3` | `Dockerfile/dnp3.Dockerfile` | `dnp3_client`, `dnp3_server` from `protocols/dnp3` |
 | `loriringhio97/enip` | `Dockerfile/enip.Dockerfile` | cpppo client and server from `protocols/Ethernet-IP` |
 | `loriringhio97/mqtt-client`, `mqtt-broker` | `Dockerfile/mqtt-*.Dockerfile` | MQTT clients, Mosquitto |
-| `loriringhio97/p4ics-controller` | `Dockerfile/controller.Dockerfile` | the optional controller |
+| `loriringhio97/p4ics-controller` | `Dockerfile/controller.Dockerfile` | the optional controller and its web GUI (v2.1.0 or later) |
 
 Build an image locally from the repository root, for example
 `docker build -f Dockerfile/dnp3.Dockerfile -t loriringhio97/dnp3 .`.

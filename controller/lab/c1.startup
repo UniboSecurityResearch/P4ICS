@@ -5,5 +5,7 @@ if [ ! -s /shared/p4ics/pki/ca.pem ]; then
     p4ics-pki /shared/p4ics/pki.tmp s1=100.0.1.1 s2=100.0.1.2 c1=100.0.1.11 c2=100.0.1.12 admin
     mv /shared/p4ics/pki.tmp /shared/p4ics/pki
 fi
+# GUI user admin; the password is in /shared/p4ics/gui-password.
+[ -s /shared/p4ics/gui-password ] || head -c 12 /dev/urandom | base64 | tr -d '/+=' > /shared/p4ics/gui-password
 p4ics-controller -config /c1.yml > /shared/c1.log 2>&1 &
 echo "c1 " >> /shared/startup.temp

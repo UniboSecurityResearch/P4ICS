@@ -6,6 +6,11 @@ tls:
   key: /shared/p4ics/pki/c1-key.pem
 api:
   listen: 100.0.1.11:3333       # p4ics-api inside c1
+gui:                            # web GUI, published on the host (make_lab.sh)
+  listen: 0.0.0.0:8080
+  user: admin
+  password_file: /shared/p4ics/gui-password   # created by c1.startup
+  topology: /topology.json
 keys:
   bits: 256
   rotate: 10m

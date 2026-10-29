@@ -18,3 +18,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 COPY --from=build /p4ics-controller /usr/local/bin/p4ics-controller
 COPY controller/pki.sh /usr/local/bin/p4ics-pki
 COPY controller/lab/api.sh /usr/local/bin/p4ics-api
+# web GUI (gui.listen of the lab configurations)
+EXPOSE 8080

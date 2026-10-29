@@ -58,21 +58,14 @@ func (c *Controller) serveAPI(ctx context.Context) error {
 		return c.Status(r.Context()), nil
 	})
 	handle("POST /rekey", admin, func(r *http.Request) (any, error) {
-		before := c.rotations()
-		c.RequestRekey("API")
 		if r.URL.Query().Get("wait") == "" {
+			c.RequestRekey("API")
 			return map[string]string{"queued": "rotation"}, nil
 		}
-		deadline := time.Now().Add(20 * time.Second)
-		for c.rotations() == before {
-			if time.Now().After(deadline) {
-				return nil, httpError{http.StatusGatewayTimeout, "rotation not done yet"}
-			}
-			select {
-			case <-r.Context().Done():
-				return nil, r.Context().Err()
-			case <-time.After(20 * time.Millisecond):
-			}
+		if err := c.Rekey(r.Context(), "API"); errors.Is(err, errRekeyTimeout) {
+			return nil, httpError{http.StatusGatewayTimeout, err.Error()}
+		} else if err != nil {
+			return nil, err
 		}
 		return c.Status(r.Context()), nil
 	})

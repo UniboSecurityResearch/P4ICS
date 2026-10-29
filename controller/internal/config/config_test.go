@@ -35,6 +35,7 @@ func TestDefaults(t *testing.T) {
 func TestFull(t *testing.T) {
 	c, err := Parse([]byte(base + `
 api: {listen: ":3333", admins: [ops]}
+gui: {listen: ":8080", user: admin, password_file: gui-password, read_only: true}
 keys: {bits: 128, rotate: 90s}
 tunnels:
   mode: on-demand
@@ -48,6 +49,9 @@ peer: {name: c0, url: "https://100.0.1.10:3333"}
 	if c.Keys.Rotate != 90*time.Second || c.Tunnels.Allow[0].B.Bits() != 32 || c.Leader() {
 		t.Fatalf("%+v %+v leader=%v", c.Keys, c.Tunnels, c.Leader())
 	}
+	if c.GUI.Listen != ":8080" || c.GUI.PasswordFile != "gui-password" || !c.GUI.ReadOnly {
+		t.Fatalf("gui %+v", c.GUI)
+	}
 }
 
 func TestErrors(t *testing.T) {
@@ -58,6 +62,8 @@ func TestErrors(t *testing.T) {
 		"tunnels: {mode: on-demand}":                            "tunnels.allow",
 		"peer: {name: c2, url: https://x}":                      "api.listen",
 		"peer: {name: c1, url: https://x}\napi: {listen: ':1'}": "same name",
+		"gui: {listen: ':8080', user: admin}":                   "gui: user admin without password",
+		"gui: {listen: ':1'}\napi: {listen: ':1'}":              "gui.listen",
 	} {
 		_, err := Parse([]byte(base + extra))
 		if err == nil || !strings.Contains(err.Error(), want) {

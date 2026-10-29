@@ -158,7 +158,8 @@ planes fill the tables:
 * **P4Runtime controller** (optional, `controller/`). It uses `simple_switch_grpc`
   with mutual TLS, installs the same `commands.txt`, and rotates the keys
   itself. It can also activate tunnels on demand, and agree on keys with a
-  second controller. See [controller/README.md](../controller/README.md).
+  second controller. A web GUI shows the switches, their tables and keys.
+  See [controller/README.md](../controller/README.md).
 
 The configuration lives in tables because bmv2's P4Runtime server cannot
 write registers.

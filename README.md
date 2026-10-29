@@ -68,7 +68,7 @@ covers the other protocols, the clients' options, keys and measurements.
 | Path | Content |
 |---|---|
 | [`testbed/`](testbed) | the Kathara lab: P4ICS switches (`s1/`, `s2/`: P4 program, C++ externs, tables), Modbus and MQTT clients and servers, key scripts |
-| [`controller/`](controller) | optional P4Runtime controller (Go, on [p4runtime-go-client](https://github.com/UniboSecurityResearch/p4runtime-go-client)) and its Kathara lab |
+| [`controller/`](controller) | optional P4Runtime controller (Go, on [p4runtime-go-client](https://github.com/UniboSecurityResearch/p4runtime-go-client)) with a web GUI, and its Kathara lab |
 | [`protocols/`](protocols) | industrial protocol clients and servers to build testbed images from: DNP3, EtherNet/IP, BACnet, IEC 61850, Profinet |
 | [`Dockerfile/`](Dockerfile) | images of the testbed devices and of the controller |
 | [`docs/`](docs) | documentation |
@@ -85,6 +85,9 @@ covers the other protocols, the clients' options, keys and measurements.
   any length), key rotation without loss, on-demand tunnels, the P4Runtime
   controller, DNP3 and EtherNet/IP in the testbed. See
   [WIRE_FORMAT §8](docs/WIRE_FORMAT.md#8-changes-from-previous-versions).
+* **v2.1.0**: web GUI of the P4Runtime controller
+  ([controller/README.md](controller/README.md#web-gui)), in the image
+  `loriringhio97/p4ics-controller:v2.1.0`. Same wire format as v2.0.0.
 
 ## Citation
 

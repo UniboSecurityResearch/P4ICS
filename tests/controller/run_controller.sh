@@ -2,9 +2,10 @@
 # The optional P4Runtime controller (controller/) against two
 # simple_switch_grpc with mutual TLS, with TCP traffic through them: static
 # and on-demand tunnels, rekeying under traffic, switch and controller
-# restarts, two controllers agreeing on keys. Builds the controller with the
-# local Go toolchain, or in a golang container, unless P4ICS_CONTROLLER_BIN
-# names a binary. Privileged because it creates network namespaces.
+# restarts, two controllers agreeing on keys, the web GUI. Builds the
+# controller with the local Go toolchain, or in a golang container, unless
+# P4ICS_CONTROLLER_BIN names a binary. Privileged because it creates network
+# namespaces.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 IMAGE="${P4_IMAGE:-loriringhio97/p4@sha256:4ecf4ad5c433ff214f076ad06d051c2c9b5b9394bb6dfc0bb81a102b53fff5f2}"
