@@ -1,11 +1,19 @@
 ip address add 100.0.1.11/24 dev eth0
+# Created here, not by p4ics-pki (umask 077): the user who started the lab
+# reads the GUI password in it. The PKI inside stays private.
+mkdir -p /shared/p4ics && chmod 755 /shared/p4ics
 # One CA per lab run (removed by c1.shutdown): switches, controllers, admin.
 if [ ! -s /shared/p4ics/pki/ca.pem ]; then
     rm -rf /shared/p4ics/pki.tmp
     p4ics-pki /shared/p4ics/pki.tmp s1=100.0.1.1 s2=100.0.1.2 c1=100.0.1.11 c2=100.0.1.12 admin
     mv /shared/p4ics/pki.tmp /shared/p4ics/pki
 fi
-# GUI user admin; the password is in /shared/p4ics/gui-password.
-[ -s /shared/p4ics/gui-password ] || head -c 12 /dev/urandom | base64 | tr -d '/+=' > /shared/p4ics/gui-password
+# GUI user admin; the password is in shared/p4ics/gui-password, readable
+# only by the owner of shared/ (the user who started the lab).
+if [ ! -s /shared/p4ics/gui-password ]; then
+    (umask 077; head -c 12 /dev/urandom | base64 | tr -d '/+=' > /shared/p4ics/gui-password.tmp)
+    chown --reference=/shared /shared/p4ics/gui-password.tmp
+    mv /shared/p4ics/gui-password.tmp /shared/p4ics/gui-password
+fi
 p4ics-controller -config /c1.yml > /shared/c1.log 2>&1 &
 echo "c1 " >> /shared/startup.temp

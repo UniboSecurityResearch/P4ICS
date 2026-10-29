@@ -80,9 +80,10 @@ kathara exec modbusclient -- python3 /modbus_client.py --rw
 
 The GUI of c1 is published on the host at `http://localhost:8080` (with
 `--peer`, c2's at `http://localhost:8081`). The user is `admin` and c1
-writes the password of each lab run to `shared/p4ics/gui-password`. On a
-remote server, use `ssh -L 8080:localhost:8080 ...`. The GUI is plain HTTP:
-do not publish it beyond the host.
+writes the password of each lab run to `shared/p4ics/gui-password`, readable
+only by the user who started the lab. On a remote server, use
+`ssh -L 8080:localhost:8080 ...`. The GUI is plain HTTP: do not publish it
+beyond the host.
 
 c1 creates the certificates and the GUI password of each lab run in
 `shared/p4ics` (removed at `kathara lclean`). Each switch publishes its
